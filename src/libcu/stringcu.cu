@@ -221,9 +221,9 @@ __device__ void *memcpy_(void *__restrict dest, const void *__restrict src, size
 		: "="__R(r) : __R(dest), __R(src), __R(n));
 	return r;
 #else
-	if (!n || dest == src) goto _ret;
 	register unsigned char *a = (unsigned char *)dest;
 	register unsigned char *b = (unsigned char *)src;
+	if (!n || dest == src) goto _ret;
 	size_t t;
 	// Do an ascending copy
 	if (a < b) { // Check for destructive overlap
@@ -297,8 +297,8 @@ _ret:
 __device__ void *memset_(void *s, int c, size_t n) {
 	//#ifndef OMIT_PTX
 	//#else
-	if (!n) goto _ret;
 	register unsigned char *a = (unsigned char *)s;
+	if (!n) goto _ret;
 	register size_t t;
 	// tiny optimize
 	if (n < 3 * wsize) {
@@ -319,7 +319,7 @@ __device__ void *memset_(void *s, int c, size_t n) {
 #endif
 	}
 	// align to word
-	if ((t = (int)a & wmask)) {
+	if ((t = (size_t)a & wmask)) {
 		t = wsize - t;
 		n -= t;
 		do { *a++ = c; } while (--t);
@@ -1536,7 +1536,7 @@ __host_device__ void strbldAppendFormatv(strbld_t *b, const char *fmt, va_list v
 			char q = type == TYPE_SQLESCAPE3 ? '"' : '\''; // Quote character
 			char *escarg = noArgs ? va_arg(va, char*) : __extsystem.getStringArg(args);
 			bool isnull = !escarg;
-			if (isnull) escarg = type == TYPE_SQLESCAPE2 ? "NULL" : "(NULL)";
+			if (isnull) escarg = (char *)(type == TYPE_SQLESCAPE2 ? "NULL" : "(NULL)");
 			int k = precision;
 			int i, j, n; char ch; for (i = n = 0; k != 0 && (ch = escarg[i]) != 0; i++, k--)
 				if (ch == q) n++;

@@ -93,6 +93,8 @@ extern __host_constant__ const int __libcuone;
 #define _uintptr_t uintptr_t
 //#define __USE_LARGEFILE64 1
 #elif __OS_UNIX
+#define register
+#define HAVE_STDINT_H
 #define MAX_PATH 260
 #define DELETE 0x00010000L
 #if defined(__LP64__) || defined(_LP64)
@@ -105,7 +107,11 @@ typedef unsigned int _uintptr_t;
 
 #include <cuda_runtime.h>
 #include <stdint.h>
+#if __OS_WIN
 #define uint unsigned int
+#else
+#include <sys/types.h>
+#endif
 #define __LIBCU__
 
 #define HAS_STDIO_BUFSIZ_NONE__

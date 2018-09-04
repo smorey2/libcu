@@ -35,6 +35,9 @@ typedef int(*__compar_fn_t)(const void *, const void *);
 #endif
 
 #include <stdlib.h>
+#if __OS_UNIX
+#include <unistd.h>
+#endif
 #if defined(__CUDA_ARCH__)
 __BEGIN_DECLS;
 
@@ -327,9 +330,15 @@ __END_DECLS;
 #define setenv(n,v,r) 0
 #define unsetenv(n) 0
 #define mkstemp(t) 0
-#include <malloc.h>
 #ifndef _MSC_VER
+#include <malloc/malloc.h>
+#ifdef __APPLE__
+#define _msize(p) malloc_size(p)
+#else
 #define _msize(p) malloc_usable_size(p)
+#endif
+#else
+#include <malloc.h>
 #endif
 #endif  /* _STDLIBCU_H */
 __BEGIN_DECLS;
@@ -340,6 +349,8 @@ __BEGIN_DECLS;
 typedef long long int quad_t;
 /* Returned by `strtouq'.  */
 typedef unsigned long long int u_quad_t;
+//#else
+//#include <sys/types.h>
 #endif
 /* Convert a string to a quadword integer.  */
 __forceinline__ __device__ quad_t strtoq_(const char *__restrict nptr, char **__restrict endptr, int base) { return (quad_t)strtol(nptr, endptr, base); }

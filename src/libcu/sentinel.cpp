@@ -175,7 +175,7 @@ void sentinelServerInitialize(sentinelExecutor *executor, char *mapHostName, boo
 #if __OS_WIN
 		_threadHostHandle = (HANDLE)_beginthreadex(0, 0, sentinelHostThread, nullptr, 0, 0);
 #elif __OS_UNIX
-		int err; if (err = pthread_create(&_threadHostHandle, NULL, &sentinelDeviceThread, NULL)) {
+		int err; if ((err = pthread_create(&_threadHostHandle, NULL, &sentinelDeviceThread, NULL))) {
 			printf("Could not create host thread (%s).\n", strerror(err));
 			exit(1);
 		}
@@ -190,7 +190,7 @@ void sentinelServerInitialize(sentinelExecutor *executor, char *mapHostName, boo
 			_threadDeviceHandle[i] = (HANDLE)_beginthreadex(0, 0, sentinelDeviceThread, (void *)i, 0, 0);
 #elif __OS_UNIX
 		int err; for (int i = 0; i < SENTINEL_DEVICEMAPS; i++)
-			if (err = pthread_create(&_threadDeviceHandle[i], NULL, &sentinelDeviceThread, (void *)(intptr_t)i)) {
+			if ((err = pthread_create(&_threadDeviceHandle[i], NULL, &sentinelDeviceThread, (void *)(intptr_t)i))) {
 				printf("Could not create device thread (%s).\n", strerror(err));
 				exit(1);
 			}

@@ -14,7 +14,7 @@ cmake -DM=64 -DC64=ON -DCMAKE_CUDA_FLAGS="-arch=sm_60" ../../src
 cd ..
 cmake --build build64 --config Debug
 cd build64
-make test
+#make test
 cd ..
 
 
@@ -23,7 +23,6 @@ mkdir build32
 cd build32
 #cmake -DM=32 -DC64=OFF -DCMAKE_CUDA_FLAGS="-arch=sm_60" ../../src
 cd ..
-
 #cmake --build build32 --config Debug
 cd build32
 #make test
