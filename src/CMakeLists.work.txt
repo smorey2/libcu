@@ -9,7 +9,7 @@ set(arch 60)
 include(CTest)
 enable_testing()
 
-include_directories(include)
+include_directories(include ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
 # CORE
 add_library(libcu.${arch} STATIC
@@ -20,9 +20,29 @@ add_library(libcu.${arch} STATIC
   libcu/stringcu.cu
   libcu/libcu.cu
   libcu/libcu.stdlib.cu
+
+  #libcu/crtdefscu.cu
+  #libcu/ctypecu.cu
+  #libcu/errnocu.cu
+  #libcu/regexcu.cu
+  #libcu/sentinel-gpu.cu
+  #libcu/setjmpcu.cu
+  #libcu/stdiocu.cu
+  #libcu/stdlibcu.cu
+  #libcu/timecu.cu
+  #libcu/unistdcu.cu
+  #libcu/direntcu.cu
+  #libcu/sys/statcu.cu
+  #libcu/sys/timecu.cu
+  #libcu/ext/hash.cu
+  #libcu/ext/memfile.cu
+  #libcu/grpcu.cu
+  #libcu/pwdcu.cu
+  #libcu/fsystem.cu
+  #libcu/fcntlcu.cu
   )
   set_source_files_properties(libcu/stringcu.cu libcu/libcu.cu PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS}")
-
+#target_include_directories(libcu.${arch} PRIVATE ${CUDA_INCLUDE_DIRS})
 # Request that libcu be built with -std=c++11. As this is a public compile feature anything that links to particles will also build with -std=c++11
 target_compile_features(libcu.${arch} PUBLIC cxx_std_11)
 

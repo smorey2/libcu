@@ -9,7 +9,7 @@ set(arch 60)
 include(CTest)
 enable_testing()
 
-include_directories(include)
+include_directories(include ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
 # CORE
 add_library(libcu.${arch} STATIC
@@ -214,6 +214,6 @@ if (BUILD_TESTING)
 
   if (APPLE)
     # We need to add the default path to the driver (libcuda.dylib) as an rpath, so that the static cuda runtime can find it at runtime.
-    set_property(TARGET libcu_test PROPERTY BUILD_RPATH ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
+    set_property(TARGET libcu_tests PROPERTY BUILD_RPATH ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
   endif()
 endif()

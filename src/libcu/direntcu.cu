@@ -6,13 +6,19 @@ struct cuDIR {
 #if __OS_WIN
 	struct DIR dir;
 #elif __OS_UNIX
-	//	struct __dirstream dir;
+	// struct __dirstream dir;
 #endif
 	void *listIdx; void *list;
 	int fakeIdx; int fake;
 };
 
-__constant__ const struct dirent _dirpFakes[2] = { { 0, 0, 2, 0, ".." }, { 0, 0, 1, 0, "." } };
+__constant__ const struct dirent _dirpFakes[2] = {
+#if __OS_WIN
+{ 0, 0, 2, 0, ".." }, { 0, 0, 1, 0, "." }
+#else
+{ 0, 0, 2, 0, 0, ".." }, { 0, 0, 1, 0, 0, "." }
+#endif
+};
 
 /* Open a directory stream on NAME. Return a DIR stream on the directory, or NULL if it could not be opened. */
 __device__ DIR *opendir_(const char *name) {

@@ -29,8 +29,8 @@ THE SOFTWARE.
 #include <crtdefscu.h>
 
 #include <string.h>
-#if defined(__CUDA_ARCH__)
 #include <stdarg.h>
+#if defined(__CUDA_ARCH__)
 __BEGIN_DECLS;
 
 __BEGIN_NAMESPACE_STD;

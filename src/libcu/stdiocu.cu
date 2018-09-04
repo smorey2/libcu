@@ -10,11 +10,11 @@
 
 #define LIBCU_MAXLENGTH 1000000000
 
-#if __OS_UNIX
-#define _base _IO_buf_base
-#define _flag _flags
-#define _file _fileno
-#endif
+//#if __OS_UNIX
+//#define _base _IO_buf_base
+//#define _flag _flags
+//#define _file _fileno
+//#endif
 
 __BEGIN_DECLS;
 
