@@ -1,8 +1,10 @@
 #include <cuda_runtimecu.h>
+#include <stdlibcu.h>
 #include <stdiocu.h>
 #include <stringcu.h>
 #include <assert.h>
 
+static __global__ void g_testbed();
 static __global__ void g_memmove_speed();
 static __global__ void g_strlen_speed();
 static __global__ void g_strnlen_speed();
@@ -20,6 +22,8 @@ int main() {
 		fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?\n");
 		goto Error;
 	}
+
+	g_testbed<<<1, 1>>>();
 
 	// Launch test
 	cudaEventRecord(start);
@@ -76,6 +80,9 @@ static __constant__ const char *_quickbrownfox =
 
 static __device__ char _buf0[] = "The quick brown fox jumped over the lazy dog.";
 static __device__ char _buf1[50];
+
+static __global__ void g_testbed() {
+}
 
 static __global__ void g_memmove_speed() {
 	for (int i = 0; i < 1000; i++) {
