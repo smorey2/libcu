@@ -180,8 +180,8 @@ __device__ int Tcl_HistoryCmd(ClientData dummy, Tcl_Interp *interp, int argc, co
 	if (argc == 1) {
 		goto infoCmd;
 	}
-	int c = args[1][0];
-	int length = strlen(args[1]);
+	int c; c = args[1][0];
+	int length; length = strlen(args[1]);
 	if (c == 'a' && !strncmp(args[1], "add", length)) {
 		if (argc != 3 && argc != 4) {
 			Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " add event ?exec?\"", (char *)NULL);
@@ -756,8 +756,8 @@ static __device__ char *GetWords(register Interp *iPtr, char *command, char *wor
 	// Scan through the words one at a time, copying those that are relevant into the result string.  Allocate a result area large enough to hold all the words if necessary.
 	int index; // Index of current word.
 	register char *next;
-	char *result = (char *)_allocFast((unsigned)(strlen(command) + 1));
-	char *dst = result;
+	char *result; result = (char *)_allocFast((unsigned)(strlen(command) + 1));
+	char *dst; dst = result;
 	for (next = command; isspace(*next); next++) { } // Empty loop body:  just find start of first word.
 	for (index = 0; *next != 0; index++) {
 		start = next;

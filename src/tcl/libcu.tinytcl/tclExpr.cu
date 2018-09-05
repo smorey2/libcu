@@ -424,7 +424,7 @@ static __device__ int ExprGetValue(Tcl_Interp *interp, register ExprInfo *infoPt
 	if (result != TCL_OK) {
 		goto done;
 	}
-	bool gotOp = false; // Non-zero means already lexed the operator (while picking up value for unary operator).  Don't lex again.
+	bool gotOp; gotOp = false; // Non-zero means already lexed the operator (while picking up value for unary operator).  Don't lex again.
 	if (infoPtr->token == OPEN_PAREN) {
 		// Parenthesized sub-expression.
 		result = ExprGetValue(interp, infoPtr, -1, valuePtr);

@@ -82,6 +82,14 @@ static __device__ char _buf0[] = "The quick brown fox jumped over the lazy dog."
 static __device__ char _buf1[50];
 
 static __global__ void g_testbed() {
+
+	char *f0a = getenv(":Test");
+	assert(!f0a);
+	int f1a = setenv(":Test", "value", true);
+	char *f1b = getenv(":Test");
+	int f1c = unsetenv(":Test");
+	assert(f1a && f1b && f1c);
+
 }
 
 static __global__ void g_memmove_speed() {

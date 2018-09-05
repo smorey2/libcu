@@ -23,7 +23,7 @@ static __device__ void makeAFile(char *file) {
 extern __constant__ cuFILE __iob_streams[LIBCU_MAXFILESTREAM + 3];
 static __global__ void g_stdio_test1() {
 	printf("stdio_test1\n");
-	goto here;
+	//goto here;
 
 	//// STDIN/STDOUT/STDERR ////
 	//#define stdin  ((FILE*)&__iob_streams[0]) /* Standard input stream.  */
@@ -96,7 +96,7 @@ static __global__ void g_stdio_test1() {
 	FILE *i0a = tmpfile();
 	fclose(i0a);
 
-here:
+//here:
 	//// FCLOSE, FFLUSH, FREOPEN, FOPEN, FPRINTF ////
 	//extern __device__ int fclose_(FILE *stream, bool wait = true); #sentinel-branch
 	//extern __device__ int fflush_(FILE *stream); #sentinel-branch

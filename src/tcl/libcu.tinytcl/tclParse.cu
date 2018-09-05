@@ -878,7 +878,7 @@ __device__ char *Tcl_ParseVar(Tcl_Interp *interp, register char *string, char **
 	if (((Interp *)interp)->noEval) {
 		return "";
 	}
-	char c = *name1End;
+	char c; c = *name1End;
 	*name1End = 0;
 	result = Tcl_GetVar2(interp, name1, name2, TCL_LEAVE_ERR_MSG);
 	*name1End = c;

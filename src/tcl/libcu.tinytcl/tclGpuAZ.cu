@@ -849,7 +849,7 @@ badAccess:
 	}
 
 	// Enter this new OpenFile_ structure in the table for the interpreter.  May have to expand the table to do this.
-	int fd = fileno(filePtr->f);
+	int fd; fd = fileno(filePtr->f);
 	TclMakeFileTable(iPtr, fd);
 	if (iPtr->filePtrArray[fd] != NULL) {
 		panic("Tcl_OpenCmd found file already open");

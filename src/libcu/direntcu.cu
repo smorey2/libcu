@@ -13,10 +13,10 @@ struct cuDIR {
 };
 
 __constant__ const struct dirent _dirpFakes[2] = {
-#if __OS_WIN
-{ 0, 0, 2, 0, ".." }, { 0, 0, 1, 0, "." }
-#else
+#ifdef __APPLE__
 { 0, 0, 2, 0, 0, ".." }, { 0, 0, 1, 0, 0, "." }
+#else
+{ 0, 0, 2, 0, ".." }, { 0, 0, 1, 0, "." }
 #endif
 };
 

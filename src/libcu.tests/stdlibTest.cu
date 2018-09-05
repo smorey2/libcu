@@ -63,17 +63,17 @@ static __global__ void g_stdlib_test1() {
 	//extern __device__ int setenv_(const char *name, const char *value, int replace);
 	//extern __device__ int unsetenv_(const char *name);
 	/* Host */
-	char *f0a = getenv("Test"); assert(f0a);
+	char *f0a = getenv("Test"); assert(!f0a);
 	int f1a = setenv("Test", "value", true);
 	char *f1b = getenv("Test");
 	int f1c = unsetenv("Test");
 	assert(f1a && f1b && f1c);
 	/* Device */
-	//char *f0a = getenv("Test"); assert(f0a);
-	//int f1a = setenv("Test", "value", true);
-	//char *f1b = getenv("Test");
-	//int f1c = unsetenv("Test");
-	//assert(f1a && f1b && f1c);
+	char *f2a = getenv(":Test"); assert(f2a);
+	int f3a = setenv(":Test", "value", true);
+	char *f3b = getenv(":Test");
+	int f3c = unsetenv(":Test");
+	assert(f3a && f3b && f3c);
 
 	//// MKTEMP, MKSTEMP ////
 	//extern __device__ char *mktemp_(char *template_);

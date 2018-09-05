@@ -167,7 +167,7 @@ wrongNumArgs:
 		}
 		num_vars = regex->re_nsub + 1;
 	}
-	regmatch_t *pmatch = (regmatch_t *)Jim_Alloc((num_vars + 1) * sizeof(*pmatch));
+	regmatch_t *pmatch; pmatch = (regmatch_t *)Jim_Alloc((num_vars + 1) * sizeof(*pmatch));
 	// If an offset has been specified, adjust for that now. If it points past the end of the string, point to the terminating null
 	if (offset) {
 		if (offset < 0)

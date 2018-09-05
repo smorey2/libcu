@@ -48,7 +48,7 @@ __device__ int Tcl_ProcCmd(ClientData dummy, Tcl_Interp *interp, int argc, const
 	if (result != TCL_OK) {
 		goto procError;
 	}
-	Arg *lastArgPtr = NULL;
+	Arg *lastArgPtr; lastArgPtr = NULL;
 	for (int i = 0; i < argCount; i++) {
 		// Now divide the specifier up into name and default.
 		int fieldCount;

@@ -330,15 +330,16 @@ __END_DECLS;
 #define setenv(n,v,r) 0
 #define unsetenv(n) 0
 #define mkstemp(t) 0
-#ifndef _MSC_VER
-#include <malloc/malloc.h>
+#ifdef _MSC_VER
+#include <malloc.h>
+#else
 #ifdef __APPLE__
+#include <malloc/malloc.h>
 #define _msize(p) malloc_size(p)
 #else
+#include <malloc.h>
 #define _msize(p) malloc_usable_size(p)
 #endif
-#else
-#include <malloc.h>
 #endif
 #endif  /* _STDLIBCU_H */
 __BEGIN_DECLS;

@@ -3376,10 +3376,10 @@ static __device__ Jim_Cmd *JimCreateProcedureCmd(Jim_Interp *interp, Jim_Obj *ar
 	if (staticsListObjPtr && JimCreateProcedureStatics(interp, cmdPtr, staticsListObjPtr) != JIM_OK)
 		goto err;
 	// Parse the args out into arglist, validating as we go Examine the argument list for default parameters and 'args'
-	for (int i = 0; i < argListLen; i++) {
+	int i; for (i = 0; i < argListLen; i++) {
 		// Examine a parameter
-		Jim_Obj *argPtr = Jim_ListGetIndex(interp, argListObjPtr, i);
-		int len = Jim_ListLength(interp, argPtr);
+		Jim_Obj *argPtr; argPtr = Jim_ListGetIndex(interp, argListObjPtr, i);
+		int len; len = Jim_ListLength(interp, argPtr);
 		if (len == 0) {
 			Jim_SetResultString(interp, "argument with no name", -1);
 err:
@@ -4254,8 +4254,8 @@ static __device__ int SetReferenceFromAny(Jim_Interp *interp, Jim_Obj *objPtr)
 	if (len < JIM_REFERENCE_SPACE)
 		goto badformat;
 	// Trim spaces
-	const char *start = str;
-	const char *end = str + len - 1;
+	const char *start; start = str;
+	const char *end; end = str + len - 1;
 	while (*start == ' ')
 		start++;
 	while (*end == ' ' && end > start)
@@ -4277,16 +4277,16 @@ static __device__ int SetReferenceFromAny(Jim_Interp *interp, Jim_Obj *objPtr)
 	refId[20] = '\0';
 	// Try to convert the ID into an unsigned long
 	char *endptr;
-	unsigned long value = strtoul(refId, &endptr, 10);
+	unsigned long value; value = strtoul(refId, &endptr, 10);
 	if (JimCheckConversion(refId, endptr) != JIM_OK)
 		goto badformat;
 	// Check if the reference really exists!
-	Jim_HashEntry *he = Jim_FindHashEntry(&interp->references, &value);
+	Jim_HashEntry *he; he = Jim_FindHashEntry(&interp->references, &value);
 	if (he == NULL) {
 		Jim_SetResultFormatted(interp, "invalid reference id \"%#s\"", objPtr);
 		return JIM_ERROR;
 	}
-	Jim_Reference *refPtr = (Jim_Reference *)Jim_GetHashEntryVal(he);
+	Jim_Reference *refPtr; refPtr = (Jim_Reference *)Jim_GetHashEntryVal(he);
 	// Free the old internal repr and set the new one.
 	Jim_FreeIntRep(interp, objPtr);
 	objPtr->typePtr = &_referenceObjType;
@@ -10006,7 +10006,7 @@ static __device__ int Jim_LinsertCoreCommand(ClientData dummy, Jim_Interp *inter
 	int idx;
 	if (Jim_GetIndex(interp, argv[2], &idx) != JIM_OK)
 		goto err;
-	int len = Jim_ListLength(interp, listPtr);
+	int len; len = Jim_ListLength(interp, listPtr);
 	if (idx >= len)
 		idx = len;
 	else if (idx < 0)

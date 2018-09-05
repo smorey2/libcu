@@ -254,7 +254,7 @@ wrongNumArgs:
 	char *p;
 	int result;
 	for (p = (char *)argPtr[1]; *p != 0;) {
-		int match = regexec(regexpPtr, p, MAX_SUB_MATCHES, pmatch, 0);
+		int match; match = regexec(regexpPtr, p, MAX_SUB_MATCHES, pmatch, 0);
 		if (match >= REG_BADPAT) {
 			regerror(match, regexpPtr, buf, sizeof(buf));
 			Tcl_AppendResult(interp, "error while matching pattern: ", buf, (char *)NULL);
@@ -268,11 +268,11 @@ wrongNumArgs:
 		num_matches++;
 
 		// Copy the portion of the source string before the match to the result variable.
-		register char *src = p + pmatch[0].rm_so;
-		register char c = *src;
+		register char *src; src = p + pmatch[0].rm_so;
+		register char c; c = *src;
 		*src = 0;
 
-		char *newValue = Tcl_SetVar(interp, (char *)argPtr[3], p, flags);
+		char *newValue; newValue = Tcl_SetVar(interp, (char *)argPtr[3], p, flags);
 		*src = c;
 		flags = TCL_APPEND_VALUE;
 		if (newValue == NULL) {

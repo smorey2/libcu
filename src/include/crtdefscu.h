@@ -136,10 +136,6 @@ All macros listed above as possibly being defined by this file are explicitly un
 #define __USE_FILE_OFFSET64	1
 #endif
 
-#ifndef LIBCU_MAXENVIRON
-#define LIBCU_MAXENVIRON 5
-#endif
-
 #ifndef LIBCU_MAXFILESTREAM
 #define LIBCU_MAXFILESTREAM 10
 #endif

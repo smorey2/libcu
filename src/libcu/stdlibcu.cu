@@ -688,24 +688,23 @@ __device__ hash_t __env_dir = HASHINIT;
 /* Return the value of envariable NAME, or NULL if it doesn't exist.  */
 __device__ char *getenv_(const char *name) {
 	if (ISHOSTENV(name)) { stdlib_getenv msg(name); return msg.RC; }
-	//if (!strcmp(name, "HOME") || !strcmp(name, "PATH")) return "gpu:\\";
-	return (char *)hashFind(&__env_dir, name);
+	char *r = (char *)hashFind(&__env_dir, name);
+	if (!r && (!strcmp(name, "HOME") || !strcmp(name, "PATH"))) r = ":\\";
+	return r;
 }
 
 /* Set NAME to VALUE in the environment. If REPLACE is nonzero, overwrite an existing value.  */
 __device__ int setenv_(const char *name, const char *value, int replace) {
 	if (ISHOSTENV(name)) { stdlib_setenv msg(name, value, replace); return msg.RC; }
 	if (!replace && hashFind(&__env_dir, name)) return 0;
-	if (hashInsert(&__env_dir, name, (void *)value))
-		panic("removed environment");
+	hashInsert(&__env_dir, name, (void *)value);
 	return 0;
 }
 
 /* Remove the variable NAME from the environment.  */
 __device__ int unsetenv_(const char *name) {
 	if (ISHOSTENV(name)) { stdlib_unsetenv msg(name); return msg.RC; }
-	if (hashInsert(&__env_dir, name, nullptr))
-		panic("removed environment");
+	hashInsert(&__env_dir, name, nullptr);
 	return 0;
 }
 

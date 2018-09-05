@@ -14,7 +14,7 @@ cmake -DM=64 -DC64=ON -DCMAKE_CUDA_FLAGS="-arch=sm_60" ../../src
 cd ..
 cmake --build build64 --config Debug
 cd build64
-#make test
+make test
 cd ..
 
 

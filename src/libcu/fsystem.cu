@@ -57,10 +57,10 @@ static __device__ void fileFree(int fd) {
 
 __device__ char __cwd[MAX_PATH] = ":\\";
 __device__ dirEnt_t __iob_root = {
-#if __OS_WIN
-{ 0, 0, 0, 1, ":\\" }, nullptr, nullptr
-#else
+#ifdef __APPLE__
 { 0, 0, 0, 0, 1, ":\\" }, nullptr, nullptr
+#else
+{ 0, 0, 0, 1, ":\\" }, nullptr, nullptr
 #endif
 };
 __device__ hash_t __iob_dir = HASHINIT;

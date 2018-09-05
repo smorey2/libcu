@@ -132,7 +132,7 @@ extern __device__ int dup2_(int fd, int fd2);
 #define dup2 dup2_
 
 /* NULL-terminated array of "NAME=VALUE" environment variables.  */
-extern __device__ char *__environ_[LIBCU_MAXENVIRON];
+extern __device__ char **__environ_;
 #define __environ __environ_
 
 /* Terminate program execution with the low-order 8 bits of STATUS.  */

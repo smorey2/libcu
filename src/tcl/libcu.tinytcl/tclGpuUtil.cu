@@ -47,7 +47,7 @@ __device__ int Tcl_EvalFile(Tcl_Interp *interp, char *fileName)
 	if (fileName == NULL) {
 		goto error;
 	}
-	FILE *file = fopen(fileName, "rb");
+	FILE *file; file = fopen(fileName, "rb");
 	if (!file) {
 		Tcl_AppendResult(interp, "couldn't read file \"", fileName, "\": ", Tcl_OSError(interp), (char *)NULL);
 		goto error;
@@ -58,8 +58,8 @@ __device__ int Tcl_EvalFile(Tcl_Interp *interp, char *fileName)
 		fclose(file);
 		goto error;
 	}
-	int fileSize = statBuf.st_size;
-	char *cmdBuffer = (char *)_allocFast((unsigned)fileSize+1);
+	int fileSize; fileSize = statBuf.st_size;
+	char *cmdBuffer; cmdBuffer = (char *)_allocFast((unsigned)fileSize + 1);
 	if (fread(cmdBuffer, fileSize, 1, file) != fileSize) {
 		Tcl_AppendResult(interp, "error in reading file \"", fileName, "\": ", Tcl_OSError(interp), (char *)NULL);
 		fclose(file);
@@ -345,7 +345,7 @@ __device__ int Tcl_CreatePipeline(Tcl_Interp *interp, int argc, const char *args
 	}
 
 	// Set up the redirected output sink for the pipeline from one of two places, if requested.
-	int lastOutputId = -1; // Write file id for output from last command in pipeline (could be file or pipe). -1 means use stdout.
+	int lastOutputId; lastOutputId = -1; // Write file id for output from last command in pipeline (could be file or pipe). -1 means use stdout.
 	if (output != NULL) {
 		if (outputFile == 2) {
 			OpenFile_ *filePtr;
@@ -382,7 +382,7 @@ __device__ int Tcl_CreatePipeline(Tcl_Interp *interp, int argc, const char *args
 		pipeIds[0] = pipeIds[1] = NULL;
 	}
 	// If we are redirecting stderr with 2>filename or 2>@fileId, then we ignore errFilePtr
-	int errorId = -1; // Writable file id for all standard error output from all commands in pipeline.  -1 means use stderr.
+	int errorId; errorId = -1; // Writable file id for all standard error output from all commands in pipeline.  -1 means use stderr.
 	if (error != NULL) {
 		if (errorFile == 2) {
 			OpenFile_ *filePtr;
@@ -431,11 +431,11 @@ errFileError:
 	}
 
 	// Scan through the argc array, forking off a process for each group of arguments between "|" arguments.
-	int *pidPtr = (int *)_allocFast((unsigned)(cmdCount * sizeof(int))); // Points to malloc-ed array holding all the pids of child processes.
+	int *pidPtr; pidPtr = (int *)_allocFast((unsigned)(cmdCount * sizeof(int))); // Points to malloc-ed array holding all the pids of child processes.
 	for (i = 0; i < numPids; i++) {
 		pidPtr[i] = -1;
 	}
-	int outputId = -1; // Writable file id for output from current command in pipeline (could be file or pipe). -1 means use stdout.
+	int outputId; outputId = -1; // Writable file id for output from current command in pipeline (could be file or pipe). -1 means use stdout.
 	int lastArg;
 	for (int firstArg = 0; firstArg < argc; numPids++, firstArg = lastArg+1) {
 		for (lastArg = firstArg; lastArg < argc; lastArg++) {
