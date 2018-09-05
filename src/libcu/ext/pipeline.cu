@@ -213,7 +213,7 @@ static int __CreateTemp(const char *contents, int length) {
 #ifdef HAVE_MKSTEMP
 	fd = mkstemp(inName);
 #else
-	mktemp(inName);
+	mkstemp(inName);
 	fd = open(inName, O_RDWR | O_CREAT | O_TRUNC, 0600);
 #endif
 	if (fd < 0) {
@@ -221,7 +221,7 @@ static int __CreateTemp(const char *contents, int length) {
 		return -1;
 	}
 	if (contents) {
-		if (write(fd, input, length) != length) {
+		if (write(fd, contents, length) != length) {
 			printf("couldn't write file input for command:  %s\n", strerror(errno));
 			close(fd);
 			return -1;
@@ -232,6 +232,7 @@ static int __CreateTemp(const char *contents, int length) {
 			return -1;
 		}
 	}
+	return -1;
 }
 
 #ifndef HAVE_EXECVPE
@@ -239,7 +240,7 @@ static int __CreateTemp(const char *contents, int length) {
 #endif
 
 static PIDTYPE __StartProcess(char **argv, char *env, FDTYPE inputId, FDTYPE outputId, FDTYPE errorId) {
-	PDTYPE pid = vfork();
+	PIDTYPE pid = vfork();
 	if (pid < 0) return __BAD_PID;
 	if (pid == 0) {
 		// Child
@@ -255,6 +256,7 @@ static PIDTYPE __StartProcess(char **argv, char *env, FDTYPE inputId, FDTYPE out
 		fprintf(stderr, "couldn't exec \"%s\"\n", argv[0]);
 		_exit(127);
 	}
+	return pid;
 }
 
 #endif
@@ -437,8 +439,7 @@ static FILE *GetAioFilehandle(const char *input) {
 #define FILE_HANDLE 2           /* input/output: filehandle */
 #define FILE_TEXT   3           /* input only:   input is actual text */
 
-static int CreatePipeline(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, FDTYPE *outPipePtr, FDTYPE *errFilePtr)
-{
+static int CreatePipeline(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, FDTYPE *outPipePtr, FDTYPE *errFilePtr) {
 	ReapDetachedPids();
 	if (inPipePtr != NULL) *inPipePtr = __BAD_FD;
 	if (outPipePtr != NULL) *outPipePtr = __BAD_FD;
@@ -448,7 +449,7 @@ static int CreatePipeline(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPi
 	// number of "|" arguments).  If there are "<", "<<", or ">" arguments then make note of input and output redirection and remove these
 	// arguments and the arguments that follow them.
 	if (!argc) {
-		printf("didn't specify command to execute", -1);
+		printf("didn't specify command to execute");
 		return -1;
 	}
 	const char *input = nullptr;	// Describes input for pipeline, depending on "inputFile".  NULL means take input from stdin/pipe.
@@ -588,10 +589,10 @@ static int CreatePipeline(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPi
 	}
 
 	// Scan through the argc array, forking off a process for each group of arguments between "|" arguments.
-	PIDTYPE *pids = (PIDTYPE *)malloc(cmdCount * sizeof(PIDTYPE)); // Points to malloc-ed array holding all the pids of child processes.
+	PIDTYPE *pids; pids = (PIDTYPE *)malloc(cmdCount * sizeof(PIDTYPE)); // Points to malloc-ed array holding all the pids of child processes.
 	for (int i = 0; i < cmdCount; i++)
 		pids[i] = __BAD_PID;
-	int numPids = 0; // Actual number of processes that exist at *pids right now.
+	int numPids; numPids = 0; // Actual number of processes that exist at *pids right now.
 	int firstArg, lastArg; // Indexes of first and last arguments in current command.
 	for (firstArg = 0; firstArg < argc; numPids++, firstArg = lastArg + 1) {
 		bool pipe_dup_err = false;

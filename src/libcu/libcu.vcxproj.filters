@@ -104,9 +104,6 @@
     <CudaCompile Include="program.cu" />
     <CudaCompile Include="libcu.stdlib.cu" />
     <CudaCompile Include="stringcu.cu" />
-    <CudaCompile Include="ext\pipeline.cu">
-      <Filter>ext</Filter>
-    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="_content">
@@ -171,5 +168,8 @@
     <None Include="pwdcu.cu" />
     <None Include="crtdefscu.cu" />
     <None Include="stdiocu.cu" />
+    <None Include="ext\pipeline.cu">
+      <Filter>ext</Filter>
+    </None>
   </ItemGroup>
 </Project>

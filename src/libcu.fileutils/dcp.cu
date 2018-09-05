@@ -8,8 +8,7 @@
 
 // Return TRUE if a filename is a directory. Nonexistant files return FALSE.
 __device__ __managed__ bool m_isadir_rc;
-__global__ void g_isadir(char *name)
-{
+__global__ void g_isadir(char *name) {
 	struct stat statbuf;
 	if (stat(name, &statbuf) < 0) {
 		m_isadir_rc = false;
@@ -19,13 +18,12 @@ __global__ void g_isadir(char *name)
 	return;
 }
 
-bool isadir_(char *str)
-{
+bool isadir_(char *str) {
 	size_t strLength = strlen(str) + 1;
 	char *d_str;
 	cudaMalloc(&d_str, strLength);
 	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
-	g_isadir<<<1,1>>>(d_str);
+	g_isadir<<<1, 1>>>(d_str);
 	cudaFree(d_str);
 	return m_isadir_rc;
 }
@@ -34,8 +32,7 @@ __forceinline int dcp_(char *str, char *str2, bool setModes) { fileutils_dcp msg
 
 // Build a path name from the specified directory name and file name. If the directory name is NULL, then the original filename is returned.
 // The built path is in a static area, and is overwritten for each call.
-char *buildName(char *dirName, char *fileName)
-{
+char *buildName(char *dirName, char *fileName) {
 	if (!dirName || *dirName == '\0')
 		return fileName;
 	char *cp = strrchr(fileName, '/');
@@ -48,8 +45,7 @@ char *buildName(char *dirName, char *fileName)
 	return buf;
 }
 
-int main(int argc, char	**argv)
-{
+int main(int argc, char	**argv) {
 	atexit(sentinelClientShutdown);
 	sentinelClientInitialize();
 	char *lastArg = argv[argc - 1];

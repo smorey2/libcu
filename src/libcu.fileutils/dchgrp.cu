@@ -8,25 +8,22 @@ struct group { short gr_gid; };
 __device__ struct group *getgrnam(char *name) { return nullptr; }
 
 __device__ __managed__ struct group *m_getgrnam_rc;
-__global__ void g_getgrnam(char *name)
-{
+__global__ void g_getgrnam(char *name) {
 	m_getgrnam_rc = getgrnam(name);
 }
-struct group *getgrnam_(char *str)
-{
+struct group *getgrnam_(char *str) {
 	size_t strLength = strlen(str) + 1;
 	char *d_str;
 	cudaMalloc(&d_str, strLength);
 	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
-	g_getgrnam<<<1,1>>>(d_str);
+	g_getgrnam<<<1, 1>>>(d_str);
 	cudaFree(d_str);
 	return m_getgrnam_rc;
 }
 
 __forceinline int dchgrp_(char *str, int gid) { fileutils_dchgrp msg(str, gid); return msg.RC; }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
 	atexit(sentinelClientShutdown);
 	sentinelClientInitialize();
 	char *cp = argv[1];

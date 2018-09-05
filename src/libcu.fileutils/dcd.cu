@@ -7,8 +7,7 @@
 __forceinline int dpwd_(char *ptr) { fileutils_dpwd msg; strcpy(ptr, msg.Ptr); return msg.RC; }
 __forceinline int dcd_(char *str) { fileutils_dcd msg(str); return msg.RC; }
 
-int main(int argc, char **argv)
-{
+int main(int argc, const char **argv) {
 	atexit(sentinelClientShutdown);
 	sentinelClientInitialize();
 	if (argc <= 1 || argc > 2) {
@@ -18,7 +17,7 @@ int main(int argc, char **argv)
 			exit(1);
 		}
 	}
-	int r = dcd_(argv[1]);
+	int r = dcd_((char *)argv[1]);
 	if (!r) {
 		fprintf(stderr, "%s: %s: %s\n", argv[0], argv[1], strerror(r));
 		exit(0);

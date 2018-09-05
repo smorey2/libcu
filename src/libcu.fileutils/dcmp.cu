@@ -5,8 +5,7 @@
 
 __forceinline int dcmp_(char *str, char *str2) { fileutils_dcmp msg(str, str2); return msg.RC; }
 
-int main(int argc, char	**argv)
-{
+int main(int argc, char	**argv) {
 	atexit(sentinelClientShutdown);
 	sentinelClientInitialize();
 	int r = dcmp_(argv[1], argv[2]);

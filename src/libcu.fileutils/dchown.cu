@@ -8,25 +8,22 @@ struct passwd { short pw_uid; };
 __device__ struct passwd *getpwnam(char *name) { return nullptr; }
 
 __device__ __managed__ struct passwd *m_getpwnam_rc;
-__global__ void g_getpwnam(char *name)
-{
+__global__ void g_getpwnam(char *name) {
 	m_getpwnam_rc = getpwnam(name);
 }
-struct passwd *getpwnam_(char *str)
-{
+struct passwd *getpwnam_(char *str) {
 	int strLength = strlen(str) + 1;
 	char *d_str;
 	cudaMalloc(&d_str, strLength);
 	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
-	g_getpwnam<<<1,1>>>(d_str);
+	g_getpwnam << <1, 1 >> > (d_str);
 	cudaFree(d_str);
 	return m_getpwnam_rc;
 }
 
 __forceinline int dchown_(char *str, int uid) { fileutils_dchown msg(str, uid); return msg.RC; }
 
-int main(int argc, char	**argv)
-{
+int main(int argc, char	**argv) {
 	atexit(sentinelClientShutdown);
 	sentinelClientInitialize();
 	char *cp = argv[1];

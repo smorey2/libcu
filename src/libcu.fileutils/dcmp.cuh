@@ -48,12 +48,12 @@ __global__ void g_dcmp(char *str, char *str2)
 	char *bp2;
 	while (true) {
 		size_t cc1 = fread(buf1, 1, sizeof(buf1), f1);
-		if (cc1 < 0) {
+		if (cc1 == (size_t)-1) {
 			perror(str);
 			goto eof;
 		}
 		size_t cc2 = fread(buf2, 1, sizeof(buf2), f2);
-		if (cc2 < 0) {
+		if (cc2 == (size_t)-1) {
 			perror(str2);
 			goto differ;
 		}
@@ -107,7 +107,7 @@ int dcmp(char *str, char *str2)
 	cudaMalloc(&d_str2, strLength);
 	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
 	cudaMemcpy(d_str2, str2, str2Length, cudaMemcpyHostToDevice);
-	g_dcmp<<<1,1>>>(d_str, d_str2);
+	g_dcmp << <1, 1 >> > (d_str, d_str2);
 	cudaFree(d_str);
 	cudaFree(d_str2);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dcmp_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;

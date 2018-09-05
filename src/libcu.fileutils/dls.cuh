@@ -30,8 +30,7 @@ __device__ char _fmt[10] = "%s";
 
 // Return the standard ls-like mode string from a file mode. This is static and so is overwritten on each call.
 static __device__ char _modeString_buf[12];
-__device__ char *modeString(int mode)
-{
+__device__ char *modeString(int mode) {
 	strcpy(_modeString_buf, "----------");
 
 	// Fill in the file type.
@@ -68,13 +67,12 @@ __device__ char *modeString(int mode)
 // Get the time to be used for a file. This is down to the minute for new files, but only the date for old files.
 // The string is returned from a static buffer, and so is overwritten for each call.
 static __device__ char _timeString_buf[26];
-__device__ char *timeString(time_t t)
-{
+__device__ char *timeString(time_t t) {
 	time_t now = time(nullptr);
 	char *str = ctime(&t);
 	strcpy(_timeString_buf, &str[4]);
 	_timeString_buf[12] = '\0';
-	if (t > now || t < now - 365*24*60*60L) {
+	if (t > now || t < now - 365 * 24 * 60 * 60L) {
 		strcpy(&_timeString_buf[7], &str[20]);
 		_timeString_buf[11] = '\0';
 	}
@@ -82,8 +80,7 @@ __device__ char *timeString(time_t t)
 }
 
 // Do an LS of a particular file name according to the flags.
-static __device__ void lsFile(char *fullName, char *name, struct stat *statbuf, int flags)
-{
+static __device__ void lsFile(char *fullName, char *name, struct stat *statbuf, int flags) {
 	char *cp;
 	struct passwd *pwd;
 	struct group *grp;
@@ -180,8 +177,7 @@ static __device__ void lsFile(char *fullName, char *name, struct stat *statbuf, 
 // Build a path name from the specified directory name and file name. If the directory name is NULL, then the original filename is returned.
 // The built path is in a static area, and is overwritten for each call.
 //static __device__ char _buildName_buf[PATHLEN];
-//__device__ char *buildName(char *dirName, char *fileName)
-//{
+//__device__ char *buildName(char *dirName, char *fileName) {
 //	if (!dirName || (*dirName == '\0'))
 //		return fileName;
 //	char *cp = strrchr(fileName, '/');
@@ -194,16 +190,14 @@ static __device__ void lsFile(char *fullName, char *name, struct stat *statbuf, 
 //}
 
 // Sort routine for list of filenames.
-__device__ int nameSort(const void *pp1, const void *pp2)
-{
+__device__ int nameSort(const void *pp1, const void *pp2) {
 	char **p1 = (char **)pp1;
 	char **p2 = (char **)pp2;
 	return strcmp(*p1, *p2);
 }
 
 __device__ int d_dls_rc;
-__global__ void g_dls(char *name, int flags, bool endSlash)
-{
+__global__ void g_dls(char *name, int flags, bool endSlash) {
 	if (!name) {
 		// alloc list
 		if (_listSize == 0) {
@@ -226,7 +220,7 @@ __global__ void g_dls(char *name, int flags, bool endSlash)
 
 	if ((flags & LSF_DIR) || !S_ISDIR(statbuf.st_mode)) {
 		lsFile(NULL, name, &statbuf, flags);
-		if (~flags & LSF_LONG) 
+		if (~flags & LSF_LONG)
 			fputc('\n', stdout);
 		d_dls_rc = -1;
 		return;
@@ -314,13 +308,12 @@ __global__ void g_dls(char *name, int flags, bool endSlash)
 	_listUsed = 0;
 	d_dls_rc = 0;
 }
-int dls(char *str, int flags, bool endSlash)
-{
+int dls(char *str, int flags, bool endSlash) {
 	size_t strLength = strlen(str) + 1;
 	char *d_str;
 	cudaMalloc(&d_str, strLength);
 	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
-	g_dls<<<1,1>>>(d_str, flags, endSlash);
+	g_dls<<<1, 1>>>(d_str, flags, endSlash);
 	cudaFree(d_str);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dls_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

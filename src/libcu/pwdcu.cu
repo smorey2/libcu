@@ -4,7 +4,7 @@
 __BEGIN_DECLS;
 
 #if __OS_WIN
-static __device__ passwd __pwds[] = { { "std", 1, 1 }, { nullptr } };
+static __device__ passwd __pwds[] = { { (char *)"std", 1, 1 }, { nullptr } };
 static __device__ passwd *__pwdIdx = nullptr;
 #endif
 

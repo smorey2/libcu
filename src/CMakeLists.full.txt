@@ -36,6 +36,7 @@ add_library(libcu.${arch} STATIC
   #libcu/sys/timecu.cu
   #libcu/ext/hash.cu
   #libcu/ext/memfile.cu
+  #libcu/ext/pipeline.cu
   #libcu/grpcu.cu
   #libcu/pwdcu.cu
   #libcu/fsystem.cu

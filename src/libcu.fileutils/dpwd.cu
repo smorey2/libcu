@@ -6,8 +6,7 @@
 
 __forceinline int dpwd_(char *ptr) { fileutils_dpwd msg; strcpy(ptr, msg.Ptr); return msg.RC; }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
 	atexit(sentinelClientShutdown);
 	sentinelClientInitialize();
 	char pwd[MAX_PATH];

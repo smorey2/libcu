@@ -6,8 +6,7 @@
 
 __forceinline int dmore_(char *str, int fd) { fileutils_dmore msg(str, fd); return msg.RC; }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
 	while (argc-- > 1) {
 		char *name = *(++argv);
 		int fd = -1;
@@ -37,15 +36,3 @@ int main(int argc, char **argv)
 	}
 	exit(0);
 }
-
-
-
-
-
-
-
-
-
-
-
-

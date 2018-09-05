@@ -13,8 +13,7 @@
 
 __forceinline int dls_(char *str, int flags, bool endSlash) { fileutils_dls msg(str, flags, endSlash); return msg.RC; }
 
-int main(int argc, char **argv)
-{
+int main(int argc, const char **argv) {
 	atexit(sentinelClientShutdown);
 	sentinelClientInitialize();
 
@@ -25,7 +24,7 @@ int main(int argc, char **argv)
 	int flags = 0;
 	if (argc > 1 && argv[1][0] == '-') {
 		argc--;
-		char *cp = *(++argv) + 1;
+		const char *cp = *(++argv) + 1;
 		while (*cp) switch (*cp++) {
 		case 'g':
 		case 'l': flags |= LSF_LONG; break;
@@ -37,7 +36,7 @@ int main(int argc, char **argv)
 		default: fprintf(stderr, "Unknown option -%c\n", cp[-1]); exit(1);
 		}
 	}
-	static char *defaultArgs[2] = { "-ls", "." };
+	static const char *defaultArgs[2] = { "-ls", "." };
 	if (argc <= 1) { argc = 2; argv = defaultArgs; }
 	if (argc > 2)
 		flags |= LSF_MULT;

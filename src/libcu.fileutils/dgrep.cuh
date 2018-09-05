@@ -3,8 +3,7 @@
 #include <ctypecu.h>
 
 // See if the specified word is found in the specified string.
-__device__ bool search(char *string, char *word, bool ignoreCase)
-{
+__device__ bool search(char *string, char *word, bool ignoreCase) {
 	int len = strlen(word);
 	if (!ignoreCase) {
 		while (true) {
@@ -43,8 +42,7 @@ __device__ bool search(char *string, char *word, bool ignoreCase)
 }
 
 __device__ int d_dgrep_rc;
-__global__ void g_dgrep(char *name, char *word, bool ignoreCase, bool tellName, bool tellLine)
-{
+__global__ void g_dgrep(char *name, char *word, bool ignoreCase, bool tellName, bool tellLine) {
 	FILE *f = fopen(name, "r");
 	if (!f) {
 		perror(name);
@@ -69,8 +67,7 @@ __global__ void g_dgrep(char *name, char *word, bool ignoreCase, bool tellName, 
 	d_dgrep_rc = 1;
 }
 
-int dgrep(char *str, char *str2, bool ignoreCase, bool tellName, bool tellLine)
-{
+int dgrep(char *str, char *str2, bool ignoreCase, bool tellName, bool tellLine) {
 	size_t strLength = strlen(str) + 1;
 	size_t str2Length = strlen(str2) + 1;
 	char *d_str;
@@ -79,7 +76,7 @@ int dgrep(char *str, char *str2, bool ignoreCase, bool tellName, bool tellLine)
 	cudaMalloc(&d_str2, strLength);
 	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
 	cudaMemcpy(d_str2, str2, str2Length, cudaMemcpyHostToDevice);
-	g_dgrep<<<1,1>>>(d_str, d_str2, ignoreCase, tellName, tellLine);
+	g_dgrep<<<1, 1>>>(d_str, d_str2, ignoreCase, tellName, tellLine);
 	cudaFree(d_str);
 	cudaFree(d_str2);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dgrep_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;

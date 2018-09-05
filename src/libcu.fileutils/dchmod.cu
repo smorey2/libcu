@@ -7,8 +7,7 @@
 
 __forceinline int dchmod_(char *str, int mode) { fileutils_dchmod msg(str, mode); return msg.RC; }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
 	atexit(sentinelClientShutdown);
 	sentinelClientInitialize();
 	int	mode = 0;

@@ -59,7 +59,7 @@ Error:
 
 	// finish
 	printf("\nPress any key to continue.\n");
-	scanf("%c");
+	char c; scanf("%c", &c);
 
 	return 0;
 }
@@ -78,7 +78,7 @@ static __constant__ const char *_quickbrownfox =
 "The quick brown fox jumped over the lazy dog. The quick brown fox jumped over the lazy dog. The quick brown fox jumped over the lazy dog. The quick brown fox jumped over the lazy dog."
 "The quick brown fox jumped over the lazy dog. The quick brown fox jumped over the lazy dog. The quick brown fox jumped over the lazy dog. The quick brown fox jumped over the lazy dog.";
 
-static __device__ char _buf0[] = "The quick brown fox jumped over the lazy dog.";
+//static __device__ char _buf0[] = "The quick brown fox jumped over the lazy dog.";
 static __device__ char _buf1[50];
 
 static __global__ void g_testbed() {
