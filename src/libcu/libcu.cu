@@ -13,7 +13,7 @@
 #include "sys/timecu.cu"
 #include "ext/hash.cu"
 #include "ext/memfile.cu"
-#include "ext/pipeline.cu"
+//#include "ext/pipeline.cu"
 #include "grpcu.cu"
 #include "pwdcu.cu"
 #include "fsystem.cu"

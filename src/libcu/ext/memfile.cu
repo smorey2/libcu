@@ -108,7 +108,7 @@ static __host_device__ int memfileCreateFile(memfile_t *f) {
 		int64_t off = 0;
 		for (fileChunk_t *p = copy.first; p; p = p->next) {
 			if (off + chunkSize > copy.endpoint.offset)
-				chunkSize = copy.endpoint.offset - off;
+				chunkSize = (int)(copy.endpoint.offset - off);
 			rc = __extsystem.vsys_write((vsysfile *)f, (uint8_t *)p->chunk, chunkSize, off);
 			if (rc) break;
 			off += chunkSize;
@@ -173,7 +173,7 @@ __host_device__ int memfileWrite(vsysfile *p, const void *buf, int amount, int64
 				write -= space;
 				f->endpoint.offset += space;
 			}
-			f->size = amount + offset;
+			f->size = (int)(amount + offset);
 		}
 	}
 	return RC_OK;

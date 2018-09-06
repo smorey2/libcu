@@ -67,13 +67,13 @@ static __global__ void g_stdlib_test1() {
 	int f1a = setenv("Test", "value", true);
 	char *f1b = getenv("Test");
 	int f1c = unsetenv("Test");
-	assert(f1a && f1b && f1c);
+	assert(!f1a && f1b && !f1c);
 	/* Device */
-	char *f2a = getenv(":Test"); assert(f2a);
+	char *f2a = getenv(":Test"); assert(!f2a);
 	int f3a = setenv(":Test", "value", true);
 	char *f3b = getenv(":Test");
 	int f3c = unsetenv(":Test");
-	assert(f3a && f3b && f3c);
+	assert(!f3a && f3b && !f3c);
 
 	//// MKTEMP, MKSTEMP ////
 	//extern __device__ char *mktemp_(char *template_);

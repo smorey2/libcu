@@ -1,4 +1,5 @@
 #include <cuda_runtimecu.h>
+#include <sentinel.h>
 #include <stdlibcu.h>
 #include <stdiocu.h>
 #include <stringcu.h>
@@ -22,6 +23,8 @@ int main() {
 		fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?\n");
 		goto Error;
 	}
+
+	sentinelServerInitialize();
 
 	g_testbed<<<1, 1>>>();
 
@@ -49,6 +52,8 @@ int main() {
 	printf("Effective: %fn", milliseconds / 1e6);
 
 Error:
+	sentinelServerShutdown();
+
 	// cudaDeviceReset must be called before exiting in order for profiling and
 	// tracing tools such as Nsight and Visual Profiler to show complete traces.
 	cudaStatus = cudaDeviceReset();
@@ -83,12 +88,12 @@ static __device__ char _buf1[50];
 
 static __global__ void g_testbed() {
 
-	char *f0a = getenv(":Test");
+	char *f0a = getenv("Test");
 	assert(!f0a);
-	int f1a = setenv(":Test", "value", true);
-	char *f1b = getenv(":Test");
-	int f1c = unsetenv(":Test");
-	assert(f1a && f1b && f1c);
+	int f1a = setenv("Test", "value", true);
+	char *f1b = getenv("Test");
+	int f1c = unsetenv("Test");
+	assert(!f1a && f1b && !f1c);
 
 }
 
