@@ -143,10 +143,16 @@ struct stdlib_mkstemp {
 		t->Str = str + offset;
 		return end;
 	}
+	static __forceinline__ __device__ bool Postfix(stdlib_mkstemp *t, intptr_t offset) {
+		char *ptr = (char *)t->Ptr - offset;
+		strcpy(t->Str, ptr);
+		return true;
+	}
 	sentinelMessage Base;
 	char *Str;
-	__device__ stdlib_mkstemp(char *str) : Base(true, STDLIB_MKSTEMP, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_mkstemp)); }
+	__device__ stdlib_mkstemp(char *str) : Base(true, STDLIB_MKSTEMP, 1024, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_mkstemp)); }
 	int RC;
+	void *Ptr;
 };
 
 #endif  /* _SENTINEL_STDLIBMSG_H */

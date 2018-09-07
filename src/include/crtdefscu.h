@@ -338,6 +338,7 @@ extern __device__ char __cwd[];
 #define ISHOSTPATH(path) ((path)[1] == ':' || ((path)[0] != ':' && __cwd[0] == 0))
 #define ISHOSTHANDLE(handle) (handle < INT_MAX-LIBCU_MAXFILESTREAM)
 #define ISHOSTPTR(ptr) ((hostptr_t *)(ptr) >= __iob_hostptrs && (hostptr_t *)(ptr) <= __iob_hostptrs+LIBCU_MAXHOSTPTR)
+#define ISONLYDEVICEPATH(path) ((path)[0] == ':' || __cwd[0] == ':')
 
 /* Host pointer support  */
 extern __constant__ hostptr_t __iob_hostptrs[LIBCU_MAXHOSTPTR];

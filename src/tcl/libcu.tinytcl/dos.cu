@@ -77,7 +77,8 @@ int cmdsound(ClientData clientData, Tcl_Interp *interp, int argc, const char *ar
 	}
 	if (frequency == 0) {
 		nosound();
-	} else {
+	}
+	else {
 		sound(frequency);
 	}
 	return TCL_OK;
@@ -92,7 +93,7 @@ int cmdgetdate(ClientData clientData, Tcl_Interp *interp, int argc, const char *
 	}
 	struct dosdate_t date;
 	_dos_getdate(&date);
-	sprintf(interp->result,  "%d %d %d", date.month, date.day, date.year);
+	sprintf(interp->result, "%d %d %d", date.month, date.day, date.year);
 	return TCL_OK;
 }
 
@@ -120,7 +121,7 @@ int cmdsetdate(ClientData clientData, Tcl_Interp *interp, int argc, const char *
 	date.day = day;
 	date.month = month;
 	date.dayofweek = 0;
-	if (_dos_setdate (&date) != 0) {
+	if (_dos_setdate(&date) != 0) {
 		Tcl_AppendResult(interp, "invalid date", (char *)NULL);
 		return TCL_ERROR;
 	}
@@ -203,11 +204,11 @@ int cmddiskfree(ClientData clientData, Tcl_Interp *interp, int argc, const char 
 		return TCL_ERROR;
 	}
 	int drive;
-	if ((drive = convert_drive_id (interp, args[1])) < 0) {
+	if ((drive = convert_drive_id(interp, args[1])) < 0) {
 		return TCL_ERROR;
 	}
 	struct diskfree_t diskfree;
-	if (_dos_getdiskfree (drive, &diskfree) != 0) {
+	if (_dos_getdiskfree(drive, &diskfree) != 0) {
 		Tcl_AppendResult(interp, "Couldn't get disk space: ", Tcl_OSError(interp), (char *)NULL);
 		return TCL_ERROR;
 	}
@@ -246,7 +247,7 @@ int cmdgetdfree(ClientData clientData, Tcl_Interp *interp, int argc, const char 
 		return TCL_ERROR;
 	}
 	int drive;
-	if ((drive = convert_drive_id (interp, args[1])) < 0) {
+	if ((drive = convert_drive_id(interp, args[1])) < 0) {
 		return TCL_ERROR;
 	}
 	struct dfree dtable;
@@ -301,7 +302,7 @@ int cmdstackfree(ClientData clientData, Tcl_Interp *interp, int argc, const char
 int cmdbios_serialcom(ClientData clientData, Tcl_Interp *interp, int argc, const char *args[])
 {
 	if (argc < 3 || argc > 4) {
-argcount:
+	argcount:
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " command port (data)\"", (char *)NULL);
 		return TCL_ERROR;
 	}
@@ -312,10 +313,12 @@ argcount:
 	if (STREQU(args[1], "status")) {
 		command = _COM_STATUS;
 		if (argc != 3) goto argcount;
-	} else if (STREQU(args[1], "receive")) {
+	}
+	else if (STREQU(args[1], "receive")) {
 		command = _COM_RECEIVE;
 		if (argc != 3) goto argcount;
-	} else if (STREQU(args[1], "send")) {
+	}
+	else if (STREQU(args[1], "send")) {
 		command = _COM_SEND;
 		if (argc != 4) goto argcount;
 		if (Tcl_GetInt(interp, args[2], &port) != TCL_OK) {
@@ -326,15 +329,18 @@ argcount:
 			_bios_serialcom(command, port, *s);
 		}
 		return TCL_OK;
-	} else if (STREQU (args[1], "init")) {
+	}
+	else if (STREQU(args[1], "init")) {
 		command = _COM_INIT;
 		if (argc == 3) {
-			data = (_COM_9600|_COM_NOPARITY|_COM_CHR8|_COM_STOP1);
-		} else {
+			data = (_COM_9600 | _COM_NOPARITY | _COM_CHR8 | _COM_STOP1);
+		}
+		else {
 			if (argc != 4) goto argcount;
 			needData = true;
 		}
-	} else {
+	}
+	else {
 		Tcl_AppendResult(interp, "bad arg: ", args[0], " command must be one of \"init\", \"send\", \"receive\" or \"status\"", (char *)NULL);
 		return TCL_ERROR;
 	}
@@ -476,7 +482,7 @@ int cmdexecvp(ClientData clientData, Tcl_Interp *interp, int argc, const char *a
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " command ?args?\"", (char *)NULL);
 		return TCL_ERROR;
 	}
-	if (execvp (args[1], &args[1]) < 0) {
+	if (execvp(args[1], &args[1]) < 0) {
 		Tcl_AppendResult(interp, "Couldn't execvp: ", args[1], ": ", Tcl_OSError(interp), (char *)NULL);
 		return TCL_ERROR;
 	}
@@ -531,7 +537,7 @@ wherey - get vertical cursor position
 int cmdvideo(ClientData clientData, Tcl_Interp *interp, int argc, const char *args[])
 {
 	if (argc < 2) {
-argcount:
+	argcount:
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " subcommand ?options?\"", (char *)NULL);
 		return TCL_ERROR;
 	}
@@ -564,14 +570,14 @@ argcount:
 		normvideo();
 		return TCL_OK;
 	}
-	if (STREQU (args[1], "dim")) {
+	if (STREQU(args[1], "dim")) {
 		if (argc != 2) goto bad2arg;
 		lowvideo();
 		return TCL_OK;
 	}
 	int color;
 	int blink;
-	if (STREQU (args[1], "bright")) {
+	if (STREQU(args[1], "bright")) {
 		if (argc != 2) goto bad2arg;
 		highvideo();
 		return TCL_OK;
@@ -579,7 +585,8 @@ argcount:
 	else if (STREQU(args[1], "color")) {
 		if (argc == 3) {
 			blink = 0;
-		} else {
+		}
+		else {
 			if (argc != 4) goto argcount;
 			blink = 128;
 		}
@@ -607,7 +614,7 @@ argcount:
 	}
 	if (STREQU(args[1], "clear")) {
 		if (argc != 2) {
-bad2arg:
+		bad2arg:
 			Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " ", args[1], "\"", (char *)NULL);
 			return TCL_ERROR;
 		}
@@ -636,7 +643,7 @@ bad2arg:
 int Tcl_InitDos(Tcl_Interp *interp)
 {
 #ifdef COMPILE_BIOS_MEMSIZE
-	Tcl_CreateCommand(interp, "bios_memsize", cmdbios_memsize, (ClientData) 0, (Tcl_CmdDeleteProc *)NULL);
+	Tcl_CreateCommand(interp, "bios_memsize", cmdbios_memsize, (ClientData)0, (Tcl_CmdDeleteProc *)NULL);
 #endif
 #ifdef COMPILE_BIOS_EQUIPLIST
 	Tcl_CreateCommand(interp, "bios_equiplist", cmdbios_equiplist, (ClientData)0, (Tcl_CmdDeleteProc *)NULL);

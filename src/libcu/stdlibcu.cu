@@ -712,25 +712,28 @@ __device__ int unsetenv_(const char *name) {
 static __device__ int __maketemp(char *template_, register int *fd) {
 	int rnd = rand_();
 	register char *start, *c;
-	struct stat sbuf;
-	for (c = template_; *c; ++c);
+	for (c = template_; *c; ++c) {}
+	printf("a: %s\n", template_);
 	while (*--c == 'X') { *c = (rnd % 10) + '0'; rnd /= 10; }
+	printf("b: %s\n", template_);
+	dirEnt_t *ent; int r;
 	for (start = c + 1;; --c) {
 		if (c <= template_) break;
 		if (*c == '/') {
 			*c = '\0';
-			if (stat(template_, &sbuf)) return 0;
-			if (!S_ISDIR(sbuf.st_mode)) { errno = ENOTDIR; return 0; }
+			if (!(ent = fsystemAccess(template_, 0, &r))) return 0;
+			if (!fsystemIsDir(ent)) { errno = ENOTDIR; return 0; }
 			*c = '/';
 			break;
 		}
 	}
+	printf("c: %s\n", template_);
 	while (true) {
 		if (fd) {
 			if ((*fd = open(template_, O_CREAT | O_EXCL | O_RDWR, 0600)) >= 0) return 1;
 			if (errno != EEXIST) return 0;
 		}
-		else if (stat(template_, &sbuf)) return errno == ENOENT ? 1 : 0;
+		else if (!fsystemAccess(template_, 0, &r)) return errno == ENOENT ? 1 : 0;
 		for (c = start;;) {
 			if (!*c) return 0;
 			if (*c == 'z') *c++ = 'a';
@@ -745,13 +748,13 @@ static __device__ int __maketemp(char *template_, register int *fd) {
 
 /* Generate a unique temporary file name from TEMPLATE. */
 __device__ char *mktemp_(char *template_) {
-	if (ISHOSTPATH(template_)) { stdlib_mktemp msg(template_); return msg.RC; }
+	if (!ISONLYDEVICEPATH(template_)) { stdlib_mktemp msg(template_); strcpy(template_, msg.RC); return msg.RC; }
 	return __maketemp(template_, nullptr) ? template_ : nullptr;
 }
 
 /* Generate a unique temporary file name from TEMPLATE. */
 __device__ int mkstemp_(char *template_) {
-	if (ISHOSTPATH(template_)) { stdlib_mkstemp msg(template_); return msg.RC; }
+	if (!ISONLYDEVICEPATH(template_)) { stdlib_mkstemp msg(template_); strcpy(template_, (const char *)msg.Ptr); return msg.RC; }
 	int fd; return __maketemp(template_, &fd) ? fd : -1;
 }
 

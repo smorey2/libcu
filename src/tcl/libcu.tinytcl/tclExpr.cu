@@ -95,7 +95,7 @@ __constant__ int _precTable[] = {
 };
 
 // Mapping from operator numbers to strings;  used for error messages.
-__constant__ char *_operatorStrings[] = {
+__constant__ const char *_operatorStrings[] = {
 	"VALUE", "(", ")", "END", "UNKNOWN", "5", "6", "7",
 	"*", "/", "%", "+", "-", "<<", ">>", "<", ">", "<=",
 	">=", "==", "!=", "&", "^", "|", "&&", "||", "?", ":",
@@ -108,7 +108,7 @@ static __device__ int ExprLex(Tcl_Interp *interp, ExprInfo *infoPtr, Value *valu
 static __device__ void ExprMakeString(Value *valuePtr);
 static __device__ int ExprParseString(Tcl_Interp *interp, char *string, Value *valuePtr);
 static __device__ int ExprTopLevel(Tcl_Interp *interp, char *string, Value *valuePtr);
-
+
 /*
 *--------------------------------------------------------------
 *
@@ -145,7 +145,8 @@ static __device__ int ExprParseString(Tcl_Interp *interp, char *string, Value *v
 				Tcl_ResetResult(interp);
 				if (valuePtr->doubleValue == 0.0) {
 					Tcl_AppendResult(interp, "floating-point value \"", string, "\" too small to represent", (char *)NULL);
-				} else {
+				}
+				else {
 					Tcl_AppendResult(interp, "floating-point value \"", string, "\" too large to represent", (char *)NULL);
 				}
 				return TCL_ERROR;
@@ -169,7 +170,7 @@ static __device__ int ExprParseString(Tcl_Interp *interp, char *string, Value *v
 	}
 	return TCL_OK;
 }
-
+
 /*
 *----------------------------------------------------------------------
 *
@@ -196,7 +197,7 @@ static __device__ int ExprLex(Tcl_Interp *interp, register ExprInfo *infoPtr, re
 		p++;
 		c = *p;
 	}
-	infoPtr->expr = p+1;
+	infoPtr->expr = p + 1;
 	char *var;
 	switch (c) {
 	case '0':
@@ -225,19 +226,21 @@ static __device__ int ExprLex(Tcl_Interp *interp, register ExprInfo *infoPtr, re
 			if (errno == ERANGE) {
 				Tcl_ResetResult(interp);
 				if (valuePtr->doubleValue == 0.0) {
-					interp->result = "floating-point value too small to represent";
-				} else {
-					interp->result = "floating-point value too large to represent";
+					interp->result = (char *)"floating-point value too small to represent";
+				}
+				else {
+					interp->result = (char *)"floating-point value too large to represent";
 				}
 				return TCL_ERROR;
 			}
 			if (term2 == infoPtr->expr) {
-				interp->result = "poorly-formed floating-point value";
+				interp->result = (char *)"poorly-formed floating-point value";
 				return TCL_ERROR;
 			}
 			valuePtr->type = TYPE_DOUBLE;
 			infoPtr->expr = term2;
-		} else {
+		}
+		else {
 			infoPtr->expr = term;
 		}
 		return TCL_OK;
@@ -256,7 +259,7 @@ static __device__ int ExprLex(Tcl_Interp *interp, register ExprInfo *infoPtr, re
 		return ExprParseString(interp, var, valuePtr);
 	case '[':
 		infoPtr->token = VALUE;
-		result = Tcl_Eval(interp, p+1, TCL_BRACKET_TERM, &infoPtr->expr);
+		result = Tcl_Eval(interp, p + 1, TCL_BRACKET_TERM, &infoPtr->expr);
 		if (result != TCL_OK) {
 			return result;
 		}
@@ -317,11 +320,11 @@ static __device__ int ExprLex(Tcl_Interp *interp, register ExprInfo *infoPtr, re
 	case '<':
 		switch (p[1]) {
 		case '<':
-			infoPtr->expr = p+2;
+			infoPtr->expr = p + 2;
 			infoPtr->token = LEFT_SHIFT;
 			break;
 		case '=':
-			infoPtr->expr = p+2;
+			infoPtr->expr = p + 2;
 			infoPtr->token = LEQ;
 			break;
 		default:
@@ -332,11 +335,11 @@ static __device__ int ExprLex(Tcl_Interp *interp, register ExprInfo *infoPtr, re
 	case '>':
 		switch (p[1]) {
 		case '>':
-			infoPtr->expr = p+2;
+			infoPtr->expr = p + 2;
 			infoPtr->token = RIGHT_SHIFT;
 			break;
 		case '=':
-			infoPtr->expr = p+2;
+			infoPtr->expr = p + 2;
 			infoPtr->token = GEQ;
 			break;
 		default:
@@ -346,25 +349,28 @@ static __device__ int ExprLex(Tcl_Interp *interp, register ExprInfo *infoPtr, re
 		return TCL_OK;
 	case '=':
 		if (p[1] == '=') {
-			infoPtr->expr = p+2;
+			infoPtr->expr = p + 2;
 			infoPtr->token = EQUAL;
-		} else {
+		}
+		else {
 			infoPtr->token = UNKNOWN;
 		}
 		return TCL_OK;
 	case '!':
 		if (p[1] == '=') {
-			infoPtr->expr = p+2;
+			infoPtr->expr = p + 2;
 			infoPtr->token = NEQ;
-		} else {
+		}
+		else {
 			infoPtr->token = NOT;
 		}
 		return TCL_OK;
 	case '&':
 		if (p[1] == '&') {
-			infoPtr->expr = p+2;
+			infoPtr->expr = p + 2;
 			infoPtr->token = AND;
-		} else {
+		}
+		else {
 			infoPtr->token = BIT_AND;
 		}
 		return TCL_OK;
@@ -373,9 +379,10 @@ static __device__ int ExprLex(Tcl_Interp *interp, register ExprInfo *infoPtr, re
 		return TCL_OK;
 	case '|':
 		if (p[1] == '|') {
-			infoPtr->expr = p+2;
+			infoPtr->expr = p + 2;
 			infoPtr->token = OR;
-		} else {
+		}
+		else {
 			infoPtr->token = BIT_OR;
 		}
 		return TCL_OK;
@@ -387,12 +394,12 @@ static __device__ int ExprLex(Tcl_Interp *interp, register ExprInfo *infoPtr, re
 		infoPtr->expr = p;
 		return TCL_OK;
 	default:
-		infoPtr->expr = p+1;
+		infoPtr->expr = p + 1;
 		infoPtr->token = UNKNOWN;
 		return TCL_OK;
 	}
 }
-
+
 /*
 *----------------------------------------------------------------------
 *
@@ -437,7 +444,8 @@ static __device__ int ExprGetValue(Tcl_Interp *interp, register ExprInfo *infoPt
 			result = TCL_ERROR;
 			goto done;
 		}
-	} else {
+	}
+	else {
 		if (infoPtr->token == MINUS) {
 			infoPtr->token = UNARY_MINUS;
 		}
@@ -452,25 +460,30 @@ static __device__ int ExprGetValue(Tcl_Interp *interp, register ExprInfo *infoPt
 			case UNARY_MINUS:
 				if (valuePtr->type == TYPE_INT) {
 					valuePtr->intValue = -valuePtr->intValue;
-				} else if (valuePtr->type == TYPE_DOUBLE){
+				}
+				else if (valuePtr->type == TYPE_DOUBLE) {
 					valuePtr->doubleValue = -valuePtr->doubleValue;
-				} else {
+				}
+				else {
 					badType = valuePtr->type;
 					goto illegalType;
-				} 
+				}
 				break;
 			case NOT:
 				if (valuePtr->type == TYPE_INT) {
 					valuePtr->intValue = !valuePtr->intValue;
-				} else if (valuePtr->type == TYPE_DOUBLE) {
+				}
+				else if (valuePtr->type == TYPE_DOUBLE) {
 					// Theoretically, should be able to use "!valuePtr->intValue", but apparently some compilers can't handle it.
 					if (valuePtr->doubleValue == 0.0) {
 						valuePtr->intValue = 1;
-					} else {
+					}
+					else {
 						valuePtr->intValue = 0;
 					}
 					valuePtr->type = TYPE_INT;
-				} else {
+				}
+				else {
 					badType = valuePtr->type;
 					goto illegalType;
 				}
@@ -478,14 +491,16 @@ static __device__ int ExprGetValue(Tcl_Interp *interp, register ExprInfo *infoPt
 			case BIT_NOT:
 				if (valuePtr->type == TYPE_INT) {
 					valuePtr->intValue = ~valuePtr->intValue;
-				} else {
+				}
+				else {
 					badType = valuePtr->type;
 					goto illegalType;
 				}
 				break;
 			}
 			gotOp = true;
-		} else if (infoPtr->token != VALUE) {
+		}
+		else if (infoPtr->token != VALUE) {
 			goto syntaxError;
 		}
 	}
@@ -504,7 +519,8 @@ static __device__ int ExprGetValue(Tcl_Interp *interp, register ExprInfo *infoPt
 			if (operator_ == END || operator_ == CLOSE_PAREN) {
 				result = TCL_OK;
 				goto done;
-			} else {
+			}
+			else {
 				goto syntaxError;
 			}
 		}
@@ -519,7 +535,8 @@ static __device__ int ExprGetValue(Tcl_Interp *interp, register ExprInfo *infoPt
 			if (valuePtr->type == TYPE_DOUBLE) {
 				valuePtr->intValue = (valuePtr->doubleValue != 0);
 				valuePtr->type = TYPE_INT;
-			} else if (valuePtr->type == TYPE_STRING) {
+			}
+			else if (valuePtr->type == TYPE_STRING) {
 				badType = TYPE_STRING;
 				goto illegalType;
 			}
@@ -527,7 +544,8 @@ static __device__ int ExprGetValue(Tcl_Interp *interp, register ExprInfo *infoPt
 				iPtr->noEval++;
 				result = ExprGetValue(interp, infoPtr, _precTable[operator_], &value2);
 				iPtr->noEval--;
-			} else if (operator_ == QUESTY) {
+			}
+			else if (operator_ == QUESTY) {
 				if (valuePtr->intValue != 0) {
 					valuePtr->pv.next = valuePtr->pv.buffer;
 					result = ExprGetValue(interp, infoPtr, _precTable[operator_], valuePtr);
@@ -541,7 +559,8 @@ static __device__ int ExprGetValue(Tcl_Interp *interp, register ExprInfo *infoPt
 					iPtr->noEval++;
 					result = ExprGetValue(interp, infoPtr, _precTable[operator_], &value2);
 					iPtr->noEval--;
-				} else {
+				}
+				else {
 					iPtr->noEval++;
 					result = ExprGetValue(interp, infoPtr, _precTable[operator_], &value2);
 					iPtr->noEval--;
@@ -554,10 +573,12 @@ static __device__ int ExprGetValue(Tcl_Interp *interp, register ExprInfo *infoPt
 					valuePtr->pv.next = valuePtr->pv.buffer;
 					result = ExprGetValue(interp, infoPtr, _precTable[operator_], valuePtr);
 				}
-			} else {
+			}
+			else {
 				result = ExprGetValue(interp, infoPtr, _precTable[operator_], &value2);
 			}
-		} else {
+		}
+		else {
 			result = ExprGetValue(interp, infoPtr, _precTable[operator_], &value2);
 		}
 		if (result != TCL_OK) {
@@ -574,15 +595,16 @@ static __device__ int ExprGetValue(Tcl_Interp *interp, register ExprInfo *infoPt
 		case MULT: case DIVIDE: case PLUS: case MINUS:
 			if ((valuePtr->type == TYPE_STRING)
 				|| (value2.type == TYPE_STRING)) {
-					badType = TYPE_STRING;
-					goto illegalType;
+				badType = TYPE_STRING;
+				goto illegalType;
 			}
 			if (valuePtr->type == TYPE_DOUBLE) {
 				if (value2.type == TYPE_INT) {
 					value2.doubleValue = value2.intValue;
 					value2.type = TYPE_DOUBLE;
 				}
-			} else if (value2.type == TYPE_DOUBLE) {
+			}
+			else if (value2.type == TYPE_DOUBLE) {
 				if (valuePtr->type == TYPE_INT) {
 					valuePtr->doubleValue = valuePtr->intValue;
 					valuePtr->type = TYPE_DOUBLE;
@@ -594,7 +616,8 @@ static __device__ int ExprGetValue(Tcl_Interp *interp, register ExprInfo *infoPt
 			if (valuePtr->type != TYPE_INT) {
 				badType = valuePtr->type;
 				goto illegalType;
-			} else if (value2.type != TYPE_INT) {
+			}
+			else if (value2.type != TYPE_INT) {
 				badType = value2.type;
 				goto illegalType;
 			}
@@ -605,16 +628,19 @@ static __device__ int ExprGetValue(Tcl_Interp *interp, register ExprInfo *infoPt
 				if (value2.type != TYPE_STRING) {
 					ExprMakeString(&value2);
 				}
-			} else if (value2.type == TYPE_STRING) {
+			}
+			else if (value2.type == TYPE_STRING) {
 				if (valuePtr->type != TYPE_STRING) {
 					ExprMakeString(valuePtr);
 				}
-			} else if (valuePtr->type == TYPE_DOUBLE) {
+			}
+			else if (valuePtr->type == TYPE_DOUBLE) {
 				if (value2.type == TYPE_INT) {
 					value2.doubleValue = value2.intValue;
 					value2.type = TYPE_DOUBLE;
 				}
-			} else if (value2.type == TYPE_DOUBLE) {
+			}
+			else if (value2.type == TYPE_DOUBLE) {
 				if (valuePtr->type == TYPE_INT) {
 					valuePtr->doubleValue = valuePtr->intValue;
 					valuePtr->type = TYPE_DOUBLE;
@@ -637,7 +663,7 @@ static __device__ int ExprGetValue(Tcl_Interp *interp, register ExprInfo *infoPt
 			break;
 			// Any other operator is an error.
 		default:
-			interp->result = "unknown operator in expression";
+			interp->result = (char *)"unknown operator in expression";
 			result = TCL_ERROR;
 			goto done;
 		}
@@ -648,20 +674,22 @@ static __device__ int ExprGetValue(Tcl_Interp *interp, register ExprInfo *infoPt
 		case MULT:
 			if (valuePtr->type == TYPE_INT) {
 				valuePtr->intValue *= value2.intValue;
-			} else {
+			}
+			else {
 				valuePtr->doubleValue *= value2.doubleValue;
 			}
 			break;
 		case DIVIDE:
 			if (valuePtr->type == TYPE_INT) {
 				if (value2.intValue == 0) {
-divideByZero:
-					interp->result = "divide by zero";
+				divideByZero:
+					interp->result = (char *)"divide by zero";
 					result = TCL_ERROR;
 					goto done;
 				}
 				valuePtr->intValue /= value2.intValue;
-			} else {
+			}
+			else {
 				if (value2.doubleValue == 0.0) {
 					goto divideByZero;
 				}
@@ -677,14 +705,16 @@ divideByZero:
 		case PLUS:
 			if (valuePtr->type == TYPE_INT) {
 				valuePtr->intValue += value2.intValue;
-			} else {
+			}
+			else {
 				valuePtr->doubleValue += value2.doubleValue;
 			}
 			break;
 		case MINUS:
 			if (valuePtr->type == TYPE_INT) {
 				valuePtr->intValue -= value2.intValue;
-			} else {
+			}
+			else {
 				valuePtr->doubleValue -= value2.doubleValue;
 			}
 			break;
@@ -695,16 +725,19 @@ divideByZero:
 			// The following code is a bit tricky:  it ensures that right shifts propagate the sign bit even on machines where ">>" won't do it by default.
 			if (valuePtr->intValue < 0) {
 				valuePtr->intValue = ~((~valuePtr->intValue) >> value2.intValue);
-			} else {
+			}
+			else {
 				valuePtr->intValue >>= value2.intValue;
 			}
 			break;
 		case LESS:
 			if (valuePtr->type == TYPE_INT) {
 				valuePtr->intValue = (valuePtr->intValue < value2.intValue);
-			} else if (valuePtr->type == TYPE_DOUBLE) {
+			}
+			else if (valuePtr->type == TYPE_DOUBLE) {
 				valuePtr->intValue = (valuePtr->doubleValue < value2.doubleValue);
-			} else {
+			}
+			else {
 				valuePtr->intValue = (strcmp(valuePtr->pv.buffer, value2.pv.buffer) < 0);
 			}
 			valuePtr->type = TYPE_INT;
@@ -712,9 +745,11 @@ divideByZero:
 		case GREATER:
 			if (valuePtr->type == TYPE_INT) {
 				valuePtr->intValue = (valuePtr->intValue > value2.intValue);
-			} else if (valuePtr->type == TYPE_DOUBLE) {
+			}
+			else if (valuePtr->type == TYPE_DOUBLE) {
 				valuePtr->intValue = (valuePtr->doubleValue > value2.doubleValue);
-			} else {
+			}
+			else {
 				valuePtr->intValue = (strcmp(valuePtr->pv.buffer, value2.pv.buffer) > 0);
 			}
 			valuePtr->type = TYPE_INT;
@@ -722,9 +757,11 @@ divideByZero:
 		case LEQ:
 			if (valuePtr->type == TYPE_INT) {
 				valuePtr->intValue = (valuePtr->intValue <= value2.intValue);
-			} else if (valuePtr->type == TYPE_DOUBLE) {
+			}
+			else if (valuePtr->type == TYPE_DOUBLE) {
 				valuePtr->intValue = (valuePtr->doubleValue <= value2.doubleValue);
-			} else {
+			}
+			else {
 				valuePtr->intValue = (strcmp(valuePtr->pv.buffer, value2.pv.buffer) <= 0);
 			}
 			valuePtr->type = TYPE_INT;
@@ -732,9 +769,11 @@ divideByZero:
 		case GEQ:
 			if (valuePtr->type == TYPE_INT) {
 				valuePtr->intValue = (valuePtr->intValue >= value2.intValue);
-			} else if (valuePtr->type == TYPE_DOUBLE) {
+			}
+			else if (valuePtr->type == TYPE_DOUBLE) {
 				valuePtr->intValue = (valuePtr->doubleValue >= value2.doubleValue);
-			} else {
+			}
+			else {
 				valuePtr->intValue = (strcmp(valuePtr->pv.buffer, value2.pv.buffer) >= 0);
 			}
 			valuePtr->type = TYPE_INT;
@@ -742,9 +781,11 @@ divideByZero:
 		case EQUAL:
 			if (valuePtr->type == TYPE_INT) {
 				valuePtr->intValue = (valuePtr->intValue == value2.intValue);
-			} else if (valuePtr->type == TYPE_DOUBLE) {
+			}
+			else if (valuePtr->type == TYPE_DOUBLE) {
 				valuePtr->intValue = (valuePtr->doubleValue == value2.doubleValue);
-			} else {
+			}
+			else {
 				valuePtr->intValue = (strcmp(valuePtr->pv.buffer, value2.pv.buffer) == 0);
 			}
 			valuePtr->type = TYPE_INT;
@@ -752,9 +793,11 @@ divideByZero:
 		case NEQ:
 			if (valuePtr->type == TYPE_INT) {
 				valuePtr->intValue = (valuePtr->intValue != value2.intValue);
-			} else if (valuePtr->type == TYPE_DOUBLE) {
+			}
+			else if (valuePtr->type == TYPE_DOUBLE) {
 				valuePtr->intValue = (valuePtr->doubleValue != value2.doubleValue);
-			} else {
+			}
+			else {
 				valuePtr->intValue = (strcmp(valuePtr->pv.buffer, value2.pv.buffer) != 0);
 			}
 			valuePtr->type = TYPE_INT;
@@ -785,7 +828,7 @@ divideByZero:
 			valuePtr->intValue = (valuePtr->intValue || value2.intValue);
 			break;
 		case COLON:
-			interp->result = "can't have : operator without ? first";
+			interp->result = (char *)"can't have : operator without ? first";
 			result = TCL_ERROR;
 			goto done;
 		}
@@ -808,7 +851,7 @@ illegalType:
 	result = TCL_ERROR;
 	goto done;
 }
-
+
 /*
 *--------------------------------------------------------------
 *
@@ -831,12 +874,13 @@ static __device__ void ExprMakeString(register Value *valuePtr)
 	}
 	if (valuePtr->type == TYPE_INT) {
 		sprintf(valuePtr->pv.buffer, "%ld", valuePtr->intValue);
-	} else if (valuePtr->type == TYPE_DOUBLE) {
+	}
+	else if (valuePtr->type == TYPE_DOUBLE) {
 		sprintf(valuePtr->pv.buffer, "%g", valuePtr->doubleValue);
 	}
 	valuePtr->type = TYPE_STRING;
 }
-
+
 /*
 *--------------------------------------------------------------
 *
@@ -874,7 +918,7 @@ static __device__ int ExprTopLevel(Tcl_Interp *interp, char *string, Value *valu
 	}
 	return TCL_OK;
 }
-
+
 /*
 *--------------------------------------------------------------
 *
@@ -898,10 +942,12 @@ __device__ int Tcl_ExprLong(Tcl_Interp *interp, char *string, long *ptr)
 	if (result == TCL_OK) {
 		if (value.type == TYPE_INT) {
 			*ptr = value.intValue;
-		} else if (value.type == TYPE_DOUBLE) {
+		}
+		else if (value.type == TYPE_DOUBLE) {
 			*ptr = (long)value.doubleValue;
-		} else {
-			interp->result = "expression didn't have numeric value";
+		}
+		else {
+			interp->result = (char *)"expression didn't have numeric value";
 			result = TCL_ERROR;
 		}
 	}
@@ -918,10 +964,12 @@ __device__ int Tcl_ExprDouble(Tcl_Interp *interp, char *string, double *ptr)
 	if (result == TCL_OK) {
 		if (value.type == TYPE_INT) {
 			*ptr = value.intValue;
-		} else if (value.type == TYPE_DOUBLE) {
+		}
+		else if (value.type == TYPE_DOUBLE) {
 			*ptr = value.doubleValue;
-		} else {
-			interp->result = "expression didn't have numeric value";
+		}
+		else {
+			interp->result = (char *)"expression didn't have numeric value";
 			result = TCL_ERROR;
 		}
 	}
@@ -938,10 +986,12 @@ __device__ int Tcl_ExprBoolean(Tcl_Interp *interp, char *string, int *ptr)
 	if (result == TCL_OK) {
 		if (value.type == TYPE_INT) {
 			*ptr = (value.intValue != 0);
-		} else if (value.type == TYPE_DOUBLE) {
+		}
+		else if (value.type == TYPE_DOUBLE) {
 			*ptr = (value.doubleValue != 0.0);
-		} else {
-			interp->result = "expression didn't have numeric value";
+		}
+		else {
+			interp->result = (char *)"expression didn't have numeric value";
 			result = TCL_ERROR;
 		}
 	}
@@ -950,7 +1000,7 @@ __device__ int Tcl_ExprBoolean(Tcl_Interp *interp, char *string, int *ptr)
 	}
 	return result;
 }
-
+
 /*
 *--------------------------------------------------------------
 *
@@ -973,14 +1023,17 @@ __device__ int Tcl_ExprString(Tcl_Interp *interp, char *string)
 	if (result == TCL_OK) {
 		if (value.type == TYPE_INT) {
 			sprintf(interp->result, "%ld", value.intValue);
-		} else if (value.type == TYPE_DOUBLE) {
+		}
+		else if (value.type == TYPE_DOUBLE) {
 			sprintf(interp->result, "%g", value.doubleValue);
-		} else {
+		}
+		else {
 			if (value.pv.buffer != value.staticSpace) {
 				interp->result = value.pv.buffer;
 				interp->freeProc = (Tcl_FreeProc *)free;
 				value.pv.buffer = value.staticSpace;
-			} else {
+			}
+			else {
 				Tcl_SetResult(interp, value.pv.buffer, TCL_VOLATILE);
 			}
 		}

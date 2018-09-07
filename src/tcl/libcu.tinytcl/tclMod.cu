@@ -47,11 +47,11 @@ static __device__ int check_match_command(Tcl_Interp *interp, const tclmod_comma
 {
 	if (!strcmp(ct->cmd, args[1])) {
 		if (argc == 3 && !strcmp(args[2], "?")) {
-			Tcl_AppendResult (interp, "Usage: ", args[0], " ", ct->cmd, " ", ct->args, "\n\n", ct->description, (char *)NULL);
+			Tcl_AppendResult(interp, "Usage: ", args[0], " ", ct->cmd, " ", ct->args, "\n\n", ct->description, (char *)NULL);
 			return -1;
 		}
 		if (argc < ct->minargs + 2 || (ct->maxargs >= 0 && argc > ct->maxargs + 2)) {
-			Tcl_AppendResult (interp, "wrong # args: should be \"", args[0], " ", ct->cmd, " ", ct->args, "\"", (char *)NULL);
+			Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " ", ct->cmd, " ", ct->args, "\"", (char *)NULL);
 			return -1;
 		}
 		return 1;

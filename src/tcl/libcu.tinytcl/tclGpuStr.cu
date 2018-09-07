@@ -1,6 +1,6 @@
 #include "tclInt.h"
 #include "tclGpu.h"
-
+
 /*
 *----------------------------------------------------------------------
 *
@@ -20,12 +20,12 @@ __device__ char *Tcl_ErrnoId()
 {
 	switch (errno) {
 #ifdef ERANGE
-	case ERANGE: return "ERANGE";
+	case ERANGE: return (char *)"ERANGE";
 #endif
 	}
-	return "unknown error";
+	return (char *)"unknown error";
 }
-
+
 /*
 *----------------------------------------------------------------------
 *
@@ -43,9 +43,9 @@ __device__ char *Tcl_ErrnoId()
 */
 __device__ char *Tcl_SignalId(int sig)
 {
-	return "unknown signal";
+	return (char *)"unknown signal";
 }
-
+
 /*
 *----------------------------------------------------------------------
 *
@@ -62,5 +62,5 @@ __device__ char *Tcl_SignalId(int sig)
 */
 __device__ char *Tcl_SignalMsg(int sig)
 {
-	return "unknown signal";
+	return (char *)"unknown signal";
 }

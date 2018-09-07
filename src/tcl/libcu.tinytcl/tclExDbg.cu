@@ -48,13 +48,14 @@ static __device__ void PrintStr(FILE *filePtr, char *string, int numChars)
 		if (string[idx] == '\n') {
 			fputc('\\', filePtr);
 			fputc('n', filePtr);
-		} else
+		}
+		else
 			fputc(string[idx], filePtr);
 	}
 	if (numChars < strlen(string))
 		fprintf_(filePtr, "...");
 }
-
+
 /*
 *-----------------------------------------------------------------------------
 *
@@ -75,19 +76,19 @@ static __device__ void PrintArg(FILE *filePtr, char *argStr, int noTruncate)
 			quote_it = TRUE;
 			break;
 		}
-		if (quote_it) 
-			fputc('{', filePtr);
-		PrintStr(filePtr, argStr, printLen);
-		if (quote_it) 
-			fputc('}', filePtr);
+	if (quote_it)
+		fputc('{', filePtr);
+	PrintStr(filePtr, argStr, printLen);
+	if (quote_it)
+		fputc('}', filePtr);
 }
-
+
 /*
 *-----------------------------------------------------------------------------
 *
 * TraceCode --
 *    Print out a trace of a code line.  Level is used for indenting and marking lines and may be eval or procedure level.
-* 
+*
 *-----------------------------------------------------------------------------
 */
 static __device__ void TraceCode(traceInfo_pt traceInfoPtr, int level, char *command, int argc, const char *args[])
@@ -98,21 +99,22 @@ static __device__ void TraceCode(traceInfo_pt traceInfoPtr, int level, char *com
 	gettimeofday(&this_time, 0);
 	fprintf_(traceInfoPtr->filePtr, "%2d:", level);
 	if (last_time.tv_sec != 0) {
-		fprintf_(traceInfoPtr->filePtr, " (%luus)", (this_time.tv_sec - last_time.tv_sec)*1000000 + (this_time.tv_usec - last_time.tv_usec));
+		fprintf_(traceInfoPtr->filePtr, " (%luus)", (this_time.tv_sec - last_time.tv_sec) * 1000000 + (this_time.tv_usec - last_time.tv_usec));
 	}
 	last_time = this_time;
 #endif
 	if (level > 20)
 		level = 20;
 	int idx;
-	for (idx = 0; idx < level; idx++) 
+	for (idx = 0; idx < level; idx++)
 		fprintf_(traceInfoPtr->filePtr, "  ");
 	if (traceInfoPtr->noEval) {
 		int printLen = strlen(command);
 		if (!traceInfoPtr->noTruncate && printLen > CMD_TRUNCATE_SIZE)
 			printLen = CMD_TRUNCATE_SIZE;
 		PrintStr(traceInfoPtr->filePtr, command, printLen);
-	} else {
+	}
+	else {
 		for (idx = 0; idx < argc; idx++) {
 			if (idx > 0)
 				fputc(' ', traceInfoPtr->filePtr);
@@ -123,7 +125,7 @@ static __device__ void TraceCode(traceInfo_pt traceInfoPtr, int level, char *com
 	if (traceInfoPtr->flush)
 		fflush(traceInfoPtr->filePtr);
 }
-
+
 /*
 *-----------------------------------------------------------------------------
 *
@@ -138,14 +140,15 @@ __device__  static void CmdTraceRoutine(ClientData clientData, Tcl_Interp *inter
 	traceInfo_pt traceInfoPtr = (traceInfo_pt)clientData;
 	if (!traceInfoPtr->procCalls) {
 		TraceCode(traceInfoPtr, level, command, argc, args);
-	} else {
+	}
+	else {
 		if (TclFindProc(iPtr, (char *)args[0]) != NULL) {
 			int procLevel = (iPtr->varFramePtr == NULL ? 0 : iPtr->varFramePtr->level);
 			TraceCode(traceInfoPtr, procLevel, command, argc, args);
 		}
 	}
 }
-
+
 /*
 *-----------------------------------------------------------------------------
 *
@@ -191,12 +194,12 @@ static __device__ int Tcl_CmdtraceCmd(ClientData clientData, Tcl_Interp *interp,
 		return TCL_OK;
 	}
 
-	infoPtr->noEval     = FALSE;
+	infoPtr->noEval = FALSE;
 	infoPtr->noTruncate = FALSE;
-	infoPtr->procCalls  = FALSE;
-	infoPtr->flush      = FALSE;
-	infoPtr->filePtr    = stdout;
-	fileHandle          = NULL;
+	infoPtr->procCalls = FALSE;
+	infoPtr->flush = FALSE;
+	infoPtr->filePtr = stdout;
+	fileHandle = NULL;
 
 	for (idx = 2; idx < argc; idx++) {
 		if (STREQU(args[idx], "notruncate")) {
@@ -234,7 +237,8 @@ static __device__ int Tcl_CmdtraceCmd(ClientData clientData, Tcl_Interp *interp,
 
 	if (STREQU(args[1], "on")) {
 		infoPtr->depth = MAXINT;
-	} else {
+	}
+	else {
 		if (Tcl_GetInt(interp, args[1], &(infoPtr->depth)) != TCL_OK)
 			return TCL_ERROR;
 	}
@@ -253,14 +257,14 @@ static __device__ int Tcl_CmdtraceCmd(ClientData clientData, Tcl_Interp *interp,
 	return TCL_OK;
 
 argumentError:
-	Tcl_AppendResult (interp, "wrong # args: ", args[0], " level | on [noeval] [notruncate] [flush] [procs]", "[handle] | off | depth", (char *)NULL);
+	Tcl_AppendResult(interp, "wrong # args: ", args[0], " level | on [noeval] [notruncate] [flush] [procs]", "[handle] | off | depth", (char *)NULL);
 	return TCL_ERROR;
 
 invalidOption:
-	Tcl_AppendResult (interp, "invalid option: expected ", "one of \"noeval\", \"notruncate\", \"procs\", ", "\"flush\" or a file handle", (char *)NULL);
+	Tcl_AppendResult(interp, "invalid option: expected ", "one of \"noeval\", \"notruncate\", \"procs\", ", "\"flush\" or a file handle", (char *)NULL);
 	return TCL_ERROR;
 }
-
+
 /*
 *-----------------------------------------------------------------------------
 *
@@ -277,7 +281,7 @@ static __device__ void CleanUpDebug(ClientData clientData)
 		Tcl_DeleteTrace(infoPtr->interp, infoPtr->traceHolder);
 	_freeFast((char *)infoPtr);
 }
-
+
 /*
 *-----------------------------------------------------------------------------
 *
@@ -291,12 +295,12 @@ __device__ void TclEx_InitDebug(Tcl_Interp *interp)
 {
 	traceInfo_pt infoPtr;
 	infoPtr = (traceInfo_pt)_allocFast(sizeof(traceInfo_t));
-	infoPtr->interp      = interp;
+	infoPtr->interp = interp;
 	infoPtr->traceHolder = NULL;
-	infoPtr->noEval      = FALSE;
-	infoPtr->noTruncate  = FALSE;
-	infoPtr->procCalls   = FALSE;
-	infoPtr->flush       = FALSE;
-	infoPtr->depth       = 0;
+	infoPtr->noEval = FALSE;
+	infoPtr->noTruncate = FALSE;
+	infoPtr->procCalls = FALSE;
+	infoPtr->flush = FALSE;
+	infoPtr->depth = 0;
 	Tcl_CreateCommand(interp, "cmdtrace", Tcl_CmdtraceCmd, (ClientData)infoPtr, CleanUpDebug);
 }

@@ -88,7 +88,7 @@ __device__ int rename_(const char *old, const char *new_) {
 #ifndef __USE_FILE_OFFSET64
 #define TEMP_DIR ":\\_temp\\"
 #define TEMP_DIRLENGTH sizeof(TEMP_DIR)-1
-__device__ FILE *tmpfile_(void) {
+__device__ FILE *tmpfile_() {
 	char newPath[50] = TEMP_DIR;
 	dirEnt_t *ent = fsystemOpendir(newPath);
 	int r; if (!ent) fsystemMkdir(newPath, 0666, &r);

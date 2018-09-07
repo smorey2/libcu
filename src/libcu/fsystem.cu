@@ -65,6 +65,7 @@ __device__ dirEnt_t __iob_root = {
 };
 __device__ hash_t __iob_dir = HASHINIT;
 
+
 __device__ int expandPath(const char *path, char *newPath) {
 	register unsigned char *d = (unsigned char *)newPath;
 	register unsigned char *s;
@@ -109,7 +110,7 @@ static __device__ dirEnt_t *createEnt(dirEnt_t *parentEnt, const char *path, con
 }
 
 static __device__ void freeEnt(dirEnt_t *ent) {
-	if (ent->dir.d_type == 1) {
+	if (ent->dir.d_type == DIRTYPE_DIR) {
 		dirEnt_t *p = ent->u.list;
 		while (p) {
 			dirEnt_t *next = p->next;
@@ -117,7 +118,7 @@ static __device__ void freeEnt(dirEnt_t *ent) {
 			p = next;
 		}
 	}
-	else if (ent->dir.d_type == 2)
+	else if (ent->dir.d_type == DIRTYPE_FILE)
 		memfileClose(ent->u.file);
 	if (ent != &__iob_root) {
 		hashInsert(&__iob_dir, ent->path, nullptr);
@@ -158,7 +159,7 @@ __device__ int fsystemChdir(const char *path) {
 __device__ dirEnt_t *fsystemOpendir(const char *path) {
 	char newPath[MAX_PATH]; expandPath(path, newPath);
 	dirEnt_t *ent = findDir(newPath);
-	if (!ent || ent->dir.d_type != 1) {
+	if (!ent || ent->dir.d_type != DIRTYPE_DIR) {
 		_set_errno(!ent ? ENOENT : ENOTDIR);
 		return nullptr;
 	}
@@ -214,13 +215,13 @@ __device__ int fsystemUnlink(const char *path, bool enotdir) {
 	}
 
 	// error if not directory
-	if (enotdir && ent->dir.d_type != 1) {
+	if (enotdir && ent->dir.d_type != DIRTYPE_DIR) {
 		_set_errno(ENOTDIR);
 		return -1;
 	}
 
 	// directory not empty
-	if (ent->dir.d_type == 1 && ent->u.list) {
+	if (ent->dir.d_type == DIRTYPE_DIR && ent->u.list) {
 		_set_errno(ENOENT);
 		return -1;
 	}
@@ -257,7 +258,7 @@ __device__ dirEnt_t *fsystemMkdir(const char *__restrict path, int mode, int *r)
 		return nullptr;
 	}
 	// create directory
-	dirEnt = createEnt(parentEnt, newPath, name, 1, 0);
+	dirEnt = createEnt(parentEnt, newPath, name, DIRTYPE_DIR, 0);
 	*r = 0;
 	return dirEnt;
 }
@@ -302,7 +303,7 @@ __device__ dirEnt_t *fsystemOpen(const char *__restrict path, int mode, int *fd)
 		return nullptr;
 	}
 	// create file
-	fileEnt = createEnt(parentEnt, newPath, name, 2, memfileSize(nullptr));
+	fileEnt = createEnt(parentEnt, newPath, name, DIRTYPE_FILE, memfileSize(nullptr));
 	fileEnt->u.file = (vsysfile *)((char *)fileEnt + ROUND64_(sizeof(dirEnt_t)));
 	memfileMemOpen(fileEnt->u.file);
 	// set to file

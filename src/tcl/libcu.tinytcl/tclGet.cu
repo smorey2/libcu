@@ -10,7 +10,7 @@
 // express or implied warranty.
 
 #include "tclInt.h"
-
+
 __device__ int Tcl_GetIndex(Tcl_Interp *interp, const char *string, const char *table[], char *msg, int flags, int *indexPtr, bool insensitive)
 {
 	panic("Not Implemented");
@@ -82,7 +82,7 @@ __device__ int Tcl_GetWideInt(Tcl_Interp *interp, const char *string, int64_t *i
 	*intPtr = i;
 	return TCL_OK;
 }
-
+
 /*
 *----------------------------------------------------------------------
 *
@@ -112,7 +112,7 @@ __device__ int Tcl_GetDouble(Tcl_Interp *interp, const char *string, double *dou
 	*doublePtr = d;
 	return TCL_OK;
 }
-
+
 /*
 *----------------------------------------------------------------------
 *
@@ -148,23 +148,31 @@ __device__ int Tcl_GetBoolean(Tcl_Interp *interp, const char *string, bool *bool
 	c = lowerCase[0];
 	if (c == '0' && lowerCase[1] == '\0') {
 		*boolPtr = false;
-	} else if (c == '1' && lowerCase[1] == '\0') {
+	}
+	else if (c == '1' && lowerCase[1] == '\0') {
 		*boolPtr = true;
-	} else if (c == 'y' && !strncmp(lowerCase, "yes", length)) {
+	}
+	else if (c == 'y' && !strncmp(lowerCase, "yes", length)) {
 		*boolPtr = true;
-	} else if (c == 'n' && !strncmp(lowerCase, "no", length)) {
+	}
+	else if (c == 'n' && !strncmp(lowerCase, "no", length)) {
 		*boolPtr = false;
-	} else if (c == 't' && !strncmp(lowerCase, "true", length)) {
+	}
+	else if (c == 't' && !strncmp(lowerCase, "true", length)) {
 		*boolPtr = true;
-	} else if (c == 'f' && !strncmp(lowerCase, "false", length)) {
+	}
+	else if (c == 'f' && !strncmp(lowerCase, "false", length)) {
 		*boolPtr = false;
-	} else if (c == 'o' && length >= 2) {
+	}
+	else if (c == 'o' && length >= 2) {
 		if (!strncmp(lowerCase, "on", length)) {
 			*boolPtr = true;
-		} else if (!strncmp(lowerCase, "off", length)) {
+		}
+		else if (!strncmp(lowerCase, "off", length)) {
 			*boolPtr = false;
 		}
-	} else {
+	}
+	else {
 		Tcl_AppendResult(interp, "expected boolean value but got \"", string, "\"", (char *)NULL);
 		return TCL_ERROR;
 	}

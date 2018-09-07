@@ -86,15 +86,15 @@ static void MainInit(int argc, char *const argv[]) {
 
 		// Before we eval the file, create an args global containing the remaining arguments
 		char *args = Tcl_Merge(argc - 2, (const char **)argv + 2);
-		Tcl_SetVar(interp, "argv", args, TCLGLOBAL__ONLY);
+		Tcl_SetVar(interp, (char *)"argv", args, TCLGLOBAL__ONLY);
 		_freeFast(args);
 
 		result = Tcl_EvalFile(interp, filename);
 		if (result != TCL_OK)
 		{
 			// And make sure we print an informative error if something goes wrong
-			Tcl_AddErrorInfo(interp, "");
-			printf("%s\n", Tcl_GetVar(interp, "errorInfo", TCL_LEAVE_ERR_MSG));
+			Tcl_AddErrorInfo(interp, (char *)"");
+			printf("%s\n", Tcl_GetVar(interp, (char *)"errorInfo", TCL_LEAVE_ERR_MSG));
 			exit(1);
 		}
 		exit(0);

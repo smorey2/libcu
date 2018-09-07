@@ -19,7 +19,7 @@ typedef struct {
 
 // Default amount of space to allocate in command buffer:
 #define CMD_BUF_SIZE 100
-
+
 /*
 *----------------------------------------------------------------------
 *
@@ -44,7 +44,7 @@ __device__ Tcl_CmdBuf Tcl_CreateCmdBuf()
 	cbPtr->bytesUsed = 0;
 	return (Tcl_CmdBuf)cbPtr;
 }
-
+
 /*
 *----------------------------------------------------------------------
 *
@@ -65,7 +65,7 @@ __device__ void Tcl_DeleteCmdBuf(Tcl_CmdBuf buffer)
 	_freeFast(cbPtr->buffer);
 	_freeFast((char *)cbPtr);
 }
-
+
 /*
 *----------------------------------------------------------------------
 *
@@ -100,7 +100,7 @@ __device__ char *Tcl_AssembleCmd(Tcl_CmdBuf buffer, char *string)
 	length = strlen(string);
 	int totalLength = cbPtr->bytesUsed + length + 1;
 	if (totalLength > cbPtr->bufSize) {
-		int newSize = cbPtr->bufSize*2;
+		int newSize = cbPtr->bufSize * 2;
 		if (newSize < totalLength) {
 			newSize = totalLength;
 		}
@@ -110,11 +110,11 @@ __device__ char *Tcl_AssembleCmd(Tcl_CmdBuf buffer, char *string)
 		cbPtr->buffer = newBuf;
 		cbPtr->bufSize = newSize;
 	}
-	strcpy(cbPtr->buffer+cbPtr->bytesUsed, string);
+	strcpy(cbPtr->buffer + cbPtr->bytesUsed, string);
 	cbPtr->bytesUsed += length;
 
 	// See if there is now a complete command in the buffer.
-	int c = cbPtr->buffer[cbPtr->bytesUsed-1];
+	int c = cbPtr->buffer[cbPtr->bytesUsed - 1];
 	if (c != '\n' && c != ';') {
 		return NULL;
 	}
@@ -124,7 +124,7 @@ __device__ char *Tcl_AssembleCmd(Tcl_CmdBuf buffer, char *string)
 	}
 	return NULL;
 }
-
+
 /*
 *----------------------------------------------------------------------
 *

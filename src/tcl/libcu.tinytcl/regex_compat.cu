@@ -21,7 +21,7 @@ int compat_regcomp(regex_t *preg, const char *regex, int cflags)
 	return(preg->preg == 0);
 }
 
-int compat_regexec(const  regex_t  *preg,  const  char *string, size_t nmatch, regmatch_t pmatch[], int eflags)
+int compat_regexec(const  regex_t  *preg, const  char *string, size_t nmatch, regmatch_t pmatch[], int eflags)
 {
 	if (regexec(preg->preg, (char *)string) == 1) {
 		int i;
@@ -45,7 +45,7 @@ int compat_regexec(const  regex_t  *preg,  const  char *string, size_t nmatch, r
 	return(1);
 }
 
-size_t compat_regerror(int errcode, const regex_t *preg, char *errbuf,  size_t errbuf_size)
+size_t compat_regerror(int errcode, const regex_t *preg, char *errbuf, size_t errbuf_size)
 {
 	return snprintf(errbuf, errbuf_size, "regex_compat() error %d", errcode);
 }

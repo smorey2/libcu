@@ -11,6 +11,11 @@
 
 __BEGIN_DECLS;
 
+enum {
+	DIRTYPE_DIR = 1,
+	DIRTYPE_FILE = 2,
+};
+
 struct dirEnt_t {
 	dirent dir;		// Entry information
 	dirEnt_t *next;	// Next entity in the directory.
@@ -37,6 +42,7 @@ __device__ dirEnt_t *fsystemOpen(const char *__restrict path, int mode, int *fd)
 __device__ void fsystemClose(int fd);
 __device__ void fsystemReset();
 __device__ void fsystemSetFlag(int fd, int flag);
+#define fsystemIsDir(ent) (ent->dir.d_type == DIRTYPE_DIR)
 
 /* File support  */
 extern __device__ dirEnt_t __iob_root;

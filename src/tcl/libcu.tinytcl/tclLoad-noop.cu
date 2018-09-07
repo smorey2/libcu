@@ -17,7 +17,7 @@
 *	Dynamically loads a binary code file into memory and returns a handle to the new code.
 *
 * Results:
-*	A standard Tcl completion code.  If an error occurs, an error message is left in the interp's result. 
+*	A standard Tcl completion code.  If an error occurs, an error message is left in the interp's result.
 *
 * Side effects:
 *	New code suddenly appears in memory.
@@ -30,7 +30,7 @@ __device__ int TclpDlopen(Tcl_Interp *interp, char *pathPtr, Tcl_LoadHandle *loa
 	*loadHandle = NULL;
 	return TCL_OK;
 }
-
+
 /*
 *----------------------------------------------------------------------
 *
@@ -46,7 +46,7 @@ __device__ Tcl_PackageInitProc *TclpFindSymbol(Tcl_Interp *interp, Tcl_LoadHandl
 {
 	return NULL;
 }
-
+
 /*
 *----------------------------------------------------------------------
 *
