@@ -40,17 +40,18 @@ __device__ void TclSetupEnv(Tcl_Interp *interp)
 
 	// Store the environment variable values into the interpreter's "env" array, and arrange for us to be notified on future writes and unsets to that array.
 	Tcl_UnsetVar2(interp, (char *)"env", (char *)NULL, TCLGLOBAL__ONLY);
-	for (int i = 0; ; i++) {
-		char *p = __environ[i];
-		if (!p || !*p) {
-			break;
+	if (__environ)
+		for (int i = 0; ; i++) {
+			char *p = __environ[i];
+			if (!p || !*p) {
+				break;
+			}
+			char *p2;
+			for (p2 = p; *p2 != '='; p2++) {}
+			*p2 = 0;
+			Tcl_SetVar2(interp, (char *)"env", p, p2 + 1, TCLGLOBAL__ONLY);
+			*p2 = '=';
 		}
-		char *p2;
-		for (p2 = p; *p2 != '='; p2++) {}
-		*p2 = 0;
-		Tcl_SetVar2(interp, (char *)"env", p, p2 + 1, TCLGLOBAL__ONLY);
-		*p2 = '=';
-	}
 	Tcl_TraceVar2(interp, (char *)"env", (char *)NULL, TCLGLOBAL__ONLY | TCL_TRACE_WRITES | TCL_TRACE_UNSETS, EnvTraceProc, (ClientData)NULL);
 }
 
