@@ -78,8 +78,12 @@ static __global__ void g_stdlib_test1() {
 	//// MKTEMP, MKSTEMP ////
 	//extern __device__ char *mktemp_(char *template_);
 	//extern __device__ int mkstemp_(char *template_);
-	char *g0a = mktemp("Test"); assert(g0a);
-	int g1a = mkstemp("Test"); assert(g1a);
+	/* Host */
+	char *g0a = mktemp("TestXXXXXX"); assert(g0a);
+	int g1a = mkstemp("TestXXXXXX"); assert(g1a);
+	/* Device */
+	char *g2a = mktemp(":\\TestXXXXXX"); assert(g0a);
+	int g3a = mkstemp(":\\TestXXXXXX"); assert(g1a);
 
 	//// SYSTEM ////
 	//extern __device__ int system_(const char *command); #sentinel

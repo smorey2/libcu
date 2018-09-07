@@ -1596,19 +1596,19 @@ __host_device__ void strbldAppendFormatv(strbld_t *b, const char *fmt, va_list v
 ** Return the number of bytes of text that StrAccum is able to accept after the attempted enlargement.  The value returned might be zero.
 */
 static __host_device__ int strbldEnlarge(strbld_t *b, int n) {
-	assert(b->index + (int64_t)n >= b->size); // Only called if really needed
+	assert(b->index + (size_t)n >= b->size); // Only called if really needed
 	if (b->error) {
 		TESTCASE_(b->error == STRACCUM_TOOBIG);
 		TESTCASE_(b->error == STRACCUM_NOMEM);
 		return 0;
 	}
 	if (!b->maxSize) {
-		n = b->size - b->index - 1;
+		n = (int)(b->size - b->index - 1);
 		strbldSetError(b, STRACCUM_TOOBIG);
 		return n;
 	}
 	char *oldText = PRINTF_ISMALLOCED(b) ? b->text : nullptr;
-	int64_t sizeNew = b->index;
+	size_t sizeNew = b->index;
 	assert((!b->text || b->text == b->base) == !PRINTF_ISMALLOCED(b));
 	sizeNew += n + 1;
 	if (sizeNew + b->index <= b->maxSize)
@@ -1637,8 +1637,8 @@ static __host_device__ int strbldEnlarge(strbld_t *b, int n) {
 
 /* Append N copies of character c to the given string buffer. */
 __host_device__ void strbldAppendChar(strbld_t *b, int n, int c) {
-	TESTCASE_(b->size + (int64_t)n > 0x7fffffff);
-	if (b->index + (int64_t)n >= b->size && (n = strbldEnlarge(b, n)) <= 0)
+	TESTCASE_(b->size + (size_t)n > 0x7fffffff);
+	if (b->index + (size_t)n >= b->size && (n = strbldEnlarge(b, n)) <= 0)
 		return;
 	assert((b->text == b->base) == !PRINTF_ISMALLOCED(b));
 	while (n-- > 0) b->text[b->index++] = c;

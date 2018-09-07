@@ -5,11 +5,11 @@
 #include <time.h>
 #include <sys/statcu.h>
 #include <math.h>
+#include <fcntl.h>
 #if __OS_WIN
 #include <io.h>
 #elif __OS_UNIX
 #include <unistd.h>
-#include <fcntl.h>
 #endif
 #include <sentinel-direntmsg.h>
 #include <sentinel-fcntlmsg.h>
@@ -32,9 +32,17 @@ int setenv(const char *name, const char *value, int overwrite) {
 	}
 	return _putenv_s(name, value);
 }
-
 #define fileno _fileno
-#define unsetenv(a) _putenv_s(a, nullptr)
+int unsetenv(const char *name) {
+	size_t nameLength = strlen(name);
+	char *remove = (char *)alloca(nameLength + 2);
+	memcpy(remove, name, nameLength);
+	remove[nameLength] = '=';
+	remove[nameLength + 1] = 0;
+	return _putenv(remove);
+}
+#define mktemp _mktemp
+#define mkstemp(p) _open(_mktemp(p), O_CREAT | O_EXCL | O_RDWR)
 #define access _access
 #define lseek _lseek
 #define close _close
@@ -42,7 +50,7 @@ int setenv(const char *name, const char *value, int overwrite) {
 #define write _write
 #define chown(a, b, c) 0
 #define chdir _chdir
-#define getcwd _getcwd
+#define getcwd _getcwd	
 #define dup _dup
 #define dup2 _dup2
 #define unlink _unlink
@@ -102,6 +110,8 @@ bool sentinelDefaultExecutor(void *tag, sentinelMessage *data, int length, char 
 	case STDLIB_GETENV: { stdlib_getenv *msg = (stdlib_getenv *)data; msg->RC = getenv(msg->Str); return true; }
 	case STDLIB_SETENV: { stdlib_setenv *msg = (stdlib_setenv *)data; msg->RC = setenv(msg->Str, msg->Str2, msg->Replace); return true; }
 	case STDLIB_UNSETENV: { stdlib_unsetenv *msg = (stdlib_unsetenv *)data; msg->RC = unsetenv(msg->Str); return true; }
+	case STDLIB_MKTEMP: { stdlib_mktemp *msg = (stdlib_mktemp *)data; msg->RC = mktemp(msg->Str); return true; }
+	case STDLIB_MKSTEMP: { stdlib_mkstemp *msg = (stdlib_mkstemp *)data; msg->RC = mkstemp(msg->Str); return true; }
 	case UNISTD_ACCESS: { unistd_access *msg = (unistd_access *)data; msg->RC = access(msg->Name, msg->Type); return true; }
 	case UNISTD_LSEEK: { unistd_lseek *msg = (unistd_lseek *)data;
 		if (!msg->Bit64) msg->RC = lseek(msg->Handle, (long)msg->Offset, msg->Whence);

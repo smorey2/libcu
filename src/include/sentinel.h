@@ -26,18 +26,17 @@ THE SOFTWARE.
 #pragma once
 #ifndef _SENTINEL_H
 #define _SENTINEL_H
+#include <crtdefscu.h>
+#include <host_defines.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef HAS_DEVICESENTINEL
 #define HAS_DEVICESENTINEL 1
 #endif
 #ifndef HAS_HOSTSENTINEL
 #define HAS_HOSTSENTINEL 1
-#endif
-
-#include <crtdefscu.h>
-#include <host_defines.h>
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 #define SENTINEL_NAME "Sentinel" //"Global\\Sentinel"

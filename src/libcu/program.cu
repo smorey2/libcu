@@ -4,6 +4,8 @@
 #include <stdiocu.h>
 #include <stringcu.h>
 #include <assert.h>
+//
+#include <unistdcu.h>
 
 static __global__ void g_testbed();
 static __global__ void g_memmove_speed();
@@ -87,14 +89,20 @@ static __constant__ const char *_quickbrownfox =
 static __device__ char _buf1[50];
 
 static __global__ void g_testbed() {
-
-	char *f0a = getenv("Test");
-	assert(!f0a);
-	int f1a = setenv("Test", "value", true);
-	char *f1b = getenv("Test");
-	int f1c = unsetenv("Test");
-	assert(!f1a && f1b && !f1c);
-
+	/* Host */
+	char *g0a = (char *)"TestXXXXXX";
+	char *g0b = mktemp(g0a);
+	printf("%s - %s", g0a, g0b);
+	unlink(g0a);
+	assert(g0b);
+	char *g1a = (char *)"TestXXXXXX";
+	int g1b = mkstemp(g1a);
+	printf("%s - %d", g1a, g1b);
+	unlink(g1a);
+	assert(g1a);
+	/* Device */
+	char *g2a = (char *)":\\TestXXXXXX"; char *g2b = mktemp(g2a); printf("%s - %s", g2a, g2b); unlink(g2a); assert(g2b);
+	char *g3a = (char *)":\\TestXXXXXX"; int g3b = mkstemp(g3a); printf("%s - %d", g3a, g3b); unlink(g3a); assert(g3a);
 }
 
 static __global__ void g_memmove_speed() {

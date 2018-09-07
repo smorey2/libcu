@@ -36,6 +36,8 @@ enum {
 	STDLIB_GETENV,
 	STDLIB_SETENV,
 	STDLIB_UNSETENV,
+	STDLIB_MKTEMP,
+	STDLIB_MKSTEMP,
 };
 
 struct stdlib_exit {
@@ -95,7 +97,7 @@ struct stdlib_setenv {
 	const char *Str;
 	const char *Str2;
 	int Replace;
-	__device__ stdlib_setenv(const char *str, const char *str2, int replace) : Base(true, STDLIB_SYSTEM, 1024, SENTINELPREPARE(Prepare)), Str(str), Str2(str2), Replace(replace) { sentinelDeviceSend(&Base, sizeof(stdlib_setenv)); }
+	__device__ stdlib_setenv(const char *str, const char *str2, int replace) : Base(true, STDLIB_SETENV, 1024, SENTINELPREPARE(Prepare)), Str(str), Str2(str2), Replace(replace) { sentinelDeviceSend(&Base, sizeof(stdlib_setenv)); }
 	int RC;
 };
 
@@ -111,7 +113,39 @@ struct stdlib_unsetenv {
 	}
 	sentinelMessage Base;
 	const char *Str;
-	__device__ stdlib_unsetenv(const char *str) : Base(true, STDLIB_SYSTEM, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_unsetenv)); }
+	__device__ stdlib_unsetenv(const char *str) : Base(true, STDLIB_UNSETENV, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_unsetenv)); }
+	int RC;
+};
+
+struct stdlib_mktemp {
+	static __forceinline__ __device__ char *Prepare(stdlib_mktemp *t, char *data, char *dataEnd, intptr_t offset) {
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
+		char *str = (char *)(data += ROUND8_(sizeof(*t)));
+		char *end = (char *)(data += strLength);
+		if (end > dataEnd) return nullptr;
+		memcpy(str, t->Str, strLength);
+		t->Str = str + offset;
+		return end;
+	}
+	sentinelMessage Base;
+	char *Str;
+	__device__ stdlib_mktemp(char *str) : Base(true, STDLIB_MKTEMP, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_mktemp)); }
+	char *RC;
+};
+
+struct stdlib_mkstemp {
+	static __forceinline__ __device__ char *Prepare(stdlib_mkstemp *t, char *data, char *dataEnd, intptr_t offset) {
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
+		char *str = (char *)(data += ROUND8_(sizeof(*t)));
+		char *end = (char *)(data += strLength);
+		if (end > dataEnd) return nullptr;
+		memcpy(str, t->Str, strLength);
+		t->Str = str + offset;
+		return end;
+	}
+	sentinelMessage Base;
+	char *Str;
+	__device__ stdlib_mkstemp(char *str) : Base(true, STDLIB_MKSTEMP, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_mkstemp)); }
 	int RC;
 };
 

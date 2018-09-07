@@ -4,8 +4,8 @@
 #include <stdio.h> // panic's printf
 
 /* Get file attributes for FILE and put them in BUF.  */
-__device__ int stat_(const char *__restrict file, struct stat *__restrict buf, bool lstat) {
-	if (ISHOSTPATH(file)) { fcntl_stat msg(file, buf, nullptr, false, lstat); return msg.RC; }
+__device__ int stat_(const char *__restrict file, struct stat *__restrict buf, bool lstat_) {
+	if (ISHOSTPATH(file)) { fcntl_stat msg(file, buf, nullptr, false, lstat_); return msg.RC; }
 	panic("Not Implemented");
 	return 0;
 }
@@ -19,8 +19,8 @@ __device__ int fstat_(int fd, struct stat *buf) {
 
 #ifdef __USE_LARGEFILE64
 /* Get file attributes for FILE and put them in BUF.  */
-__device__ int stat64_(const char *__restrict file, struct stat64 *__restrict buf, bool lstat) {
-	if (ISHOSTPATH(file)) { fcntl_stat msg(file, nullptr, buf, lstat, true); return msg.RC; }
+__device__ int stat64_(const char *__restrict file, struct stat64 *__restrict buf, bool lstat_) {
+	if (ISHOSTPATH(file)) { fcntl_stat msg(file, nullptr, buf, lstat_, true); return msg.RC; }
 	panic("Not Implemented");
 	return 0;
 }

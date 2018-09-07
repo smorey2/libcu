@@ -74,7 +74,7 @@ __BEGIN_DECLS;
 
 #ifndef __USE_FILE_OFFSET64
 /* Get file attributes about FILE and put them in BUF. If FILE is a symbolic link, do not follow it.  */
-extern __device__ int stat_(const char *__restrict file, struct stat *__restrict buf, bool lstat = false);
+extern __device__ int stat_(const char *__restrict file, struct stat *__restrict buf, bool lstat_ = false);
 #define stat(file, buf) stat_(file, buf, false)
 #define lstat(file, buf) stat_(file, buf, true)
 /* Get file attributes for the file, device, pipe, or socket that file descriptor FD is open on and put them in BUF.  */
@@ -86,7 +86,7 @@ extern __device__ int fstat_(int fd, struct stat *buf);
 #define fstat(fd, buf) fstat64_(fd, buf)
 #endif
 #ifdef __USE_LARGEFILE64
-extern __device__ int stat64_(const char *__restrict file, struct stat64 *__restrict buf, bool lstat = false);
+extern __device__ int stat64_(const char *__restrict file, struct stat64 *__restrict buf, bool lstat_ = false);
 #define stat64(file, buf) stat64_(file, buf, false)
 #define lstat64(file, buf) stat64_(file, buf, true)
 extern __device__ int fstat64_(int fd, struct stat64 *buf);

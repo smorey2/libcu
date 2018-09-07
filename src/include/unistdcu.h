@@ -161,6 +161,7 @@ __END_DECLS;
 #define usleep(m) 0
 #define chown(f,o,g) 0
 //#define chgrp
+#define unlink _unlink
 #endif  /* __CUDA_ARCH__ */
 
 #endif  /* _UNISTDCU_H */

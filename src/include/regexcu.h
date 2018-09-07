@@ -27,7 +27,6 @@ THE SOFTWARE.
 #ifndef _REGEXCU_H
 #define _REGEXCU_H
 #define _REGEX_H
-
 #include <crtdefscu.h>
 
 #ifdef __cplusplus

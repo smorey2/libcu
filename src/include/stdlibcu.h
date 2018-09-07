@@ -329,6 +329,7 @@ __END_DECLS;
 #define strtoull(s,e,b) 0
 #define setenv(n,v,r) 0
 #define unsetenv(n) 0
+#define mktemp(t) 0
 #define mkstemp(t) 0
 #ifdef _MSC_VER
 #include <malloc.h>

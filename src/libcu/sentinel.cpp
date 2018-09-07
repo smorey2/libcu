@@ -187,7 +187,7 @@ void sentinelServerInitialize(sentinelExecutor *executor, char *mapHostName, boo
 		//memset(_threadDeviceHandle, 0, sizeof(_threadDeviceHandle));
 #if __OS_WIN
 		for (int i = 0; i < SENTINEL_DEVICEMAPS; i++)
-			_threadDeviceHandle[i] = (HANDLE)_beginthreadex(0, 0, sentinelDeviceThread, (void *)i, 0, 0);
+			_threadDeviceHandle[i] = (HANDLE)_beginthreadex(0, 0, sentinelDeviceThread, (void *)(intptr_t)i, 0, 0);
 #elif __OS_UNIX
 		int err; for (int i = 0; i < SENTINEL_DEVICEMAPS; i++)
 			if ((err = pthread_create(&_threadDeviceHandle[i], NULL, &sentinelDeviceThread, (void *)(intptr_t)i))) {

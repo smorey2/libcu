@@ -1,6 +1,7 @@
 #include <stdlibcu.h>
 #include <stdiocu.h>
 #include <sentinel-stdlibmsg.h>
+#include <sys/statcu.h>
 #include <bits/libcu_fpmax.h>
 #include <ext/hash.h>
 #include <ctypecu.h>
@@ -689,7 +690,7 @@ __device__ hash_t __env_dir = HASHINIT;
 __device__ char *getenv_(const char *name) {
 	if (ISHOSTENV(name)) { stdlib_getenv msg(name); return msg.RC; }
 	char *r = (char *)hashFind(&__env_dir, name);
-	if (!r && (!strcmp(name, "HOME") || !strcmp(name, "PATH"))) r = ":\\";
+	if (!r && (!strcmp(name, "HOME") || !strcmp(name, "PATH"))) r = (char *)":\\";
 	return r;
 }
 
@@ -708,15 +709,50 @@ __device__ int unsetenv_(const char *name) {
 	return 0;
 }
 
+static __device__ int __maketemp(char *template_, register int *fd) {
+	int rnd = rand_();
+	register char *start, *c;
+	struct stat sbuf;
+	for (c = template_; *c; ++c);
+	while (*--c == 'X') { *c = (rnd % 10) + '0'; rnd /= 10; }
+	for (start = c + 1;; --c) {
+		if (c <= template_) break;
+		if (*c == '/') {
+			*c = '\0';
+			if (stat(template_, &sbuf)) return 0;
+			if (!S_ISDIR(sbuf.st_mode)) { errno = ENOTDIR; return 0; }
+			*c = '/';
+			break;
+		}
+	}
+	while (true) {
+		if (fd) {
+			if ((*fd = open(template_, O_CREAT | O_EXCL | O_RDWR, 0600)) >= 0) return 1;
+			if (errno != EEXIST) return 0;
+		}
+		else if (stat(template_, &sbuf)) return errno == ENOENT ? 1 : 0;
+		for (c = start;;) {
+			if (!*c) return 0;
+			if (*c == 'z') *c++ = 'a';
+			else {
+				if (isdigit(*c)) *c = 'a';
+				else ++*c;
+				break;
+			}
+		}
+	}
+}
+
 /* Generate a unique temporary file name from TEMPLATE. */
 __device__ char *mktemp_(char *template_) {
-	panic("Not Implemented");
-	return nullptr;
+	if (ISHOSTPATH(template_)) { stdlib_mktemp msg(template_); return msg.RC; }
+	return __maketemp(template_, nullptr) ? template_ : nullptr;
 }
 
 /* Generate a unique temporary file name from TEMPLATE. */
 __device__ int mkstemp_(char *template_) {
-	return open(mktemp_(template_), 0);
+	if (ISHOSTPATH(template_)) { stdlib_mkstemp msg(template_); return msg.RC; }
+	int fd; return __maketemp(template_, &fd) ? fd : -1;
 }
 
 /* Execute the given line as a shell command.  */

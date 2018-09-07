@@ -35,7 +35,7 @@ THE SOFTWARE.
 #endif
 
 enum {
-	FCNTL_FCNTL = 46,
+	FCNTL_FCNTL = 48,
 	FCNTL_OPEN,
 	FCNTL_CLOSE,
 	FCNTL_STAT,
@@ -85,7 +85,7 @@ struct fcntl_stat {
 	}
 	sentinelMessage Base;
 	const char *Str; struct stat *Ptr; struct stat64 *Ptr64; bool Bit64; bool LStat;
-	__device__ fcntl_stat(const char *str, struct stat *ptr, struct stat64 *ptr64, bool bit64, bool lstat) : Base(true, FCNTL_STAT, 1024, SENTINELPREPARE(Prepare)), Str(str), Ptr(ptr), Ptr64(ptr64), Bit64(bit64), LStat(lstat) { sentinelDeviceSend(&Base, sizeof(fcntl_stat)); }
+	__device__ fcntl_stat(const char *str, struct stat *ptr, struct stat64 *ptr64, bool bit64, bool lstat_) : Base(true, FCNTL_STAT, 1024, SENTINELPREPARE(Prepare)), Str(str), Ptr(ptr), Ptr64(ptr64), Bit64(bit64), LStat(lstat_) { sentinelDeviceSend(&Base, sizeof(fcntl_stat)); }
 	int RC;
 };
 

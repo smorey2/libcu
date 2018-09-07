@@ -169,9 +169,9 @@ typedef struct strbld_t {
 	void *tag;			// Optional database for lookaside.  Can be NULL //: db
 	char *base;			// A base allocation.  Not from malloc. //: zBase
 	char *text;			// The string collected so far //: zText
-	int index;			// Length of the string so far //: nChar
+	size_t index;		// Length of the string so far //: nChar
 	size_t size;		// Amount of space allocated in zText //: nAlloc
-	int maxSize;		// Maximum allowed string length //: mxAlloc
+	size_t maxSize;		// Maximum allowed string length //: mxAlloc
 	unsigned char error; // Becomes true if any memory allocation fails //: accError
 	unsigned char flags; // SQLITE_PRINTF flags below //: printfFlags
 } strbld_t;
