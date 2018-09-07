@@ -21,7 +21,7 @@ struct passwd *getpwnam_(char *str) {
 	return m_getpwnam_rc;
 }
 
-__forceinline int dchown_(char *str, int uid) { fileutils_dchown msg(str, uid); return msg.RC; }
+inline int dchown_(char *str, int uid) { fileutils_dchown msg(str, uid); return msg.RC; }
 
 int main(int argc, char	**argv) {
 	atexit(sentinelClientShutdown);

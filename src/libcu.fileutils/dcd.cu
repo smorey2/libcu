@@ -2,16 +2,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "sentinel-fileutilsmsg.h"
-#include <Windows.h>
 
-__forceinline int dpwd_(char *ptr) { fileutils_dpwd msg; strcpy(ptr, msg.Ptr); return msg.RC; }
-__forceinline int dcd_(char *str) { fileutils_dcd msg(str); return msg.RC; }
+inline int dpwd_(char *ptr) { fileutils_dpwd msg; strcpy(ptr, msg.Ptr); return msg.RC; }
+inline int dcd_(char *str) { fileutils_dcd msg(str); return msg.RC; }
 
 int main(int argc, const char **argv) {
 	atexit(sentinelClientShutdown);
 	sentinelClientInitialize();
 	if (argc <= 1 || argc > 2) {
-		char pwd[MAX_PATH];
+		char pwd[FILENAME_MAX];
 		if (!dpwd_(pwd)) {
 			printf("%s\n", pwd);
 			exit(1);

@@ -5,7 +5,7 @@
 
 #define	isoctal(ch)	((ch) >= '0' && (ch) <= '7')
 
-__forceinline int dchmod_(char *str, int mode) { fileutils_dchmod msg(str, mode); return msg.RC; }
+inline int dchmod_(char *str, int mode) { fileutils_dchmod msg(str, mode); return msg.RC; }
 
 int main(int argc, char **argv) {
 	atexit(sentinelClientShutdown);

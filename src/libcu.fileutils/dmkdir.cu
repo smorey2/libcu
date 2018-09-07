@@ -5,7 +5,7 @@
 
 unsigned short _newMode = 0666; // & ~umask(0);
 
-__forceinline int dmkdir_(char *name, unsigned short mode) { fileutils_dmkdir msg(name, mode); return msg.RC; }
+inline int dmkdir_(char *name, unsigned short mode) { fileutils_dmkdir msg(name, mode); return msg.RC; }
 
 int makeDir(char *name, int f) {
 	char iname[256];

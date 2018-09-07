@@ -4,8 +4,7 @@
 #include "sentinel-fileutilsmsg.h"
 #include <sys/statcu.h>
 #include <unistdcu.h>
-#define	PATHLEN 256	
-
+	
 // Return TRUE if a filename is a directory. Nonexistant files return FALSE.
 __device__ __managed__ bool m_isadir_rc;
 __global__ void g_isadir(char *name) {
@@ -28,7 +27,7 @@ bool isadir_(char *str) {
 	return m_isadir_rc;
 }
 
-__forceinline int dmv_(char *str, char *str2) { fileutils_dmv msg(str, str2); return msg.RC; }
+inline int dmv_(char *str, char *str2) { fileutils_dmv msg(str, str2); return msg.RC; }
 
 // Build a path name from the specified directory name and file name. If the directory name is NULL, then the original filename is returned.
 // The built path is in a static area, and is overwritten for each call.
@@ -38,7 +37,7 @@ char *buildName(char *dirName, char *fileName) {
 	char *cp = strrchr(fileName, '/');
 	if (cp)
 		fileName = cp + 1;
-	static char buf[PATHLEN];
+	static char buf[FILENAME_MAX];
 	strcpy(buf, dirName);
 	strcat(buf, "/");
 	strcat(buf, fileName);

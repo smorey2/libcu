@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "sentinel-fileutilsmsg.h"
 
-__forceinline int dgrep_(char *str, char *str2, bool ignoreCase, bool tellName, bool tellLine) { fileutils_dgrep msg(str, str2, ignoreCase, tellName, tellLine); return msg.RC; }
+inline int dgrep_(char *str, char *str2, bool ignoreCase, bool tellName, bool tellLine) { fileutils_dgrep msg(str, str2, ignoreCase, tellName, tellLine); return msg.RC; }
 
 int main(int argc, char **argv) {
 	atexit(sentinelClientShutdown);

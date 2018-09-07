@@ -4,7 +4,7 @@
 #include "sentinel-fileutilsmsg.h"
 #include <unistdcu.h>
 
-__forceinline int dmore_(char *str, int fd) { fileutils_dmore msg(str, fd); return msg.RC; }
+inline int dmore_(char *str, int fd) { fileutils_dmore msg(str, fd); return msg.RC; }
 
 int main(int argc, char **argv) {
 	while (argc-- > 1) {

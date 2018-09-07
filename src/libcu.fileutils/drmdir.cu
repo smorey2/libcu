@@ -5,7 +5,7 @@
 
 unsigned short _newMode = 0666; // & ~umask(0);
 
-__forceinline int drmdir_(char *str) { fileutils_drmdir msg(str); return msg.RC; }
+inline int drmdir_(char *str) { fileutils_drmdir msg(str); return msg.RC; }
 
 int removeDir(char *name, int f) {
 	int r, r2 = 2;

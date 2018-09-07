@@ -21,7 +21,7 @@ struct group *getgrnam_(char *str) {
 	return m_getgrnam_rc;
 }
 
-__forceinline int dchgrp_(char *str, int gid) { fileutils_dchgrp msg(str, gid); return msg.RC; }
+inline int dchgrp_(char *str, int gid) { fileutils_dchgrp msg(str, gid); return msg.RC; }
 
 int main(int argc, char **argv) {
 	atexit(sentinelClientShutdown);

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "sentinel-fileutilsmsg.h"
 
-__forceinline int drm_(char *str) { fileutils_drm msg(str); return msg.RC; }
+inline int drm_(char *str) { fileutils_drm msg(str); return msg.RC; }
 
 int main(int argc, char **argv) {
 	//int recurse = ((argv[1] && argv[1][0] == '-' && argv[1][1] == 'r') || (argv[2] && argv[2][0] == '-' && argv[2][1] == 'r') ? 1 : 0);

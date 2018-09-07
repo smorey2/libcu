@@ -11,7 +11,7 @@
 #define LSF_ALL		0x10		// List files starting with `.'
 #define LSF_CLASS	0x20		// Classify files (append symbol)
 
-__forceinline int dls_(char *str, int flags, bool endSlash) { fileutils_dls msg(str, flags, endSlash); return msg.RC; }
+inline int dls_(char *str, int flags, bool endSlash) { fileutils_dls msg(str, flags, endSlash); return msg.RC; }
 
 int main(int argc, const char **argv) {
 	atexit(sentinelClientShutdown);
