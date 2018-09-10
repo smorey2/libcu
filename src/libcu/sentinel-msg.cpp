@@ -112,6 +112,12 @@ bool sentinelDefaultExecutor(void *tag, sentinelMessage *data, int length, char 
 	case STDLIB_UNSETENV: { stdlib_unsetenv *msg = (stdlib_unsetenv *)data; msg->RC = unsetenv(msg->Str); return true; }
 	case STDLIB_MKTEMP: { stdlib_mktemp *msg = (stdlib_mktemp *)data; msg->RC = mktemp(msg->Str); return true; }
 	case STDLIB_MKSTEMP: { stdlib_mkstemp *msg = (stdlib_mkstemp *)data; msg->RC = mkstemp(msg->Str); return true; }
+
+	//case STDLIB_MBLEN: { stdlib_mblen *msg = (stdlib_mblen *)data; msg->RC = mblen(msg->Str, msg->Size); return true; }
+	//case STDLIB_MBTOWC: { stdlib_mbtowc *msg = (stdlib_mbtowc *)data; msg->RC = mbtowc(msg->Str, msg->Ptr, msg->Size); return true; }
+	//case STDLIB_WCTOMB: { stdlib_wctomb *msg = (stdlib_wctomb *)data; msg->RC = wctomb(msg->Str, msg->Len); return true; }
+	//case STDLIB_MBSTOWCS: { stdlib_mbstowcs *msg = (stdlib_mbstowcs *)data; msg->RC = mbstowcs(msg->Str, msg->Len); return true; }
+	//case STDLIB_WCSTOMBS: { stdlib_wcstombs *msg = (stdlib_wcstombs *)data; msg->RC = wcstombs(msg->Str, msg->Len); return true; }
 	case UNISTD_ACCESS: { unistd_access *msg = (unistd_access *)data; msg->RC = access(msg->Name, msg->Type); return true; }
 	case UNISTD_LSEEK: { unistd_lseek *msg = (unistd_lseek *)data;
 		if (!msg->Bit64) msg->RC = lseek(msg->Handle, (long)msg->Offset, msg->Whence);

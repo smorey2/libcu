@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <stdlibcu.h>
 #include <stdiocu.h>
 #include <sentinel-stdlibmsg.h>
@@ -713,9 +714,7 @@ static __device__ int __maketemp(char *template_, register int *fd) {
 	int rnd = rand_();
 	register char *start, *c;
 	for (c = template_; *c; ++c) {}
-	printf("a: %s\n", template_);
 	while (*--c == 'X') { *c = (rnd % 10) + '0'; rnd /= 10; }
-	printf("b: %s\n", template_);
 	dirEnt_t *ent; int r;
 	for (start = c + 1;; --c) {
 		if (c <= template_) break;
@@ -727,7 +726,6 @@ static __device__ int __maketemp(char *template_, register int *fd) {
 			break;
 		}
 	}
-	printf("c: %s\n", template_);
 	while (true) {
 		if (fd) {
 			if ((*fd = open(template_, O_CREAT | O_EXCL | O_RDWR, 0600)) >= 0) return 1;
@@ -748,13 +746,13 @@ static __device__ int __maketemp(char *template_, register int *fd) {
 
 /* Generate a unique temporary file name from TEMPLATE. */
 __device__ char *mktemp_(char *template_) {
-	if (!ISONLYDEVICEPATH(template_)) { stdlib_mktemp msg(template_); strcpy(template_, msg.RC); return msg.RC; }
+	if (ISHOSTPATH(template_)) { stdlib_mktemp msg(template_); strcpy(template_, msg.RC); return msg.RC; }
 	return __maketemp(template_, nullptr) ? template_ : nullptr;
 }
 
 /* Generate a unique temporary file name from TEMPLATE. */
 __device__ int mkstemp_(char *template_) {
-	if (!ISONLYDEVICEPATH(template_)) { stdlib_mkstemp msg(template_); strcpy(template_, (const char *)msg.Ptr); return msg.RC; }
+	if (ISHOSTPATH(template_)) { stdlib_mkstemp msg(template_); strcpy(template_, (const char *)msg.Ptr); return msg.RC; }
 	int fd; return __maketemp(template_, &fd) ? fd : -1;
 }
 
@@ -765,7 +763,17 @@ __device__ int system_(const char *command) {
 
 /* Do a binary search for KEY in BASE, which consists of NMEMB elements of SIZE bytes each, using COMPAR to perform the comparisons.  */
 __device__ void *bsearch_(const void *key, const void *base, size_t nmemb, size_t size, __compar_fn_t compar) {
-	panic("Not Implemented");
+	const char *base0 = (const char *)base;
+	for (size_t lim = nmemb; lim != 0; lim >>= 1) {
+		const void *p = base0 + (lim >> 1) * size;
+		int cmp = (*compar)(key, p);
+		if (!cmp)
+			return (void *)p;
+		if (cmp > 0) { // key > p: move right
+			base = (char *)p + size;
+			lim--;
+		} // else move left
+	}
 	return nullptr;
 }
 
@@ -913,31 +921,69 @@ __device__ lldiv_t lldiv_(long long int numer, long long int denom) {
 #endif
 
 /* Return the length of the multibyte character in S, which is no longer than N.  */
-__device__ int mblen_(const char *s, size_t n) {
-	panic("Not Implemented");
-	return 0;
+__device__ int mblen_l_(const char *s, size_t n, locale_t loc) {
+	static const mbstate_t initial;
+	//NORMALIZE_LOCALE(loc);
+	if (!s) {
+		loc->__mbs_mblen = initial; // No support for state dependent encodings.
+		return 0;
+	}
+	size_t rval = loc->__mbrtowc(nullptr, s, n, &loc->__mbs_mblen, loc);
+	if (rval == (size_t)-1 || rval == (size_t)-2)
+		return -1;
+	return (int)rval;
 }
+__device__ int mblen_(const char *s, size_t n, locale_t loc) { return mblen_l_(s, n, __current_locale()); }
+
 /* Return the length of the given multibyte character, putting its `wchar_t' representation in *PWC.  */
-__device__ int mbtowc_(wchar_t *__restrict __pwc, const char *__restrict s, size_t n) {
-	panic("Not Implemented");
-	return 0;
+__device__ int mbtowc_l_(wchar_t *__restrict pwc, const char *__restrict s, size_t n, locale_t loc) {
+	static const mbstate_t initial;
+	//NORMALIZE_LOCALE(loc);
+	if (!s) {
+		loc->__mbs_mbtowc = initial; // No support for state dependent encodings.
+		return 0;
+	}
+	size_t rval = loc->__mbrtowc(pwc, s, n, &loc->__mbs_mbtowc, loc);
+	if (rval == (size_t)-1 || rval == (size_t)-2)
+		return -1;
+	return (int)rval;
 }
+__device__ int mbtowc_(wchar_t *__restrict pwc, const char *__restrict s, size_t n) { return mbtowc_l_(pwc, s, n, __current_locale()); }
+
 /* Put the multibyte character represented by WCHAR in S, returning its length.  */
-__device__ int wctomb_(char *s, wchar_t wchar) {
-	panic("Not Implemented");
-	return 0;
+__device__ int wctomb_l_(char *s, wchar_t wchar, locale_t loc) {
+	static const mbstate_t initial;
+	//NORMALIZE_LOCALE(loc);
+	if (!s) {
+		loc->__mbs_wctomb = initial; // No support for state dependent encodings.
+		return 0;
+	}
+	size_t rval;
+	if ((rval = loc->__wcrtomb(s, wchar, &loc->__mbs_wctomb, loc)) == (size_t)-1)
+		return -1;
+	return (int)rval;
 }
+__device__ int wctomb_(char *s, wchar_t wchar) { return wctomb_l_(s, wchar, __current_locale()); }
 
 /* Convert a multibyte string to a wide char string.  */
-__device__ size_t mbstowcs_(wchar_t *__restrict pwcs, const char *__restrict s, size_t n) {
-	panic("Not Implemented");
-	return 0;
+__device__ size_t mbstowcs_l_(wchar_t *__restrict pwcs, const char *__restrict s, size_t n, locale_t loc) {
+	static const mbstate_t initial;
+	//NORMALIZE_LOCALE(loc);
+	mbstate_t mbs = initial;
+	const char *sp = s;
+	return loc->__mbsnrtowcs(pwcs, &sp, SIZE_T_MAX, n, &mbs, loc);
 }
+__device__ size_t mbstowcs_(wchar_t *__restrict pwcs, const char *__restrict s, size_t n) { return mbstowcs_l_(pwcs, s, n, __current_locale()); }
+
 /* Convert a wide char string to multibyte string.  */
-__device__ size_t wcstombs_(char *__restrict s, const wchar_t *__restrict pwcs, size_t n) {
-	panic("Not Implemented");
-	return 0;
+__device__ size_t wcstombs_l_(char *__restrict s, const wchar_t *__restrict pwcs, size_t n, locale_t loc) {
+	static const mbstate_t initial;
+	//NORMALIZE_LOCALE(loc);
+	mbstate_t mbs = initial;
+	const wchar_t *pwcsp = pwcs;
+	return loc->__wcsnrtombs(s, &pwcsp, SIZE_T_MAX, n, &mbs, loc);
 }
+__device__ size_t wcstombs_(char *__restrict s, const wchar_t *__restrict pwcs, size_t n) { return wcstombs_l_(s, pwcs, n, __current_locale()); }
 
 #if defined(__GNUC__)
 __device__ uint16_t __builtin_bswap16_(uint16_t x) { char *p = (char *)x; return (uint16_t)p[0] << 8 | (uint16_t)p[1]; }

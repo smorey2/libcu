@@ -288,7 +288,7 @@ __BEGIN_NAMESPACE_STD;
 extern __device__ int mblen_(const char *s, size_t n);
 #define mblen mblen_
 /* Return the length of the given multibyte character, putting its `wchar_t' representation in *PWC.  */
-extern __device__ int mbtowc_(wchar_t *__restrict __pwc, const char *__restrict s, size_t n);
+extern __device__ int mbtowc_(wchar_t *__restrict pwc, const char *__restrict s, size_t n);
 #define mbtowc mbtowc_
 /* Put the multibyte character represented by WCHAR in S, returning its length.  */
 extern __device__ int wctomb_(char *s, wchar_t wchar);

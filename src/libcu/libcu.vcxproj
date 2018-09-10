@@ -57,6 +57,8 @@
     <ClInclude Include="..\include\_unistd.h" />
     <ClInclude Include="..\include\unistdcu.h" />
     <ClInclude Include="fsystem.h" />
+    <ClInclude Include="locale\xlocalecu.h" />
+    <ClInclude Include="locale\xlocale_private.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sentinel-msg.cpp" />
@@ -74,6 +76,7 @@
     <None Include="fcntlcu.cu" />
     <None Include="grpcu.cu" />
     <None Include="crtdefscu.cu" />
+    <CudaCompile Include="locale\none.cu" />
     <CudaCompile Include="program.cu" />
     <CudaCompile Include="libcu.cu" />
     <CudaCompile Include="libcu.stdlib.cu" />

@@ -26,6 +26,10 @@ THE SOFTWARE.
 #ifndef _CRTDEFSCU_H
 #define _CRTDEFSCU_H
 
+//////////////////////
+// OS
+#pragma region OS
+
 /* Figure out if we are dealing with Unix, Windows, or some other operating system. */
 #if defined(__OS_OTHER)
 # if __OS_OTHER == 1
@@ -55,6 +59,30 @@ THE SOFTWARE.
 #  define __OS_WIN 0
 # endif
 #endif
+
+#if __OS_WIN
+#include <crtdefs.h>
+//#include <corecrt_io.h>
+#define _uintptr_t uintptr_t
+//#define __USE_LARGEFILE64 1
+#elif __OS_UNIX
+#define register
+#define HAVE_STDINT_H
+#define MAX_PATH 260
+#define DELETE 0x00010000L
+#if defined(__LP64__) || defined(_LP64)
+# define _WIN64 1
+typedef unsigned int long long _uintptr_t;
+# else
+typedef unsigned int _uintptr_t;
+# endif
+#endif
+
+#pragma endregion
+
+//////////////////////
+// BYTEORDER
+#pragma region BYTEORDER
 
 /*
 ** Macros to determine whether the machine is big or little endian, and whether or not that determination is run-time or compile-time.
@@ -87,23 +115,7 @@ extern __host_constant__ const int __libcuone;
 #define LIBCU_UTF16NATIVE (SQLITE_BIGENDIAN?TEXTENCODE_UTF16BE:TEXTENCODE_UTF16LE)
 #endif
 
-#if __OS_WIN
-#include <crtdefs.h>
-//#include <corecrt_io.h>
-#define _uintptr_t uintptr_t
-//#define __USE_LARGEFILE64 1
-#elif __OS_UNIX
-#define register
-#define HAVE_STDINT_H
-#define MAX_PATH 260
-#define DELETE 0x00010000L
-#if defined(__LP64__) || defined(_LP64)
-# define _WIN64 1
-typedef unsigned int long long _uintptr_t;
-# else
-typedef unsigned int _uintptr_t;
-# endif
-#endif
+#pragma endregion
 
 #include <cuda_runtime.h>
 #include <stdint.h>
@@ -125,11 +137,11 @@ _FILE_OFFSET_BITS=N	Select default filesystem interface.
 All macros listed above as possibly being defined by this file are explicitly undefined if they are not explicitly defined. */
 
 #ifdef _LARGEFILE_SOURCE
-#define __USE_LARGEFILE		1
+#define __USE_LARGEFILE 1
 #endif
 
 #ifdef _LARGEFILE64_SOURCE
-#define __USE_LARGEFILE64	1
+#define __USE_LARGEFILE64 1
 #endif
 
 #if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
@@ -159,10 +171,15 @@ All macros listed above as possibly being defined by this file are explicitly un
 #endif
 #endif  /* __CUDA_ARCH__ */
 
-/* GCC does not define the offsetof() macro so we'll have to do it ourselves. */
-#ifndef offsetof
-#define offsetof(STRUCTURE,FIELD) ((int)((char*)&((STRUCTURE*)0)->FIELD))
+//////////////////////
+// LIMITS
+#pragma region LIMITS
+
+#ifdef _MSC_VER
+#define SIZE_T_MAX SIZE_MAX
 #endif
+
+#pragma endregion
 
 //////////////////////
 // UTILITY
@@ -225,6 +242,11 @@ All macros listed above as possibly being defined by this file are explicitly un
 #endif
 /* Swap two objects of type TYPE. */
 #define SWAP_(TYPE,A,B) { TYPE t=A; A=B; B=t; }
+
+/* GCC does not define the offsetof() macro so we'll have to do it ourselves. */
+#ifndef offsetof
+#define offsetof(STRUCTURE,FIELD) ((int)((char*)&((STRUCTURE*)0)->FIELD))
+#endif
 
 #pragma endregion
 
@@ -338,7 +360,7 @@ extern __device__ char __cwd[];
 #define ISHOSTPATH(path) ((path)[1] == ':' || ((path)[0] != ':' && __cwd[0] == 0))
 #define ISHOSTHANDLE(handle) (handle < INT_MAX-LIBCU_MAXFILESTREAM)
 #define ISHOSTPTR(ptr) ((hostptr_t *)(ptr) >= __iob_hostptrs && (hostptr_t *)(ptr) <= __iob_hostptrs+LIBCU_MAXHOSTPTR)
-#define ISONLYDEVICEPATH(path) ((path)[0] == ':' || __cwd[0] == ':')
+//#define ISONLYDEVICEPATH(path) ((path)[0] == ':' || __cwd[0] == ':')
 
 /* Host pointer support  */
 extern __constant__ hostptr_t __iob_hostptrs[LIBCU_MAXHOSTPTR];
