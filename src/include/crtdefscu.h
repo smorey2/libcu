@@ -175,10 +175,6 @@ All macros listed above as possibly being defined by this file are explicitly un
 // LIMITS
 #pragma region LIMITS
 
-#ifdef _MSC_VER
-#define SIZE_T_MAX SIZE_MAX
-#endif
-
 #pragma endregion
 
 //////////////////////

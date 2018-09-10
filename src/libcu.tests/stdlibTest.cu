@@ -134,11 +134,12 @@ static __global__ void g_stdlib_test1() {
 	//extern __device__ size_t mbstowcs_(wchar_t *__restrict pwcs, const char *__restrict s, size_t n);
 	//extern __device__ size_t wcstombs_(char *__restrict s, const wchar_t *__restrict pwcs, size_t n);
 	char buf[10];
-	int m0a = mblen("test", 4); assert(m0a == 4);
-	wchar_t m1a; int m1b = mbtowc(&m1a, "a", 1); assert(m1a == 4);
-	int m2a = wctomb(buf, L'a'); bool m2b = (buf[0] == 1 && buf[1] == 0); assert(m2a && m2b);
-	size_t m3a = mbstowcs(L"test", buf, sizeof(buf));
-	size_t m4a = wcstombs(buf, L"test", sizeof(buf));
+	wchar_t wstr[5];
+	int m0a = mblen("test", 4); assert(m0a == 1);
+	wchar_t m1a; int m1b = mbtowc(&m1a, "test", 4); assert(m1a == 't' && m1b == 1);
+	int m2b = wctomb(buf, (wchar_t)'t'); assert(m2b == 1 && buf[0] == 't');
+	size_t m3a = mbstowcs(wstr, "test", 5); assert(m3a);
+	size_t m4a = wcstombs(buf, L"test", sizeof(buf)); assert(m4a);
 
 	//// STRTOQ, STRTOUQ ////
 	//__forceinline__ __device__ quad_t strtoq_(const char *__restrict nptr, char **__restrict endptr, int base);

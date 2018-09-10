@@ -101,7 +101,7 @@
     <ClInclude Include="locale\xlocale_private.h">
       <Filter>locale</Filter>
     </ClInclude>
-    <ClInclude Include="locale\xlocalecu.h">
+    <ClInclude Include="locale\mblocal.h">
       <Filter>locale</Filter>
     </ClInclude>
   </ItemGroup>
@@ -110,9 +110,6 @@
     <CudaCompile Include="program.cu" />
     <CudaCompile Include="libcu.stdlib.cu" />
     <CudaCompile Include="stringcu.cu" />
-    <CudaCompile Include="locale\none.cu">
-      <Filter>locale</Filter>
-    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="_content">
@@ -182,6 +179,18 @@
     <None Include="stdiocu.cu" />
     <None Include="ext\pipeline.cu">
       <Filter>ext</Filter>
+    </None>
+    <None Include="locale\ascii.cu">
+      <Filter>locale</Filter>
+    </None>
+    <None Include="locale\none.cu">
+      <Filter>locale</Filter>
+    </None>
+    <None Include="locale\utf8.cu">
+      <Filter>locale</Filter>
+    </None>
+    <None Include="locale\xlocale.cu">
+      <Filter>locale</Filter>
     </None>
   </ItemGroup>
 </Project>

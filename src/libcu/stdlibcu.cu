@@ -9,6 +9,7 @@
 #include <errnocu.h>
 #include <fcntlcu.h>
 #include <assert.h>
+#include "locale/xlocale_private.h"
 
 __BEGIN_DECLS;
 
@@ -921,29 +922,29 @@ __device__ lldiv_t lldiv_(long long int numer, long long int denom) {
 #endif
 
 /* Return the length of the multibyte character in S, which is no longer than N.  */
-__device__ int mblen_l_(const char *s, size_t n, locale_t loc) {
-	static const mbstate_t initial;
-	//NORMALIZE_LOCALE(loc);
+__device__ int mblen_l_(const char *s, size_t n, localecu_t loc) {
+	static const mbstate_t initial = {};
+	NORMALIZE_LOCALE(loc);
 	if (!s) {
 		loc->__mbs_mblen = initial; // No support for state dependent encodings.
 		return 0;
 	}
-	size_t rval = loc->__mbrtowc(nullptr, s, n, &loc->__mbs_mblen, loc);
+	size_t rval = loc->__ctype->__mbrtowc(nullptr, s, n, &loc->__mbs_mblen, loc);
 	if (rval == (size_t)-1 || rval == (size_t)-2)
 		return -1;
 	return (int)rval;
 }
-__device__ int mblen_(const char *s, size_t n, locale_t loc) { return mblen_l_(s, n, __current_locale()); }
+__device__ int mblen_(const char *s, size_t n) { return mblen_l_(s, n, __current_locale()); }
 
 /* Return the length of the given multibyte character, putting its `wchar_t' representation in *PWC.  */
-__device__ int mbtowc_l_(wchar_t *__restrict pwc, const char *__restrict s, size_t n, locale_t loc) {
-	static const mbstate_t initial;
-	//NORMALIZE_LOCALE(loc);
+__device__ int mbtowc_l_(wchar_t *__restrict pwc, const char *__restrict s, size_t n, localecu_t loc) {
+	static const mbstate_t initial = {};
+	NORMALIZE_LOCALE(loc);
 	if (!s) {
 		loc->__mbs_mbtowc = initial; // No support for state dependent encodings.
 		return 0;
 	}
-	size_t rval = loc->__mbrtowc(pwc, s, n, &loc->__mbs_mbtowc, loc);
+	size_t rval = loc->__ctype->__mbrtowc(pwc, s, n, &loc->__mbs_mbtowc, loc);
 	if (rval == (size_t)-1 || rval == (size_t)-2)
 		return -1;
 	return (int)rval;
@@ -951,37 +952,37 @@ __device__ int mbtowc_l_(wchar_t *__restrict pwc, const char *__restrict s, size
 __device__ int mbtowc_(wchar_t *__restrict pwc, const char *__restrict s, size_t n) { return mbtowc_l_(pwc, s, n, __current_locale()); }
 
 /* Put the multibyte character represented by WCHAR in S, returning its length.  */
-__device__ int wctomb_l_(char *s, wchar_t wchar, locale_t loc) {
-	static const mbstate_t initial;
-	//NORMALIZE_LOCALE(loc);
+__device__ int wctomb_l_(char *s, wchar_t wchar, localecu_t loc) {
+	static const mbstate_t initial = {};
+	NORMALIZE_LOCALE(loc);
 	if (!s) {
 		loc->__mbs_wctomb = initial; // No support for state dependent encodings.
 		return 0;
 	}
 	size_t rval;
-	if ((rval = loc->__wcrtomb(s, wchar, &loc->__mbs_wctomb, loc)) == (size_t)-1)
+	if ((rval = loc->__ctype->__wcrtomb(s, wchar, &loc->__mbs_wctomb, loc)) == (size_t)-1)
 		return -1;
 	return (int)rval;
 }
 __device__ int wctomb_(char *s, wchar_t wchar) { return wctomb_l_(s, wchar, __current_locale()); }
 
 /* Convert a multibyte string to a wide char string.  */
-__device__ size_t mbstowcs_l_(wchar_t *__restrict pwcs, const char *__restrict s, size_t n, locale_t loc) {
-	static const mbstate_t initial;
-	//NORMALIZE_LOCALE(loc);
+__device__ size_t mbstowcs_l_(wchar_t *__restrict pwcs, const char *__restrict s, size_t n, localecu_t loc) {
+	static const mbstate_t initial = {};
+	NORMALIZE_LOCALE(loc);
 	mbstate_t mbs = initial;
 	const char *sp = s;
-	return loc->__mbsnrtowcs(pwcs, &sp, SIZE_T_MAX, n, &mbs, loc);
+	return loc->__ctype->__mbsnrtowcs(pwcs, &sp, SIZE_MAX, n, &mbs, loc);
 }
 __device__ size_t mbstowcs_(wchar_t *__restrict pwcs, const char *__restrict s, size_t n) { return mbstowcs_l_(pwcs, s, n, __current_locale()); }
 
 /* Convert a wide char string to multibyte string.  */
-__device__ size_t wcstombs_l_(char *__restrict s, const wchar_t *__restrict pwcs, size_t n, locale_t loc) {
-	static const mbstate_t initial;
-	//NORMALIZE_LOCALE(loc);
+__device__ size_t wcstombs_l_(char *__restrict s, const wchar_t *__restrict pwcs, size_t n, localecu_t loc) {
+	static const mbstate_t initial = {};
+	NORMALIZE_LOCALE(loc);
 	mbstate_t mbs = initial;
 	const wchar_t *pwcsp = pwcs;
-	return loc->__wcsnrtombs(s, &pwcsp, SIZE_T_MAX, n, &mbs, loc);
+	return loc->__ctype->__wcsnrtombs(s, &pwcsp, SIZE_MAX, n, &mbs, loc);
 }
 __device__ size_t wcstombs_(char *__restrict s, const wchar_t *__restrict pwcs, size_t n) { return wcstombs_l_(s, pwcs, n, __current_locale()); }
 
