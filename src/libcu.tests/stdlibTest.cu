@@ -1,4 +1,3 @@
-//#include <cuda_runtimecu.h>
 #include <stdiocu.h>
 #include <stdlibcu.h>
 #include <assert.h>
@@ -133,8 +132,7 @@ static __global__ void g_stdlib_test1() {
 	//extern __device__ int wctomb_(char *s, wchar_t wchar);
 	//extern __device__ size_t mbstowcs_(wchar_t *__restrict pwcs, const char *__restrict s, size_t n);
 	//extern __device__ size_t wcstombs_(char *__restrict s, const wchar_t *__restrict pwcs, size_t n);
-	char buf[10];
-	wchar_t wstr[5];
+	char buf[10]; wchar_t wstr[5];
 	int m0a = mblen("test", 4); assert(m0a == 1);
 	wchar_t m1a; int m1b = mbtowc(&m1a, "test", 4); assert(m1a == 't' && m1b == 1);
 	int m2b = wctomb(buf, (wchar_t)'t'); assert(m2b == 1 && buf[0] == 't');
@@ -146,57 +144,8 @@ static __global__ void g_stdlib_test1() {
 	//__forceinline__ __device__ u_quad_t strtouq_(const char *__restrict nptr, char **__restrict endptr, int base);
 	quad_t n0a = strtoq("1.0", nullptr, 10); assert(n0a == 1);
 	u_quad_t n1a = strtouq("1.0", nullptr, 10); assert(n1a == 1);
-
-	//// MALLOCZERO //// ??different than calloc??
-	//__forceinline__ __device__ void *mallocZero(size_t size);
-	// SKIP
 }
 cudaError_t stdlib_test1() { g_stdlib_test1<<<1, 1>>>(); return cudaDeviceSynchronize(); }
-
-#pragma region qsort
-
-/*
-static __device__ int qsortSelectFiles(const struct dirent *dirbuf) {
-	return dirbuf->d_name[0] == '.' ? 0 : 1;
-}
-
-static __global__ void stdlib_qsort() {
-struct dirent **a;
-struct dirent *dirbuf;
-
-int i, numdir;
-
-chdir("/");
-numdir = scandir(".", &a, qsortSelectFiles, NULL);
-printf("\nGot %d entries from scandir().\n", numdir);
-for (i = 0; i < numdir; ++i) {
-dirbuf = a[i];
-printf("[%d] %s\n", i, dirbuf->d_name);
-free(a[i]);
-}
-free(a);
-numdir = scandir(".", &a, qsortSelectFiles, alphasort);
-printf("\nGot %d entries from scandir() using alphasort().\n", numdir);
-for (i = 0; i < numdir; ++i) {
-dirbuf = a[i];
-printf("[%d] %s\n", i, dirbuf->d_name);
-}
-printf("\nCalling qsort()\n");
-// Even though some manpages say that alphasort should be int alphasort(const void *a, const void *b),
-// in reality glibc and uclibc have const struct dirent** instead of const void*.
-// Therefore we get a warning here unless we use a cast, which makes people think that alphasort prototype needs to be fixed in uclibc headers.
-qsort(a, numdir, sizeof(struct dirent *), (void *)alphasort);
-for (i = 0; i < numdir; ++i) {
-dirbuf = a[i];
-printf("[%d] %s\n", i, dirbuf->d_name);
-free(a[i]);
-}
-free(a);
-return 0;
-}
-*/
-
-#pragma endregion
 
 #pragma region strtol
 
