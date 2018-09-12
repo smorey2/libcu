@@ -93,7 +93,7 @@ static __global__ void g_stdlib_test1() {
 
 	//// SYSTEM ////
 	//extern __device__ int system_(const char *command); #sentinel
-	int h0a = system("echo"); assert(!h0a);
+	int h0a = system("echo > nul"); assert(!h0a);
 
 	//// BSEARCH ////
 	//extern __device__ void *bsearch_(const void *key, const void *base, size_t nmemb, size_t size, __compar_fn_t compar);

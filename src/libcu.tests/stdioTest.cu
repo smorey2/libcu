@@ -15,7 +15,7 @@
 #define MAKEAFILE
 static __device__ void makeAFile(char *file) {
 	FILE *fp = fopen(file, "w");
-	fprintf_(fp, "test");
+	fprintf(fp, "test");
 	fclose(fp);
 }
 #endif
@@ -108,29 +108,29 @@ static __global__ void g_stdio_test1() {
 	FILE *j0a = fopen(HostDir"missing.txt", "r"); assert(!j0a);
 	makeAFile(HostDir"test.txt");
 	FILE *j1a = fopen(HostDir"test.txt", "r"); int j1b = fread(buf, 1, 4, j1a); FILE *j1c = freopen(HostDir"test.txt", "r", j1a); int j1d = fread(buf, 1, 4, j1c); int j1e = fclose(j1c); assert(j1a && j1b == 4 && j1c && j1d == 4 && !j1e);
-	FILE *j2a = fopen(HostDir"test.txt", "w"); int j2b = fprintf_(j2a, "test"); FILE *j2c = freopen(HostDir"test.txt", "w", j2a); int j2d = fprintf_(j2c, "test"); int j2e = fflush(j2c); int j2f = fclose(j2c); assert(j2a && j2b == 4 && j2c && j2d == 4 && !j2e && !j2f);
-	FILE *j3a = fopen(HostDir"test.txt", "w"); int j3b = fprintf_(j3a, "%03000d", 1234); FILE *j3c = freopen(HostDir"test.txt", "w", j3a); int j3d = fprintf_(j3c, "%03000d", 1234); int j3e = fflush(j3c); int j3f = fclose(j3c); assert(j3a && j3b == 3000 && j3c && j3d == 3000 && !j3e && !j3f);
+	FILE *j2a = fopen(HostDir"test.txt", "w"); int j2b = fprintf(j2a, "test"); FILE *j2c = freopen(HostDir"test.txt", "w", j2a); int j2d = fprintf(j2c, "test"); int j2e = fflush(j2c); int j2f = fclose(j2c); assert(j2a && j2b == 4 && j2c && j2d == 4 && !j2e && !j2f);
+	FILE *j3a = fopen(HostDir"test.txt", "w"); int j3b = fprintf(j3a, "%03000d", 1234); FILE *j3c = freopen(HostDir"test.txt", "w", j3a); int j3d = fprintf(j3c, "%03000d", 1234); int j3e = fflush(j3c); int j3f = fclose(j3c); assert(j3a && j3b == 3000 && j3c && j3d == 3000 && !j3e && !j3f);
 
 	/* Device Absolute */
 	FILE *k0a = fopen(DeviceDir"missing.txt", "r"); assert(!k0a);
 	makeAFile(DeviceDir"test.txt");
 	FILE *k1a = fopen(DeviceDir"test.txt", "r"); int k1b = fread(buf, 1, 4, k1a); FILE *k1c = freopen(DeviceDir"test.txt", "r", k1a); int k1d = fread(buf, 1, 4, k1c); int k1e = fclose(k1c); assert(k1a && k1b == 4 && k1c && k1d == 4 && !k1e);
-	FILE *k2a = fopen(DeviceDir"test.txt", "w"); int k2b = fprintf_(k2a, "test"); FILE *k2c = freopen(DeviceDir"test.txt", "w", k2a); int k2d = fprintf_(k2c, "test"); int k2e = fflush(k2c); int k2f = fclose(k2c); assert(k2a && k2b == 4 && k2c && k2d == 4 && !k2e && !k2f);
-	FILE *k3a = fopen(DeviceDir"test.txt", "w"); int k3b = fprintf_(k3a, "%03000d", 1234); FILE *k3c = freopen(DeviceDir"test.txt", "w", k3a); int k3d = fprintf_(k3c, "%03000d", 1234); int k3e = fflush(k3c); int k3f = fclose(k3c); assert(k3a && k3b == 3000 && k3c && k3d == 3000 && !k3e && !k3f);
+	FILE *k2a = fopen(DeviceDir"test.txt", "w"); int k2b = fprintf(k2a, "test"); FILE *k2c = freopen(DeviceDir"test.txt", "w", k2a); int k2d = fprintf(k2c, "test"); int k2e = fflush(k2c); int k2f = fclose(k2c); assert(k2a && k2b == 4 && k2c && k2d == 4 && !k2e && !k2f);
+	FILE *k3a = fopen(DeviceDir"test.txt", "w"); int k3b = fprintf(k3a, "%03000d", 1234); FILE *k3c = freopen(DeviceDir"test.txt", "w", k3a); int k3d = fprintf(k3c, "%03000d", 1234); int k3e = fflush(k3c); int k3f = fclose(k3c); assert(k3a && k3b == 3000 && k3c && k3d == 3000 && !k3e && !k3f);
 
 	/* Host Relative */
 	chdir(HostDir);
 	FILE *l0a = fopen("missing.txt", "r"); assert(!l0a);
 	makeAFile("test.txt");
 	FILE *l1a = fopen("test.txt", "r"); int l1b = fread(buf, 4, 1, l1a); FILE *l1c = freopen("test.txt", "r", l1a); int l1d = fread(buf, 4, 1, l1c); int l1e = fclose(l1c); assert(l1a);
-	FILE *l2a = fopen("test.txt", "w"); int l2b = fprintf_(l2a, "test"); FILE *l2c = freopen("test.txt", "w", l2a); int l2d = fprintf_(l2c, "test"); int l2e = fflush(l2c); int l2f = fclose(l2c); assert(l2a);
+	FILE *l2a = fopen("test.txt", "w"); int l2b = fprintf(l2a, "test"); FILE *l2c = freopen("test.txt", "w", l2a); int l2d = fprintf(l2c, "test"); int l2e = fflush(l2c); int l2f = fclose(l2c); assert(l2a);
 
 	/* Device Relative */
 	chdir(DeviceDir);
 	FILE *m0a = fopen("missing.txt", "r"); assert(!m0a);
 	makeAFile("test.txt");
 	FILE *m1a = fopen("test.txt", "r"); int m1b = fread(buf, 4, 1, m1a); FILE *m1c = freopen("test.txt", "r", m1a); int m1d = fread(buf, 4, 1, m1c); int m1e = fclose(m1c); assert(m1a);
-	FILE *m2a = fopen("test.txt", "w"); int m2b = fprintf_(m2a, "test"); FILE *m2c = freopen("test.txt", "w", m2a); int m2d = fprintf_(m2c, "test"); int m2e = fflush(m2c); int m2f = fclose(m2c); assert(m2a);
+	FILE *m2a = fopen("test.txt", "w"); int m2b = fprintf(m2a, "test"); FILE *m2c = freopen("test.txt", "w", m2a); int m2d = fprintf(m2c, "test"); int m2e = fflush(m2c); int m2f = fclose(m2c); assert(m2a);
 
 	//// SETVBUF, SETBUF ////
 	//extern __device__ int setvbuf_(FILE *__restrict stream, char *__restrict buf, int modes, size_t n); #sentinel-branch

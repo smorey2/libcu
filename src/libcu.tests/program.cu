@@ -33,7 +33,7 @@ cudaError_t unistd_test1();
 #endif
 
 int main(int argc, char **argv) {
-	int testId = argv[1] ? atoi(argv[1]) : 16;
+	int testId = argv[1] ? atoi(argv[1]) : 12;
 
 	// Choose which GPU to run on, change this on a multi-GPU system.
 	cudaError_t cudaStatus = cudaSetDevice(gpuGetMaxGflopsDevice());
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
 	case 13: cudaStatus = stdio_64bit(); break;
 	case 14: cudaStatus = stdio_ganging(); break;
 	case 15: cudaStatus = stdio_scanf(); break;
-	case 16: cudaStatus = stdlib_test1(); break; // assert
+	case 16: cudaStatus = stdlib_test1(); break;
 	case 17: cudaStatus = stdlib_strtol(); break;
 	case 18: cudaStatus = stdlib_strtoq(); break;
 	case 19: cudaStatus = string_test1(); break;

@@ -30,7 +30,7 @@ typedef struct __align__(8) {
 __device__ streamRef __iob_streamRefs[LIBCU_MAXFILESTREAM]; // Start of circular buffer (set up by host)
 volatile __device__ streamRef *__iob_freeStreamPtr = __iob_streamRefs; // Current atomically-incremented non-wrapped offset
 volatile __device__ streamRef *__iob_retnStreamPtr = __iob_streamRefs; // Current atomically-incremented non-wrapped offset
-__constant__ cuFILE __iob_streams[LIBCU_MAXFILESTREAM+3];
+__constant__ cuFILE __iob_streams[LIBCU_MAXFILESTREAM + 3];
 
 static __forceinline__ __device__ void writeStreamRef(streamRef *ref, cuFILE *s) {
 	ref->file = s;
@@ -46,7 +46,7 @@ static __device__ cuFILE *streamGet(int fd = 0) {
 	streamRef *ref = (streamRef *)((char *)&__iob_streamRefs + offset);
 	cuFILE *s = (cuFILE *)ref->file;
 	if (!s) {
-		s = &__iob_streams[offsetId+3];
+		s = &__iob_streams[offsetId + 3];
 		writeStreamRef(ref, s);
 	}
 	s->_file = fd;
@@ -92,12 +92,12 @@ __device__ FILE *tmpfile_() {
 	char newPath[50] = TEMP_DIR;
 	dirEnt_t *ent = fsystemOpendir(newPath);
 	int r; if (!ent) fsystemMkdir(newPath, 0666, &r);
-	newPath[TEMP_DIRLENGTH+6] = 0;
+	newPath[TEMP_DIRLENGTH + 6] = 0;
 	int i; for (i = 0; i < 10; i++) {
 		for (int n = 0; n < 6; n++) {
-			int x = rand() % (10+26);
-			char c = x < 10 ? x+'0' : x < 10+26 ? x-10+'a' : 'Z';
-			newPath[TEMP_DIRLENGTH+n] = c;
+			int x = rand() % (10 + 26);
+			char c = x < 10 ? x + '0' : x < 10 + 26 ? x - 10 + 'a' : 'Z';
+			newPath[TEMP_DIRLENGTH + n] = c;
 		}
 		if (!fsystemAccess(newPath, 0, &r)) break;
 	}
@@ -114,8 +114,7 @@ __device__ FILE *tmpfile_() {
 
 /* Close STREAM. */
 __device__ int fclose_(FILE *stream, bool wait) {
-	if (ISHOSTFILE(stream)) { 
-		stdio_fclose msg(wait, stream); return msg.RC; }
+	if (ISHOSTFILE(stream)) { stdio_fclose msg(wait, stream); return msg.RC; }
 	register cuFILE *s = (cuFILE *)stream;
 	dirEnt_t *f; UNUSED_SYMBOL(f);
 	if (!s || !(f = (dirEnt_t *)s->_base))
@@ -141,9 +140,9 @@ __device__ FILE *freopen_(const char *__restrict filename, const char *__restric
 	// Parse the specified mode.
 	unsigned short openMode = O_RDONLY;
 	if (*modes != 'r') { // Not read...
-		openMode = (O_WRONLY|O_CREAT|O_TRUNC);
+		openMode = (O_WRONLY | O_CREAT | O_TRUNC);
 		if (*modes != 'w') { // Not write (create or truncate)...
-			openMode = (O_WRONLY|O_CREAT|O_APPEND);
+			openMode = (O_WRONLY | O_CREAT | O_APPEND);
 			if (*modes != 'a') {	// Not write (create or append)...
 				_set_errno(EINVAL); // So illegal mode.
 				streamFree(s);
@@ -155,8 +154,8 @@ __device__ FILE *freopen_(const char *__restrict filename, const char *__restric
 		++modes;
 	if (modes[1] == '+') { // Read and Write.
 		++modes;
-		openMode |= (O_RDONLY|O_WRONLY);
-		openMode += (O_RDWR - (O_RDONLY|O_WRONLY));
+		openMode |= (O_RDONLY | O_WRONLY);
+		openMode += (O_RDWR - (O_RDONLY | O_WRONLY));
 	}
 
 	// Need to allocate a FILE (not freopen).
@@ -178,7 +177,7 @@ __device__ FILE *freopen_(const char *__restrict filename, const char *__restric
 /* Open a file and create a new stream for it. */
 __device__ FILE *fopen_(const char *__restrict filename, const char *__restrict modes) {
 	if (ISHOSTPATH(filename)) { stdio_freopen msg(filename, modes, nullptr); return msg.RC; }
-	return freopen_(filename, modes, nullptr); 
+	return freopen_(filename, modes, nullptr);
 }
 
 #ifdef __USE_LARGEFILE64
@@ -191,9 +190,9 @@ __device__ FILE *freopen64_(const char *__restrict filename, const char *__restr
 	// Parse the specified mode.
 	unsigned short openMode = O_RDONLY;
 	if (*modes != 'r') { // Not read...
-		openMode = (O_WRONLY|O_CREAT|O_TRUNC);
+		openMode = (O_WRONLY | O_CREAT | O_TRUNC);
 		if (*modes != 'w') { // Not write (create or truncate)...
-			openMode = (O_WRONLY|O_CREAT|O_APPEND);
+			openMode = (O_WRONLY | O_CREAT | O_APPEND);
 			if (*modes != 'a') {	// Not write (create or append)...
 				_set_errno(EINVAL); // So illegal mode.
 				streamFree(s);
@@ -205,8 +204,8 @@ __device__ FILE *freopen64_(const char *__restrict filename, const char *__restr
 		++modes;
 	if (modes[1] == '+') { // Read and Write.
 		++modes;
-		openMode |= (O_RDONLY|O_WRONLY);
-		openMode += (O_RDWR - (O_RDONLY|O_WRONLY));
+		openMode |= (O_RDONLY | O_WRONLY);
+		openMode += (O_RDWR - (O_RDONLY | O_WRONLY));
 	}
 
 	// Need to allocate a FILE (not freopen).
@@ -224,7 +223,7 @@ __device__ FILE *freopen64_(const char *__restrict filename, const char *__restr
 __device__ FILE *fopen64_(const char *__restrict filename, const char *__restrict modes)
 {
 	if (ISHOSTPATH(filename)) { stdio_freopen msg(filename, modes, nullptr); return msg.RC; }
-	return freopen64_(filename, modes, nullptr); 
+	return freopen64_(filename, modes, nullptr);
 }
 #endif
 
@@ -269,7 +268,7 @@ __device__ int vfprintf_(FILE *__restrict s, const char *__restrict format, va_l
 	int size = b.index + 1;
 	// chunk results
 	int rc = 1, offset = 0;
-	if (!ISHOSTFILE(s)) while (size > 0 && rc > 0) { rc = fwrite_(v + offset, 1, size > 1024 ? 1024 : size, s); size -= 1024; offset += rc; }
+	if (!ISHOSTFILE(s)) { rc = fwrite_(v, 1, size, s); offset = size; } //while (size > 0 && rc > 0) { rc = fwrite_(v + offset, 1, size > 4096 ? 4096 : size, s); size -= 4096; offset += rc; }
 	else while (size > 0 && rc > 0) { stdio_fwrite msg(true, v + offset, 1, size > 1024 ? 1024 : size, s); rc = msg.RC; size -= 1024; offset += rc; }
 	free((void *)v);
 	return offset - 1; // remove null termination, returns number of characters written
@@ -450,7 +449,7 @@ __device__ int feof_(FILE *stream) {
 __device__ int ferror_(FILE *stream) {
 	if (ISHOSTFILE(stream)) { stdio_ferror msg(stream); return msg.RC; }
 	if (stream == stdout || stream == stderr)
-		return 0; 
+		return 0;
 	return 0;
 }
 
@@ -504,21 +503,21 @@ static __device__ const char *__sccl(char *tab, const char *fmt) {
 	if (c == '^') {
 		v = 1; // default => accept
 		c = *fmt++; // get new first char
-	} else
-		v = 0; // default => reject 
+	}
+	else v = 0; // default => reject
 	memset(tab, v, 256); // XXX: Will not work if sizeof(tab*) > sizeof(char)
 	if (c == 0)
-		return (fmt - 1); // format ended before closing ]
+		return fmt - 1; // format ended before closing ]
 	// Now set the entries corresponding to the actual scanset to the opposite of the above.
 	// The first character may be ']' (or '-') without being special; the last character may be '-'.
 	v = 1 - v;
 	for (;;) {
 		tab[c] = v; // take character c
-doswitch:
+	doswitch:
 		n = *fmt++; // and examine the next
 		switch (n) {
 		case 0: // format ended too soon
-			return (fmt - 1);
+			return fmt - 1;
 		case '-':
 			// A scanset of the form [01+-]
 			// is defined as `the digit 0, the digit 1, the character +, the character -', but
@@ -602,10 +601,10 @@ __device__ int vsscanf_(const char *__restrict str, const char *__restrict fmt, 
 		width = 0;
 		flags = 0;
 		// switch on the format.  continue if done; break once format type is derived.
-again:	c = *fmt++;
+	again:	c = *fmt++;
 		switch (c) {
 		case '%':
-literal_:
+		literal_:
 			if (inr <= 0)
 				goto input_failure;
 			if (*str != c)
@@ -620,8 +619,8 @@ literal_:
 			if (flags & LONG) {
 				flags &= ~LONG;
 				flags |= LONGLONG;
-			} else
-				flags |= LONG;
+			}
+			else flags |= LONG;
 			goto again;
 		case 'q':
 			flags |= LONGLONG; // not quite
@@ -630,8 +629,8 @@ literal_:
 			if (flags & SHORT) {
 				flags &= ~SHORT;
 				flags |= SHORTSHORT;
-			} else
-				flags |= SHORT;
+			}
+			else flags |= SHORT;
 			goto again;
 
 		case '0': case '1': case '2': case '3': case '4':
@@ -678,7 +677,7 @@ literal_:
 			c = CT_CHAR;
 			break;
 		case 'p': // pointer format is like hex
-			flags |= POINTER|PFXOK;
+			flags |= POINTER | PFXOK;
 			c = CT_INT;
 			flags |= UNSIGNED;
 			base = 16;
@@ -818,7 +817,7 @@ literal_:
 				width = sizeof(buf) - 2;
 			width++;
 #endif
-			flags |= SIGNOK|NDIGITS|NZDIGITS;
+			flags |= SIGNOK | NDIGITS | NZDIGITS;
 			for (p = buf; width; width--) {
 				c = *str;
 				// Switch on the character; `goto ok' if we accept it as a part of number.
@@ -832,18 +831,18 @@ literal_:
 						base = 8;
 						flags |= PFXOK;
 					}
-					if (flags & NZDIGITS) flags &= ~(SIGNOK|NZDIGITS|NDIGITS);
-					else flags &= ~(SIGNOK|PFXOK|NDIGITS);
+					if (flags & NZDIGITS) flags &= ~(SIGNOK | NZDIGITS | NDIGITS);
+					else flags &= ~(SIGNOK | PFXOK | NDIGITS);
 					goto ok;
 				case '1': case '2': case '3': // 1 through 7 always legal
 				case '4': case '5': case '6': case '7':
 					base = _basefix[base];
-					flags &= ~(SIGNOK|PFXOK|NDIGITS);
+					flags &= ~(SIGNOK | PFXOK | NDIGITS);
 					goto ok;
 				case '8': case '9': // digits 8 and 9 ok iff decimal or hex
 					base = _basefix[base];
 					if (base <= 8) break; // not legal here
-					flags &= ~(SIGNOK|PFXOK|NDIGITS);
+					flags &= ~(SIGNOK | PFXOK | NDIGITS);
 					goto ok;
 				case 'A': case 'B': case 'C': // letters ok iff hex
 				case 'D': case 'E': case 'F':
@@ -851,7 +850,7 @@ literal_:
 				case 'd': case 'e': case 'f':
 					// no need to fix base here
 					if (base <= 10) break; // not legal here
-					flags &= ~(SIGNOK|PFXOK|NDIGITS);
+					flags &= ~(SIGNOK | PFXOK | NDIGITS);
 					goto ok;
 				case '+': case '-': // sign ok only as first character
 					if (flags & SIGNOK) {
@@ -869,13 +868,12 @@ literal_:
 				}
 				// If we got here, c is not a legal character for a number.  Stop accumulating digits.
 				break;
-ok:
+			ok:
 				// c is legal: store it and look at the next.
 				*p++ = c;
 				if (--inr > 0)
 					str++;
-				else 
-					break; // end of input
+				else break; // end of input
 			}
 			// If we had only a sign, it is no good; push back the sign.  If the number ends in `x',
 			// it was [sign] '0' 'x', so push back the x and treat it as [sign] '0'.

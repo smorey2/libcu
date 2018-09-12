@@ -6,6 +6,8 @@
 #include <assert.h>
 //
 #include <unistdcu.h>
+#define HostDir "C:\\T_\\"
+#define DeviceDir ":\\"
 
 static __global__ void g_testbed();
 static __global__ void g_memmove_speed();
@@ -26,7 +28,9 @@ int main() {
 		goto Error;
 	}
 
+	cudaErrorCheck(cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 5));
 	sentinelServerInitialize();
+	//sentinelRegisterFileUtils();
 
 	g_testbed<<<1, 1>>>();
 
@@ -89,7 +93,13 @@ static __constant__ const char *_quickbrownfox =
 static __device__ char _buf1[50];
 
 static __global__ void g_testbed() {
-
+	FILE *k3a = fopen(DeviceDir"test.txt", "w");
+	int k3b = fprintf(k3a, "%03000d", 1234);
+	FILE *k3c = freopen(DeviceDir"test.txt", "w", k3a);
+	int k3d = fprintf(k3c, "%03000d", 1234);
+	int k3e = fflush(k3c);
+	int k3f = fclose(k3c);
+	assert(k3a && k3b == 3000 && k3c && k3d == 3000 && !k3e && !k3f);
 }
 
 static __global__ void g_memmove_speed() {

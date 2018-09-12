@@ -164,9 +164,6 @@
     <None Include="ext\hash.cu">
       <Filter>ext</Filter>
     </None>
-    <None Include="ext\memfile.cu">
-      <Filter>ext</Filter>
-    </None>
     <None Include="fsystem.cu" />
     <None Include="fcntlcu.cu" />
     <None Include="grpcu.cu" />
@@ -177,9 +174,6 @@
     <None Include="pwdcu.cu" />
     <None Include="crtdefscu.cu" />
     <None Include="stdiocu.cu" />
-    <None Include="ext\pipeline.cu">
-      <Filter>ext</Filter>
-    </None>
     <None Include="locale\ascii.cu">
       <Filter>locale</Filter>
     </None>
@@ -191,6 +185,12 @@
     </None>
     <None Include="locale\xlocale.cu">
       <Filter>locale</Filter>
+    </None>
+    <None Include="ext\memfile.cu">
+      <Filter>ext</Filter>
+    </None>
+    <None Include="ext\pipeline.cu">
+      <Filter>ext</Filter>
     </None>
   </ItemGroup>
 </Project>

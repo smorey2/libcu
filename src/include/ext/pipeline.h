@@ -29,6 +29,23 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
+#ifdef _MSC_VER
+#define FDTYPE HANDLE
+#define PIDTYPE HANDLE
+#define __BAD_FD INVALID_HANDLE_VALUE
+#define __BAD_PID INVALID_HANDLE_VALUE
+#else
+	typedef int FDTYPE;
+	typedef int PIDTYPE;
+#define __BAD_FD -1
+#define __BAD_PID -1
+#endif
+
+	/* Cleanup Children */
+	extern int CleanupChildren_(int numPids, PIDTYPE *pids, int child_siginfo);
+	/* Create Pipeline */
+	extern int CreatePipeline_(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, FDTYPE *outPipePtr, FDTYPE *errFilePtr);
+
 #ifdef  __cplusplus
 }
 #endif

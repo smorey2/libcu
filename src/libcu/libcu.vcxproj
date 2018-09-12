@@ -66,6 +66,7 @@
     <ClCompile Include="sentinel-host.cpp" />
     <ClCompile Include="cuda_runtime.cpp" />
     <None Include="sys\timecu.cu" />
+    <None Include="sys\statcu.cu" />
     <None Include="pwdcu.cu" />
     <None Include="ext\hash.cu" />
     <None Include="ext\pipeline.cu">
@@ -76,31 +77,20 @@
     <None Include="fcntlcu.cu" />
     <None Include="grpcu.cu" />
     <None Include="crtdefscu.cu" />
-    <None Include="locale\ascii.cu">
-      <FileType>Document</FileType>
-    </None>
-    <None Include="locale\none.cu">
-      <FileType>Document</FileType>
-    </None>
-    <None Include="locale\utf8.cu">
-      <FileType>Document</FileType>
-    </None>
-    <None Include="locale\xlocale.cu">
-      <FileType>Document</FileType>
-    </None>
+    <None Include="locale\ascii.cu" />
+    <None Include="locale\none.cu" />
+    <None Include="locale\utf8.cu" />
+    <None Include="locale\xlocale.cu" />
     <CudaCompile Include="program.cu" />
     <CudaCompile Include="libcu.cu" />
     <CudaCompile Include="libcu.stdlib.cu" />
     <None Include="ctypecu.cu" />
     <None Include="sentinel-gpu.cu" />
-    <None Include="sys\statcu.cu" />
     <None Include="direntcu.cu" />
     <None Include="errnocu.cu" />
     <None Include="regexcu.cu" />
     <None Include="setjmpcu.cu" />
-    <None Include="stdiocu.cu">
-      <FileType>Document</FileType>
-    </None>
+    <None Include="stdiocu.cu" />
     <None Include="stdlibcu.cu" />
     <CudaCompile Include="stringcu.cu" />
     <None Include="timecu.cu" />

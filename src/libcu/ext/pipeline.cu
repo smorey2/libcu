@@ -17,11 +17,6 @@
 #include <io.h>
 #include <string>
 
-typedef HANDLE FDTYPE;
-typedef HANDLE PIDTYPE;
-#define __BAD_FD INVALID_HANDLE_VALUE
-#define __BAD_PID INVALID_HANDLE_VALUE
-
 #define WIFEXITED(STATUS) 1
 #define WEXITSTATUS(STATUS) (STATUS)
 #define WIFSIGNALED(STATUS) 0
@@ -189,10 +184,10 @@ end:
 #include <sys/wait.h>
 #include <sys/stat.h>
 
-typedef int FDTYPE;
-typedef int PIDTYPE;
-#define __BAD_FD -1
-#define __BAD_PID -1
+//typedef int FDTYPE;
+//typedef int PIDTYPE;
+//#define __BAD_FD -1
+//#define __BAD_PID -1
 
 #define __Pipe pipe
 #define __Fileno fileno
@@ -296,8 +291,7 @@ typedef struct OpenFile {
 } OpenFile_t;
 
 /* Create a new process using the vfork system call, and keep track of it for "safe" waiting with Tcl_WaitPids. */
-PIDTYPE StartProcess(char **argv, char *env, FDTYPE inputId, FDTYPE outputId, FDTYPE errorId)
-{
+static PIDTYPE StartProcess(char **argv, char *env, FDTYPE inputId, FDTYPE outputId, FDTYPE errorId) {
 #if __OS_UNIX
 	// Disable SIGPIPE signals:  if they were allowed, this process might go away unexpectedly if children misbehave.  This code
 	// can potentially interfere with other application code that expects to handle SIGPIPEs;  what's really needed is an
@@ -330,8 +324,7 @@ PIDTYPE StartProcess(char **argv, char *env, FDTYPE inputId, FDTYPE outputId, FD
 	return pid;
 }
 
-static void ReapDetachedPids()
-{
+static void ReapDetachedPids() {
 	int count, dest = 0;
 	register WaitInfo_t *info;
 	for (info = _waitInfo.table, count = _waitInfo.used; count > 0; info++, count--) {
@@ -345,8 +338,7 @@ static void ReapDetachedPids()
 	}
 }
 
-static PIDTYPE WaitForProcess(PIDTYPE pid, int *statusPtr)
-{
+static PIDTYPE WaitForProcess(PIDTYPE pid, int *statusPtr) {
 	for (int i = 0; i < _waitInfo.used; i++) {
 		if (pid == _waitInfo.table[i].pid) {
 			__WaitPid(pid, statusPtr, 0); // wait for it
@@ -359,8 +351,7 @@ static PIDTYPE WaitForProcess(PIDTYPE pid, int *statusPtr)
 	return __BAD_PID;
 }
 
-static void DetachPids(int numPids, const PIDTYPE *pids)
-{
+static void DetachPids(int numPids, const PIDTYPE *pids) {
 	for (int i = 0; i < _waitInfo.used; i++)
 		for (int j = 0; j < numPids; j++) {
 			if (pids[j] == _waitInfo.table[i].pid) {
@@ -370,8 +361,8 @@ static void DetachPids(int numPids, const PIDTYPE *pids)
 		}
 }
 
-static int CleanupChildren(int numPids, PIDTYPE *pids, int child_siginfo)
-{
+/* Cleanup Children */
+int CleanupChildren_(int numPids, PIDTYPE *pids, int child_siginfo) {
 	int result = 0;
 	for (int i = 0; i < numPids; i++) {
 		int waitStatus = 0;
@@ -439,7 +430,8 @@ static FILE *GetAioFilehandle(const char *input) {
 #define FILE_HANDLE 2           /* input/output: filehandle */
 #define FILE_TEXT   3           /* input only:   input is actual text */
 
-static int CreatePipeline(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, FDTYPE *outPipePtr, FDTYPE *errFilePtr) {
+/* Create Pipeline */
+int CreatePipeline_(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, FDTYPE *outPipePtr, FDTYPE *errFilePtr) {
 	ReapDetachedPids();
 	if (inPipePtr != NULL) *inPipePtr = __BAD_FD;
 	if (outPipePtr != NULL) *outPipePtr = __BAD_FD;
