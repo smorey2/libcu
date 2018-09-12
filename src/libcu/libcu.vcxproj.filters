@@ -110,6 +110,9 @@
     <CudaCompile Include="program.cu" />
     <CudaCompile Include="libcu.stdlib.cu" />
     <CudaCompile Include="stringcu.cu" />
+    <CudaCompile Include="ext\pipeline.cu">
+      <Filter>ext</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="_content">
@@ -187,9 +190,6 @@
       <Filter>locale</Filter>
     </None>
     <None Include="ext\memfile.cu">
-      <Filter>ext</Filter>
-    </None>
-    <None Include="ext\pipeline.cu">
       <Filter>ext</Filter>
     </None>
   </ItemGroup>

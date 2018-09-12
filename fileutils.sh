@@ -1,5 +1,6 @@
 #! /bin/sh
 cp src/CMakeLists.fileutils.txt src/CMakeLists.txt
+if test "$CUARCH" = ""; then export CUARCH=35; fi
 
 # START
 rm -rf _fileutils
@@ -8,7 +9,7 @@ cd _fileutils
 
 
 # BUILD64
-cmake -DM=64 -DC64=ON -DCMAKE_CUDA_FLAGS="-arch=sm_60" ../src
+cmake -DM=64 -DC64=ON -Darch="$CUARCH" -DCMAKE_CUDA_FLAGS="-arch=sm_$CUARCH" ../src
 cmake --build . --config Debug
 
 

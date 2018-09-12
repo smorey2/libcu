@@ -8,11 +8,6 @@
 // PORTABILITY
 #pragma region PORTABILITY
 #if __OS_WIN
-#ifndef STRICT
-#define STRICT
-#endif
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 #include <fcntl.h>
 #include <io.h>
 #include <string>

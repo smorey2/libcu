@@ -30,8 +30,13 @@ extern "C" {
 #endif
 
 #ifdef _MSC_VER
-#define FDTYPE HANDLE
-#define PIDTYPE HANDLE
+#ifndef STRICT
+#define STRICT
+#endif
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+	typedef HANDLE FDTYPE;
+	typedef HANDLE PIDTYPE;
 #define __BAD_FD INVALID_HANDLE_VALUE
 #define __BAD_PID INVALID_HANDLE_VALUE
 #else
