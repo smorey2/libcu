@@ -8,77 +8,77 @@ link_directories(../_build/build64)
 add_executable(dcat
 	libcu.fileutils/dcat.cu
   )
-  target_link_libraries(dcat PRIVATE libcu.${arch}.a)
+  target_link_libraries(dcat PRIVATE libcu.${arch})
 # dcd
 add_executable(dcd
 	libcu.fileutils/dcd.cu
   )
-  target_link_libraries(dcd PRIVATE libcu.${arch}.a)
+  target_link_libraries(dcd PRIVATE libcu.${arch})
 # dchgrp
 add_executable(dchgrp
 	libcu.fileutils/dchgrp.cu
   )
-  target_link_libraries(dchgrp PRIVATE libcu.${arch}.a)
+  target_link_libraries(dchgrp PRIVATE libcu.${arch})
 # dchmod
 add_executable(dchmod
 	libcu.fileutils/dchmod.cu
   )
-  target_link_libraries(dchmod PRIVATE libcu.${arch}.a)
+  target_link_libraries(dchmod PRIVATE libcu.${arch})
 # dchown
 add_executable(dchown
 	libcu.fileutils/dchown.cu
   )
-  target_link_libraries(dchown PRIVATE libcu.${arch}.a)
+  target_link_libraries(dchown PRIVATE libcu.${arch})
 # dcmp
 add_executable(dcmp
 	libcu.fileutils/dcmp.cu
   )
-  target_link_libraries(dcmp PRIVATE libcu.${arch}.a)
+  target_link_libraries(dcmp PRIVATE libcu.${arch})
 # dcp
 add_executable(dcp
 	libcu.fileutils/dcp.cu
   )
-  target_link_libraries(dcp PRIVATE libcu.${arch}.a)
+  target_link_libraries(dcp PRIVATE libcu.${arch})
 # dgrep
 add_executable(dgrep
 	libcu.fileutils/dgrep.cu
   )
-  target_link_libraries(dgrep PRIVATE libcu.${arch}.a)
+  target_link_libraries(dgrep PRIVATE libcu.${arch})
 # dls
 add_executable(dls
 	libcu.fileutils/dls.cu
   )
-  target_link_libraries(dls PRIVATE libcu.${arch}.a)
+  target_link_libraries(dls PRIVATE libcu.${arch})
 # dmkdir
 add_executable(dmkdir
 	libcu.fileutils/dmkdir.cu
   )
-  target_link_libraries(dmkdir PRIVATE libcu.${arch}.a)
+  target_link_libraries(dmkdir PRIVATE libcu.${arch})
 # dmore
 add_executable(dmore
 	libcu.fileutils/dmore.cu
   )
-  target_link_libraries(dmore PRIVATE libcu.${arch}.a)
+  target_link_libraries(dmore PRIVATE libcu.${arch})
 # dmv
 add_executable(dmv
 	libcu.fileutils/dmv.cu
   )
-  target_link_libraries(dmv PRIVATE libcu.${arch}.a)
+  target_link_libraries(dmv PRIVATE libcu.${arch})
 # dpwd
 add_executable(dpwd
 	libcu.fileutils/dpwd.cu
   )
-  target_link_libraries(dpwd PRIVATE libcu.${arch}.a)
+  target_link_libraries(dpwd PRIVATE libcu.${arch})
 # drm
 add_executable(drm
 	libcu.fileutils/drm.cu
   )
-  target_link_libraries(drm PRIVATE libcu.${arch}.a)
+  target_link_libraries(drm PRIVATE libcu.${arch})
 # drmdir
 add_executable(drmdir
 	libcu.fileutils/drmdir.cu
   )
-  target_link_libraries(drmdir PRIVATE libcu.${arch}.a)
+  target_link_libraries(drmdir PRIVATE libcu.${arch})
 
 # Request that libcu be built with -std=c++11. As this is a public compile feature anything that links to particles will also build with -std=c++11
 target_compile_features(dcat PUBLIC cxx_std_11)

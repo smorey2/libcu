@@ -11,7 +11,7 @@ int dchown(char *str, int uid) {
 	char *d_str;
 	cudaMalloc(&d_str, strLength);
 	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
-	g_dchown << <1, 1 >> >(d_str, uid);
+	g_dchown<<<1, 1>>>(d_str, uid);
 	cudaFree(d_str);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dchown_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

@@ -64,7 +64,7 @@ __device__ dirEnt_t __iob_root = {
 #endif
 };
 __device__ hash_t __iob_dir = HASHINIT;
-
+__device__ mode_t __umask = 0;
 
 __device__ int expandPath(const char *path, char *newPath) {
 	register unsigned char *d = (unsigned char *)newPath;
@@ -262,6 +262,27 @@ __device__ dirEnt_t *fsystemMkdir(const char *__restrict path, int mode, int *r)
 	*r = 0;
 	return dirEnt;
 }
+
+__device__ dirEnt_t *fsystemMkfifo(const char *__restrict path, int mode, int *r) {
+	char newPath[MAX_PATH]; expandPath(path, newPath);
+	dirEnt_t *dirEnt = (dirEnt_t *)hashFind(&__iob_dir, newPath);
+	if (dirEnt) {
+		*r = 1;
+		return dirEnt;
+	}
+	const char *name;
+	dirEnt_t *parentEnt = findDirInPath(newPath, &name);
+	if (!parentEnt) {
+		_set_errno(ENOENT);
+		*r = -1;
+		return nullptr;
+	}
+	// create directory
+	dirEnt = createEnt(parentEnt, newPath, name, DIRTYPE_FIFO, 0);
+	*r = 0;
+	return dirEnt;
+}
+
 
 __device__ dirEnt_t *fsystemAccess(const char *__restrict path, int mode, int *r) {
 	char newPath[MAX_PATH]; expandPath(path, newPath);

@@ -42,8 +42,7 @@ __device__ int chmod_(const char *file, mode_t mode) {
 
 /* Set the file creation mask of the current process to MASK, and return the old creation mask.  */
 __device__ mode_t umask_(mode_t mask) {
-	panic("Not Implemented");
-	return 0;
+	mode_t r = __umask; __umask = mask; return r;
 }
 
 /* Create a new directory named PATH, with permission bits MODE.  */
@@ -55,6 +54,5 @@ __device__ int mkdir_(const char *path, mode_t mode) {
 /* Create a new FIFO named PATH, with permission bits MODE.  */
 __device__ int mkfifo_(const char *path, mode_t mode) {
 	if (ISHOSTPATH(path)) { fcntl_mkfifo msg(path, mode); return msg.RC; }
-	panic("Not Implemented");
-	return 0;
+	int r; fsystemMkfifo(path, mode, &r); return r;
 }

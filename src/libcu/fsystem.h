@@ -14,6 +14,7 @@ __BEGIN_DECLS;
 enum {
 	DIRTYPE_DIR = 1,
 	DIRTYPE_FILE = 2,
+	DIRTYPE_FIFO = 2,
 };
 
 struct dirEnt_t {
@@ -37,6 +38,7 @@ __device__ dirEnt_t *fsystemOpendir(const char *path);
 __device__ int fsystemRename(const char *old, const char *new_);
 __device__ int fsystemUnlink(const char *path, bool enotdir);
 __device__ dirEnt_t *fsystemMkdir(const char *__restrict path, int mode, int *r);
+__device__ dirEnt_t *fsystemMkfifo(const char *__restrict path, int mode, int *r);
 __device__ dirEnt_t *fsystemAccess(const char *__restrict path, int mode, int *r);
 __device__ dirEnt_t *fsystemOpen(const char *__restrict path, int mode, int *fd);
 __device__ void fsystemClose(int fd);

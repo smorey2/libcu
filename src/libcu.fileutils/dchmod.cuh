@@ -9,7 +9,7 @@ int dchmod(char *str, int mode) {
 	char *d_str;
 	cudaMalloc(&d_str, strLength);
 	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
-	g_dchmod << <1, 1 >> >(d_str, mode);
+	g_dchmod<<<1, 1>>>(d_str, mode);
 	cudaFree(d_str);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dchmod_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

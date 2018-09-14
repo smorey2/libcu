@@ -11,7 +11,7 @@ int dchgrp(char *str, int gid) {
 	char *d_str;
 	cudaMalloc(&d_str, strLength);
 	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
-	g_dchgrp << <1, 1 >> >(d_str, gid);
+	g_dchgrp<<<1, 1>>>(d_str, gid);
 	cudaFree(d_str);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dchgrp_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }
