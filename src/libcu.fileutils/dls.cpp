@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "sentinel-fileutilsmsg.h"
+#include <sentinel-client.cpp>
+#include <ext/pipeline.cpp>
 
 // Flags for the LS command.
 #define	LSF_LONG	0x01
@@ -10,12 +12,16 @@
 #define	LSF_MULT	0x08
 #define LSF_ALL		0x10		// List files starting with `.'
 #define LSF_CLASS	0x20		// Classify files (append symbol)
-
-inline int dls_(char *str, int flags, bool endSlash) { fileutils_dls msg(str, flags, endSlash); return msg.RC; }
+__forceinline__ int dls_(char *str, int flags, bool endSlash) { fileutils_dls msg(str, flags, endSlash); return msg.RC; }
 
 int main(int argc, const char **argv) {
 	atexit(sentinelClientShutdown);
 	sentinelClientInitialize();
+
+	//// pipeline
+	//FDTYPE in, out, err;
+	//CreatePipeline(0, nullptr, nullptr, &in, &out, &err);
+	//sentinelRedirect redir((int)in, (int)out, (int)err);
 
 	// setup
 	dls_(nullptr, 1, false);

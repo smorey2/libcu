@@ -63,8 +63,8 @@ __device__ dirEnt_t __iob_root = {
 { 0, 0, 0, 1, ":\\" }, nullptr, nullptr
 #endif
 };
-__device__ hash_t __iob_dir = HASHINIT;
-__device__ mode_t __umask = 0;
+static __device__ hash_t __iob_dir = HASHINIT;
+static __device__ mode_t __umask = 0;
 
 __device__ int expandPath(const char *path, char *newPath) {
 	register unsigned char *d = (unsigned char *)newPath;
@@ -148,6 +148,12 @@ static __device__ dirEnt_t *findDirInPath(const char *path, const char **file) {
 	*file2 = '\\';
 	*file = file2 + 1;
 	return ent;
+}
+
+__device__ mode_t fsystemUmask(mode_t mask) {
+	mode_t r = __umask;
+	__umask = mask;
+	return r;
 }
 
 __device__ int fsystemChdir(const char *path) {
@@ -240,6 +246,10 @@ __device__ int fsystemUnlink(const char *path, bool enotdir) {
 
 	// free entity
 	freeEnt(ent);
+	return 0;
+}
+
+__device__ int fsystemChmod(const char *file, mode_t mode) {
 	return 0;
 }
 

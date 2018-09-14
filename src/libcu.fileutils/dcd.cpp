@@ -2,9 +2,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "sentinel-fileutilsmsg.h"
+#include <sentinel-client.cpp>
 
-inline int dpwd_(char *ptr) { fileutils_dpwd msg; strcpy(ptr, msg.Ptr); return msg.RC; }
-inline int dcd_(char *str) { fileutils_dcd msg(str); return msg.RC; }
+__forceinline__ int dpwd_(char *ptr) { fileutils_dpwd msg; strcpy(ptr, msg.Ptr); return msg.RC; }
+__forceinline__ int dcd_(char *str) { fileutils_dcd msg(str); return msg.RC; }
 
 int main(int argc, const char **argv) {
 	atexit(sentinelClientShutdown);

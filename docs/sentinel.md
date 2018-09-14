@@ -37,7 +37,6 @@ extern void sentinelUnregisterExecutor(sentinelExecutor *exec, bool forDevice = 
 extern void sentinelRegisterFileUtils();
 ```
 
-
 ## Structure
 These defines are used for Sentinel:
 * `SENTINEL_NAME` - default name to use for IPC when calling `sentinelServerInitialize`
@@ -111,6 +110,23 @@ sentinelMessage
 - Prepare() - method to prepare message for transport
 ```
 
+### sentinelRedirect
+The `sentinelRedirect` holds stdin, stdout, stderr for redirection
+```
+sentinelRedirect
+- In - stdin
+- Out - stdout
+- Err - stderr
+```
+
+### SentinelClientMessage
+The `sentinelClientMessage` holds `sentinelMessage` and `sentinelRedirect`
+```
+sentinelClientMessage
+- Base - sentinelMessage
+- Redir - sentinelRedirect
+```
+
 ### SentinelExecutor
 The `sentinelExecutor` is responsible for executing message on host.
 ```
@@ -160,8 +176,7 @@ Message asset(s) referenced outside of the message payload, like string values, 
 * `prepare` must embed referenced values, replacing the original pointers with the emeded one and apply the offset to align memory maps.
 ```
 struct module_string {
-	static __forceinline __device__ char *Prepare(module_string *t, char *data, char *dataEnd, intptr_t offset)
-	{
+	static __forceinline __device__ char *Prepare(module_string *t, char *data, char *dataEnd, intptr_t offset) {
 		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
 		char *str = (char *)(data += _ROUND8(sizeof(*t)));
 		char *end = (char *)(data += strLength);
@@ -180,8 +195,7 @@ struct module_string {
 
 ### Executor
 ```
-bool sentinelExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*,char*,char*,intptr_t))
-{
+bool sentinelExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*,char*,char*,intptr_t)) {
 	switch (data->OP) {
 	case MODULE_SIMPLE: { module_simple *msg = (module_simple *)data; msg->RC = msg->Value; return true; }
 	case MODULE_STRING: { module_string *msg = (module_string *)data; msg->RC = strlen(msg->Str); return true; }

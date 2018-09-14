@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "sentinel-fileutilsmsg.h"
+#include <sentinel-client.cpp>
 
 #define CAT_BUF_SIZE 4096
 void dumpfile(FILE *f) {

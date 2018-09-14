@@ -3,7 +3,7 @@
 #include <stddefcu.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errnocu.h>
+#include <errno.h>
 
 // PORTABILITY
 #pragma region PORTABILITY
@@ -179,11 +179,6 @@ end:
 #include <sys/wait.h>
 #include <sys/stat.h>
 
-//typedef int FDTYPE;
-//typedef int PIDTYPE;
-//#define __BAD_FD -1
-//#define __BAD_PID -1
-
 #define __Pipe pipe
 #define __Fileno fileno
 #define __Read read
@@ -357,7 +352,7 @@ static void DetachPids(int numPids, const PIDTYPE *pids) {
 }
 
 /* Cleanup Children */
-int CleanupChildren_(int numPids, PIDTYPE *pids, int child_siginfo) {
+int CleanupChildren(int numPids, PIDTYPE *pids, int child_siginfo) {
 	int result = 0;
 	for (int i = 0; i < numPids; i++) {
 		int waitStatus = 0;
@@ -426,7 +421,7 @@ static FILE *GetAioFilehandle(const char *input) {
 #define FILE_TEXT   3           /* input only:   input is actual text */
 
 /* Create Pipeline */
-int CreatePipeline_(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, FDTYPE *outPipePtr, FDTYPE *errFilePtr) {
+int CreatePipeline(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, FDTYPE *outPipePtr, FDTYPE *errFilePtr) {
 	ReapDetachedPids();
 	if (inPipePtr != NULL) *inPipePtr = __BAD_FD;
 	if (outPipePtr != NULL) *outPipePtr = __BAD_FD;
@@ -435,10 +430,11 @@ int CreatePipeline_(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr,
 	// First, scan through all the arguments to figure out the structure of the pipeline.  Count the number of distinct processes (it's the
 	// number of "|" arguments).  If there are "<", "<<", or ">" arguments then make note of input and output redirection and remove these
 	// arguments and the arguments that follow them.
-	if (!argc) {
-		printf("didn't specify command to execute");
-		return -1;
-	}
+	//if (!argc) {
+	//	printf("didn't specify command to execute");
+	//	return -1;
+	//}
+
 	const char *input = nullptr;	// Describes input for pipeline, depending on "inputFile".  NULL means take input from stdin/pipe.
 	int inputFile = FILE_NAME;		// 1 means input is name of input file.
 	// 2 means input is filehandle name.
@@ -455,49 +451,51 @@ int CreatePipeline_(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr,
 	// All this is ignored if error is NULL */
 	int cmdCount = 1; // Count of number of distinct commands found in argc/argv.
 	int lastBar = -1;
-	for (int i = 0; i < argc; i++) {
-		const char *arg = argv[i];
-		if ((arg[0] == '|' && !arg[1]) || (arg[0] == '|' && arg[1] == '&' && !arg[2])) {
-			if (i == lastBar + 1 || i == argc - 1) { printf("illegal use of | or |& in command"); return -1; }
-			lastBar = i;
-			cmdCount++;
-			continue;
+	if (argc) {
+		for (int i = 0; i < argc; i++) {
+			const char *arg = argv[i];
+			if ((arg[0] == '|' && !arg[1]) || (arg[0] == '|' && arg[1] == '&' && !arg[2])) {
+				if (i == lastBar + 1 || i == argc - 1) { printf("illegal use of | or |& in command"); return -1; }
+				lastBar = i;
+				cmdCount++;
+				continue;
+			}
+			else if (arg[0] == '<') {
+				input = arg + 1;
+				inputFile = FILE_NAME;
+				if (*input == '<') { input++; inputFile = FILE_TEXT; }
+				else if (*input == '@') { input++; inputFile = FILE_HANDLE; }
+				if (!*input && ++i < argc) { input = argv[i]; }
+			}
+			else if (arg[0] == '>') {
+				bool dup_error = false;
+				output = arg + 1;
+				outputFile = FILE_NAME;
+				if (*output == '>') { outputFile = FILE_APPEND; output++; }
+				if (*output == '&') { output++; dup_error = true; } // Redirect stderr too 
+				if (*output == '@') { outputFile = FILE_HANDLE; output++; }
+				if (!*output && ++i < argc) { output = argv[i]; }
+				if (dup_error) { errorFile = outputFile; error = output; }
+			}
+			else if (arg[0] == '2' && arg[1] == '>') {
+				error = arg + 2;
+				errorFile = FILE_NAME;
+				if (*error == '@') { error++; errorFile = FILE_HANDLE; }
+				else if (*error == '>') { error++; errorFile = FILE_APPEND; }
+				if (!*error && ++i < argc) { error = argv[i]; }
+			}
+			else continue;
+			if (i >= argc) { printf("can't specify \"%s\" as last word in command", arg); return -1; }
 		}
-		else if (arg[0] == '<') {
-			input = arg + 1;
-			inputFile = FILE_NAME;
-			if (*input == '<') { input++; inputFile = FILE_TEXT; }
-			else if (*input == '@') { input++; inputFile = FILE_HANDLE; }
-			if (!*input && ++i < argc) { input = argv[i]; }
-		}
-		else if (arg[0] == '>') {
-			bool dup_error = false;
-			output = arg + 1;
-			outputFile = FILE_NAME;
-			if (*output == '>') { outputFile = FILE_APPEND; output++; }
-			if (*output == '&') { output++; dup_error = true; } // Redirect stderr too 
-			if (*output == '@') { outputFile = FILE_HANDLE; output++; }
-			if (!*output && ++i < argc) { output = argv[i]; }
-			if (dup_error) { errorFile = outputFile; error = output; }
-		}
-		else if (arg[0] == '2' && arg[1] == '>') {
-			error = arg + 2;
-			errorFile = FILE_NAME;
-			if (*error == '@') { error++; errorFile = FILE_HANDLE; }
-			else if (*error == '>') { error++; errorFile = FILE_APPEND; }
-			if (!*error && ++i < argc) { error = argv[i]; }
-		}
-		else continue;
-		if (i >= argc) { printf("can't specify \"%s\" as last word in command", arg); return -1; }
 	}
 
 	/* Must do this before vfork(), so do it now */
 	//save_environ = JimSaveEnv(JimBuildEnv(interp));
 
 	FDTYPE pipeIds[2] = { __BAD_FD, __BAD_FD }; // File ids for pipe that's being created.
-	FDTYPE inputId = __BAD_FD;			// Readable file id input to current command in pipeline (could be file or pipe).  JIM_BAD_FD means use stdin.
-	FDTYPE outputId = __BAD_FD;			// Writable file id for output from current command in pipeline (could be file or pipe). JIM_BAD_FD means use stdout.
-	FDTYPE errorId = __BAD_FD;			// Writable file id for all standard error output from all commands in pipeline.  JIM_BAD_FD means use stderr.
+	FDTYPE inputId = __BAD_FD;			// Readable file id input to current command in pipeline (could be file or pipe).  __BAD_FD means use stdin.
+	FDTYPE outputId = __BAD_FD;			// Writable file id for output from current command in pipeline (could be file or pipe). __BAD_FD means use stdout.
+	FDTYPE errorId = __BAD_FD;			// Writable file id for all standard error output from all commands in pipeline.  __BAD_FD means use stderr.
 	FDTYPE lastOutputId = __BAD_FD;		// Write file id for output from last command in pipeline (could be file or pipe). -1 means use stdout.
 
 	// Set up the redirected input source for the pipeline, if so requested.
@@ -513,7 +511,7 @@ int CreatePipeline_(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr,
 		}
 		else { // File redirection.  Just open the file.
 			inputId = __Open_r(input);
-			if (inputId == __BAD_FD) { printf("couldn't read file \"%s\": %s\n", input, __Strerror()); goto error; }
+			if (inputId == __BAD_FD) { printf("couldn't read file \"%s\": %s\n", input, strerror(errno)); goto error; }
 		}
 	}
 	else if (inPipePtr) {
@@ -533,7 +531,7 @@ int CreatePipeline_(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr,
 		}
 		else { // Output is to go to a file.
 			lastOutputId = __Open_w(output, outputFile == FILE_APPEND);
-			if (lastOutputId == __BAD_FD) { printf("couldn't write file \"%s\": %s\n", output, __Strerror()); goto error; }
+			if (lastOutputId == __BAD_FD) { printf("couldn't write file \"%s\": %s\n", output, strerror(errno)); goto error; }
 		}
 	}
 	else if (outPipePtr) { // Output is to go to a pipe.
@@ -561,7 +559,7 @@ int CreatePipeline_(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr,
 		else { // Output is to go to a file.
 			errorId = __Open_w(error, errorFile == FILE_APPEND);
 			if (errorId == __BAD_FD) {
-				printf("couldn't write file \"%s\": %s\n", error, __Strerror());
+				printf("couldn't write file \"%s\": %s\n", error, strerror(errno));
 				goto error;
 			}
 		}
@@ -576,43 +574,48 @@ int CreatePipeline_(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr,
 	}
 
 	// Scan through the argc array, forking off a process for each group of arguments between "|" arguments.
-	PIDTYPE *pids; pids = (PIDTYPE *)malloc(cmdCount * sizeof(PIDTYPE)); // Points to malloc-ed array holding all the pids of child processes.
-	for (int i = 0; i < cmdCount; i++)
-		pids[i] = __BAD_PID;
+	PIDTYPE *pids; pids = nullptr;
 	int numPids; numPids = 0; // Actual number of processes that exist at *pids right now.
-	int firstArg, lastArg; // Indexes of first and last arguments in current command.
-	for (firstArg = 0; firstArg < argc; numPids++, firstArg = lastArg + 1) {
-		bool pipe_dup_err = false;
-		FDTYPE origErrorId = errorId;
-		for (lastArg = firstArg; lastArg < argc; lastArg++) {
-			if (argv[lastArg][0] == '|') {
-				if (argv[lastArg][1] == '&') pipe_dup_err = true;
-				break;
-			}
-		}
-		argv[lastArg] = 0; // Replace | with NULL for execv()
-		if (lastArg == argc) {
-			outputId = lastOutputId;
-		}
-		else {
-			if (__Pipe(pipeIds) != 0) { printf("couldn't create pipe"); goto error; }
-			outputId = pipeIds[1];
-		}
-		if (pipe_dup_err) errorId = outputId;
-
-		PIDTYPE pid = StartProcess(argv, nullptr, inputId, outputId, errorId);
-		pids[numPids] = pid;
-
-		// Restore in case of pipe_dup_err
-		errorId = origErrorId;
-
-		// Close off our copies of file descriptors that were set up for this child, then set up the input for the next child.
-		if (inputId != __BAD_FD) __Close(inputId);
-		if (outputId != __BAD_FD) __Close(outputId);
-		inputId = pipeIds[0];
-		pipeIds[0] = pipeIds[1] = __BAD_FD;
+	if (!argc) {
 	}
-	*pidsPtr = pids;
+	else {
+		pids = (PIDTYPE *)malloc(cmdCount * sizeof(PIDTYPE)); // Points to malloc-ed array holding all the pids of child processes.
+		for (int i = 0; i < cmdCount; i++)
+			pids[i] = __BAD_PID;
+		int firstArg, lastArg; // Indexes of first and last arguments in current command.
+		for (firstArg = 0; firstArg < argc; numPids++, firstArg = lastArg + 1) {
+			bool pipe_dup_err = false;
+			FDTYPE origErrorId = errorId;
+			for (lastArg = firstArg; lastArg < argc; lastArg++) {
+				if (argv[lastArg][0] == '|') {
+					if (argv[lastArg][1] == '&') pipe_dup_err = true;
+					break;
+				}
+			}
+			argv[lastArg] = 0; // Replace | with NULL for execv()
+			if (lastArg == argc) {
+				outputId = lastOutputId;
+			}
+			else {
+				if (__Pipe(pipeIds) != 0) { printf("couldn't create pipe"); goto error; }
+				outputId = pipeIds[1];
+			}
+			if (pipe_dup_err) errorId = outputId;
+
+			PIDTYPE pid = StartProcess(argv, nullptr, inputId, outputId, errorId);
+			pids[numPids] = pid;
+
+			// Restore in case of pipe_dup_err
+			errorId = origErrorId;
+
+			// Close off our copies of file descriptors that were set up for this child, then set up the input for the next child.
+			if (inputId != __BAD_FD) __Close(inputId);
+			if (outputId != __BAD_FD) __Close(outputId);
+			inputId = pipeIds[0];
+			pipeIds[0] = pipeIds[1] = __BAD_FD;
+		}
+		*pidsPtr = pids;
+	}
 
 	// All done.  Cleanup open files lying around and then return.
 cleanup:

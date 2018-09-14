@@ -1,6 +1,7 @@
 #ifndef _FSYSTEM_H
 #define _FSYSTEM_H
 #include <crtdefscu.h>
+#include <sys/statcu.h>
 #include <fcntl.h>
 #include <ext/memfile.h>
 #if __OS_WIN
@@ -14,7 +15,7 @@ __BEGIN_DECLS;
 enum {
 	DIRTYPE_DIR = 1,
 	DIRTYPE_FILE = 2,
-	DIRTYPE_FIFO = 2,
+	DIRTYPE_FIFO = 3,
 };
 
 struct dirEnt_t {
@@ -33,10 +34,12 @@ struct file_t {
 };
 
 __device__ int expandPath(const char *path, char *newPath);
+__device__ mode_t fsystemUmask(mode_t mask);
 __device__ int fsystemChdir(const char *path);
 __device__ dirEnt_t *fsystemOpendir(const char *path);
 __device__ int fsystemRename(const char *old, const char *new_);
 __device__ int fsystemUnlink(const char *path, bool enotdir);
+__device__ int fsystemChmod(const char *file, mode_t mode);
 __device__ dirEnt_t *fsystemMkdir(const char *__restrict path, int mode, int *r);
 __device__ dirEnt_t *fsystemMkfifo(const char *__restrict path, int mode, int *r);
 __device__ dirEnt_t *fsystemAccess(const char *__restrict path, int mode, int *r);

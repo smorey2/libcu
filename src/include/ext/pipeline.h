@@ -47,9 +47,9 @@ extern "C" {
 #endif
 
 	/* Cleanup Children */
-	extern int CleanupChildren_(int numPids, PIDTYPE *pids, int child_siginfo);
+	extern int CleanupChildren(int numPids, PIDTYPE *pids, int child_siginfo);
 	/* Create Pipeline */
-	extern int CreatePipeline_(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, FDTYPE *outPipePtr, FDTYPE *errFilePtr);
+	extern int CreatePipeline(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, FDTYPE *outPipePtr, FDTYPE *errFilePtr);
 
 #ifdef  __cplusplus
 }

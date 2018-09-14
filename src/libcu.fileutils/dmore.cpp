@@ -2,9 +2,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "sentinel-fileutilsmsg.h"
+#include <sentinel-client.cpp>
 #include <unistdcu.h>
 
-inline int dmore_(char *str, int fd) { fileutils_dmore msg(str, fd); return msg.RC; }
+__forceinline__ int dmore_(char *str, int fd) { fileutils_dmore msg(str, fd); return msg.RC; }
 
 int main(int argc, char **argv) {
 	while (argc-- > 1) {
@@ -15,7 +16,7 @@ int main(int argc, char **argv) {
 			if (fd == -1)
 				break;
 			static char buf[80];
-			if (read(0, buf, sizeof(buf)) < 0) {
+			if (_read(0, buf, sizeof(buf)) < 0) {
 				if (fd > -1)
 					fd = dmore_(nullptr, fd); // close(fd);
 				exit(0);

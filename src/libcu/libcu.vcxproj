@@ -61,17 +61,15 @@
     <ClInclude Include="locale\xlocale_private.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\include\sentinel-client.cpp" />
+    <ClCompile Include="..\include\ext\pipeline.cpp" />
     <ClCompile Include="sentinel-msg.cpp" />
     <ClCompile Include="sentinel.cpp" />
-    <ClCompile Include="sentinel-host.cpp" />
     <ClCompile Include="cuda_runtime.cpp" />
     <None Include="sys\timecu.cu" />
     <None Include="sys\statcu.cu" />
     <None Include="pwdcu.cu" />
     <None Include="ext\hash.cu" />
-    <CudaCompile Include="ext\pipeline.cu">
-      <FileType>Document</FileType>
-    </CudaCompile>
     <None Include="ext\memfile.cu" />
     <None Include="fsystem.cu" />
     <None Include="fcntlcu.cu" />
@@ -179,7 +177,7 @@
       <AdditionalDependencies>cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>"$(CudaToolkitBinDir)\nvcc.exe" -m=32 -arch=sm_$(CUARCH) -lib "$(IntDir)stringcu.cu.obj" "$(IntDir)libcu.cu.obj" "$(IntDir)libcu.stdlib.cu.obj" "$(IntDir)cuda_runtime.obj" "$(IntDir)sentinel.obj" "$(IntDir)sentinel-host.obj" "$(IntDir)sentinel-msg.obj" -o "$(OutDir)libcu.$(CUARCH).lib"</Command>
+      <Command>"$(CudaToolkitBinDir)\nvcc.exe" -m=32 -arch=sm_$(CUARCH) -lib "$(IntDir)stringcu.cu.obj" "$(IntDir)libcu.cu.obj" "$(IntDir)libcu.stdlib.cu.obj" "$(IntDir)cuda_runtime.obj" "$(IntDir)sentinel.obj" "$(IntDir)sentinel-msg.obj" -o "$(OutDir)libcu.$(CUARCH).lib"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <Include>$(SolutionDir)include;%(Include)</Include>
@@ -202,7 +200,7 @@
       <AdditionalDependencies>cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>"$(CudaToolkitBinDir)\nvcc.exe" -m=64 -arch=sm_$(CUARCH) -lib "$(IntDir)stringcu.cu.obj" "$(IntDir)libcu.cu.obj" "$(IntDir)libcu.stdlib.cu.obj" "$(IntDir)cuda_runtime.obj" "$(IntDir)sentinel.obj" "$(IntDir)sentinel-host.obj" "$(IntDir)sentinel-msg.obj" -o "$(OutDir)libcu.$(CUARCH).lib"</Command>
+      <Command>"$(CudaToolkitBinDir)\nvcc.exe" -m=64 -arch=sm_$(CUARCH) -lib "$(IntDir)stringcu.cu.obj" "$(IntDir)libcu.cu.obj" "$(IntDir)libcu.stdlib.cu.obj" "$(IntDir)cuda_runtime.obj" "$(IntDir)sentinel.obj" "$(IntDir)sentinel-msg.obj" -o "$(OutDir)libcu.$(CUARCH).lib"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <Include>$(SolutionDir)include;%(Include)</Include>
@@ -230,7 +228,7 @@
       <AdditionalDependencies>cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>"$(CudaToolkitBinDir)\nvcc.exe" -m=32 -arch=sm_$(CUARCH) -lib "$(IntDir)stringcu.cu.obj" "$(IntDir)libcu.cu.obj" "$(IntDir)libcu.stdlib.cu.obj" "$(IntDir)cuda_runtime.obj" "$(IntDir)sentinel.obj" "$(IntDir)sentinel-host.obj" "$(IntDir)sentinel-msg.obj" -o "$(OutDir)libcu.$(CUARCH).lib"</Command>
+      <Command>"$(CudaToolkitBinDir)\nvcc.exe" -m=32 -arch=sm_$(CUARCH) -lib "$(IntDir)stringcu.cu.obj" "$(IntDir)libcu.cu.obj" "$(IntDir)libcu.stdlib.cu.obj" "$(IntDir)cuda_runtime.obj" "$(IntDir)sentinel.obj" "$(IntDir)sentinel-msg.obj" -o "$(OutDir)libcu.$(CUARCH).lib"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <Include>$(SolutionDir)include;%(Include)</Include>
@@ -257,7 +255,7 @@
       <AdditionalDependencies>cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>"$(CudaToolkitBinDir)\nvcc.exe" -m=64 -arch=sm_$(CUARCH) -lib "$(IntDir)stringcu.cu.obj" "$(IntDir)libcu.cu.obj" "$(IntDir)libcu.stdlib.cu.obj" "$(IntDir)cuda_runtime.obj" "$(IntDir)sentinel.obj" "$(IntDir)sentinel-host.obj" "$(IntDir)sentinel-msg.obj" -o "$(OutDir)libcu.$(CUARCH).lib"</Command>
+      <Command>"$(CudaToolkitBinDir)\nvcc.exe" -m=64 -arch=sm_$(CUARCH) -lib "$(IntDir)stringcu.cu.obj" "$(IntDir)libcu.cu.obj" "$(IntDir)libcu.stdlib.cu.obj" "$(IntDir)cuda_runtime.obj" "$(IntDir)sentinel.obj" "$(IntDir)sentinel-msg.obj" -o "$(OutDir)libcu.$(CUARCH).lib"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <Include>$(SolutionDir)include;%(Include)</Include>

@@ -2,10 +2,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "sentinel-fileutilsmsg.h"
+#include <sentinel-client.cpp>
 
 #define	isoctal(ch)	((ch) >= '0' && (ch) <= '7')
 
-inline int dchmod_(char *str, int mode) { fileutils_dchmod msg(str, mode); return msg.RC; }
+__forceinline__ int dchmod_(char *str, int mode) { fileutils_dchmod msg(str, mode); return msg.RC; }
 
 int main(int argc, char **argv) {
 	atexit(sentinelClientShutdown);

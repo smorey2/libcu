@@ -2,6 +2,7 @@
 #if __OS_WIN
 #include <windows.h>
 #include <process.h>
+#include <io.h>
 #define THREADHANDLE HANDLE
 #define THREADCALL unsigned int __stdcall
 #elif __OS_UNIX
@@ -103,6 +104,8 @@ static THREADCALL sentinelDeviceThread(void *data) {
 // https://msdn.microsoft.com/en-us/library/windows/desktop/aa366551(v=vs.85).aspx
 // https://github.com/pathscale/nvidia_sdk_samples/blob/master/simpleStreams/0_Simple/simpleStreams/simpleStreams.cu
 #if HAS_HOSTSENTINEL
+static sentinelMap *_sentinelHostMap = nullptr;
+static intptr_t _sentinelHostMapOffset = 0;
 #if __OS_WIN
 static HANDLE _hostMapHandle = NULL;
 static int *_hostMap = nullptr;
@@ -131,7 +134,7 @@ void sentinelServerInitialize(sentinelExecutor *executor, char *mapHostName, boo
 			exit(1);
 		}
 		_sentinelHostMap = _ctx.HostMap = (sentinelMap *)ROUNDN_(_hostMap, MEMORY_ALIGNMENT);
-		_ctx.HostMap->Offset = (intptr_t)_sentinelHostMap;
+		_sentinelHostMap->Offset = (intptr_t)_sentinelHostMap;
 #elif __OS_UNIX
 		_hostMap = mmap(NULL, sizeof(sentinelMap) + MEMORY_ALIGNMENT, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 		if (!_hostMap) {
@@ -139,7 +142,7 @@ void sentinelServerInitialize(sentinelExecutor *executor, char *mapHostName, boo
 			exit(1);
 		}
 		_sentinelHostMap = _ctx.HostMap = (sentinelMap *)ROUNDN_(_hostMap, MEMORY_ALIGNMENT);
-		_ctx.HostMap->Offset = 0;
+		_sentinelHostMap->Offset = 0;
 #endif
 	}
 #endif
@@ -199,7 +202,7 @@ void sentinelServerInitialize(sentinelExecutor *executor, char *mapHostName, boo
 #endif
 	return;
 initialize_error:
-	printf("sentinelServerInitialize:Error");
+	perror("sentinelServerInitialize:Error");
 	sentinelServerShutdown();
 	exit(1);
 }
@@ -235,42 +238,19 @@ void sentinelServerShutdown() {
 #endif
 }
 
-#if HAS_HOSTSENTINEL
-void sentinelClientInitialize(char *mapHostName) {
-#if __OS_WIN
-	_hostMapHandle = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, mapHostName);
-	if (!_hostMapHandle) {
-		printf("Could not open file mapping object (%d).\n", GetLastError());
-		exit(1);
-	}
-	_hostMap = (int *)MapViewOfFile(_hostMapHandle, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(sentinelMap) + MEMORY_ALIGNMENT);
-	if (!_hostMap) {
-		printf("Could not map view of file (%d).\n", GetLastError());
-		CloseHandle(_hostMapHandle);
-		exit(1);
-	}
-	_sentinelHostMap = _ctx.HostMap = (sentinelMap *)ROUNDN_(_hostMap, MEMORY_ALIGNMENT);
-	_sentinelHostMapOffset = (intptr_t)((char *)_ctx.HostMap->Offset - (char *)_sentinelHostMap);
-#elif __OS_UNIX
-	_hostMap = mmap(NULL, sizeof(sentinelMap) + MEMORY_ALIGNMENT, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-	if (!_hostMap) {
-		printf("Could not map view of file.\n");
-		exit(1);
-	}
-	_sentinelHostMap = _ctx.HostMap = (sentinelMap *)ROUNDN_(_hostMap, MEMORY_ALIGNMENT);
-	_sentinelHostMapOffset = 0;
-#endif
+sentinelRedirect sentinelRedirectClientMessage(sentinelMessage *data) {
+	FILE *files[3]; ((sentinelClientMessage *)data)->Redir.toFiles(files);
+	FILE *out = files[1];
+	printf("before");
+	fprintf(out, "TEST\n");
+	fflush(out);
+	//
+	sentinelRedirect last;
+	//last.In = _dup2(redir.In, 0); if (last.In == -1) { perror("_dup(0) failure"); exit(1); }
+	//last.Out = _dup2(redir.Out, 1); if (last.Out == -1) { perror("_dup(1) failure"); exit(1); }
+	//last.Err = _dup2(redir.Err, 2); if (last.Err == -1) { perror("_dup(2) failure"); exit(1); }
+	return last;
 }
-
-void sentinelClientShutdown() {
-#if __OS_WIN
-	if (_hostMap) { UnmapViewOfFile(_hostMap); _hostMap = nullptr; }
-	if (_hostMapHandle) { CloseHandle(_hostMapHandle); _hostMapHandle = NULL; }
-#elif __OS_UNIX
-	if (_hostMap) { munmap(_hostMap, sizeof(sentinelMap) + MEMORY_ALIGNMENT); _hostMap = nullptr; }
-#endif
-}
-#endif
 
 sentinelExecutor *sentinelFindExecutor(const char *name, bool forDevice) {
 	sentinelExecutor *list = forDevice ? _ctx.DeviceList : _ctx.HostList;

@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "sentinel-fileutilsmsg.h"
+#include <sentinel-client.cpp>
 
-inline int dcmp_(char *str, char *str2) { fileutils_dcmp msg(str, str2); return msg.RC; }
+__forceinline__ int dcmp_(char *str, char *str2) { fileutils_dcmp msg(str, str2); return msg.RC; }
 
 int main(int argc, char	**argv) {
 	atexit(sentinelClientShutdown);

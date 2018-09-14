@@ -110,9 +110,6 @@
     <CudaCompile Include="program.cu" />
     <CudaCompile Include="libcu.stdlib.cu" />
     <CudaCompile Include="stringcu.cu" />
-    <CudaCompile Include="ext\pipeline.cu">
-      <Filter>ext</Filter>
-    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="_content">
@@ -144,8 +141,10 @@
   <ItemGroup>
     <ClCompile Include="cuda_runtime.cpp" />
     <ClCompile Include="sentinel.cpp" />
-    <ClCompile Include="sentinel-host.cpp" />
     <ClCompile Include="sentinel-msg.cpp" />
+    <ClCompile Include="..\include\ext\pipeline.cpp">
+      <Filter>include\ext</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Libcu.Native.nuspec" />
@@ -191,6 +190,9 @@
     </None>
     <None Include="ext\memfile.cu">
       <Filter>ext</Filter>
+    </None>
+    <None Include="..\include\sentinel-client.cpp">
+      <Filter>include</Filter>
     </None>
   </ItemGroup>
 </Project>

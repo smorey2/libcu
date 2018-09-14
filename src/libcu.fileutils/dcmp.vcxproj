@@ -10,12 +10,9 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <PropertyGroup Label="UserMacros">
-    <CUARCH Condition="'$(CUARCH)'==''">35</CUARCH>
-  </PropertyGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1483D509-D5E0-4B1E-ACD5-E44FD27E544F}</ProjectGuid>
-    <RootNamespace>libcu</RootNamespace>
+    <RootNamespace>dcmp</RootNamespace>
     <ProjectName>dcmp</ProjectName>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -54,15 +51,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libcu.$(CUARCH).lib;cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(OutDir);$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
     </Link>
-    <CudaCompile>
-      <Include>$(SolutionDir)include;%(Include)</Include>
-      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
-      <TargetMachinePlatform>64</TargetMachinePlatform>
-      <CodeGeneration>compute_$(CUARCH),sm_$(CUARCH)</CodeGeneration>
-    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -77,18 +66,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>libcu.$(CUARCH).lib;cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(OutDir);$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
     </Link>
-    <CudaCompile>
-      <Include>$(SolutionDir)include;%(Include)</Include>
-      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
-      <TargetMachinePlatform>64</TargetMachinePlatform>
-      <CodeGeneration>compute_$(CUARCH),sm_$(CUARCH)</CodeGeneration>
-    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CudaCompile Include="dcmp.cu" />
+    <ClCompile Include="dcmp.cpp" />
     <None Include="dcmp.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

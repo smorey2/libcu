@@ -2,33 +2,18 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "sentinel-fileutilsmsg.h"
+#include <sentinel-client.cpp>
+#include <grpcu.h>
 
 #define	isdecimal(ch) ((ch) >= '0' && (ch) <= '9')
-struct group { short gr_gid; };
-__device__ struct group *getgrnam(char *name) { return nullptr; }
-
-__device__ __managed__ struct group *m_getgrnam_rc;
-__global__ void g_getgrnam(char *name) {
-	m_getgrnam_rc = getgrnam(name);
-}
-struct group *getgrnam_(char *str) {
-	size_t strLength = strlen(str) + 1;
-	char *d_str;
-	cudaMalloc(&d_str, strLength);
-	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
-	g_getgrnam<<<1, 1>>>(d_str);
-	cudaFree(d_str);
-	return m_getgrnam_rc;
-}
-
-inline int dchgrp_(char *str, int gid) { fileutils_dchgrp msg(str, gid); return msg.RC; }
+__forceinline__ struct group *dchgrp_getgrnam_(char *str) { fileutils_getgrnam msg(str); return msg.RC; }
+__forceinline__ int dchgrp_(char *str, int gid) { fileutils_dchgrp msg(str, gid); return msg.RC; }
 
 int main(int argc, char **argv) {
 	atexit(sentinelClientShutdown);
 	sentinelClientInitialize();
 	char *cp = argv[1];
 	int gid;
-	struct group *grp;
 	if (isdecimal(*cp)) {
 		gid = 0;
 		while (isdecimal(*cp))
@@ -39,7 +24,7 @@ int main(int argc, char **argv) {
 		}
 	}
 	else {
-		grp = getgrnam_(cp);
+		struct group *grp = dchgrp_getgrnam_(cp);
 		if (!grp) {
 			fprintf(stderr, "Unknown group name\n");
 			exit(1);

@@ -31,7 +31,6 @@ THE SOFTWARE.
 #include <sys/stat.h>
 #if __OS_WIN
 //#include <corecrt_io.h>
-//#include <bits/libcu_stat.h>
 typedef int mode_t;
 #endif
 
