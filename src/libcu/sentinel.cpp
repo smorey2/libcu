@@ -239,13 +239,14 @@ void sentinelServerShutdown() {
 }
 
 sentinelRedirect sentinelRedirectClientMessage(sentinelMessage *data) {
-	FILE *files[3]; ((sentinelClientMessage *)data)->Redir.toFiles(files);
-	FILE *out = files[1];
-	printf("before");
-	fprintf(out, "TEST\n");
-	fflush(out);
+	//FILE *files[3]; ((sentinelClientMessage *)data)->Redir.toFiles(files);
+	//FILE *out = files[1];
+	//printf("before");
+	//fprintf(out, "TEST\n");
+	//fflush(out);
 	//
 	sentinelRedirect last;
+	memset((void *)&last, 0, sizeof(last));
 	//last.In = _dup2(redir.In, 0); if (last.In == -1) { perror("_dup(0) failure"); exit(1); }
 	//last.Out = _dup2(redir.Out, 1); if (last.Out == -1) { perror("_dup(1) failure"); exit(1); }
 	//last.Err = _dup2(redir.Err, 2); if (last.Err == -1) { perror("_dup(2) failure"); exit(1); }

@@ -58,9 +58,9 @@ static __device__ void fileFree(int fd) {
 __device__ char __cwd[MAX_PATH] = ":\\";
 __device__ dirEnt_t __iob_root = {
 #ifdef __APPLE__
-{ 0, 0, 0, 0, 1, ":\\" }, nullptr, nullptr
+{ 0, 0, 0, 0, 1, ":\\" }, {}, nullptr, nullptr
 #else
-{ 0, 0, 0, 1, ":\\" }, nullptr, nullptr
+{ 0, 0, 0, 1, ":\\" }, {}, nullptr, nullptr
 #endif
 };
 static __device__ hash_t __iob_dir = HASHINIT;
@@ -104,6 +104,13 @@ static __device__ dirEnt_t *createEnt(dirEnt_t *parentEnt, const char *path, con
 	ent->path = newPath;
 	ent->dir.d_type = type;
 	strcpy(ent->dir.d_name, name);
+	// stat
+	struct stat *stat = &ent->stat;
+	memset(stat, 0, sizeof(struct stat));
+	stat->st_mode = type;
+	time(&stat->st_ctime);
+	memcpy(&stat->st_atime, &stat->st_ctime, sizeof(time_t));
+	memcpy(&stat->st_mtime, &stat->st_ctime, sizeof(time_t));
 	// add to directory
 	ent->next = parentEnt->u.list; parentEnt->u.list = ent;
 	return ent;
@@ -249,7 +256,51 @@ __device__ int fsystemUnlink(const char *path, bool enotdir) {
 	return 0;
 }
 
-__device__ int fsystemChmod(const char *file, mode_t mode) {
+static __device__ int stat__(dirEnt_t *ent, struct stat *buf) {
+	memcpy(buf, &ent->stat, sizeof(*buf));
+	return 0;
+}
+
+static __device__ int stat64__(dirEnt_t *ent, struct _stat64 *buf) {
+	struct stat *estat = &ent->stat;
+	buf->st_mode = estat->st_mode;
+	buf->st_uid = estat->st_uid;
+	buf->st_gid = estat->st_gid;
+	buf->st_size = estat->st_size;
+	buf->st_atime = estat->st_atime;
+	buf->st_mtime = estat->st_mtime;
+	buf->st_ctime = estat->st_ctime;
+	return 0;
+}
+
+__device__ int fsystemStat(const char *path, struct stat *buf, struct _stat64 *buf64, bool lstat_) {
+	char newPath[MAX_PATH]; expandPath(path, newPath);
+	dirEnt_t *ent = (dirEnt_t *)hashFind(&__iob_dir, newPath);
+	if (!ent) {
+		_set_errno(ENOENT);
+		return -1;
+	}
+	return buf ? stat__(ent, buf) : stat64__(ent, buf64);
+}
+
+__device__ int fsystemFStat(int fd, struct stat *buf, struct _stat64 *buf64) {
+	file_t *f = GETFILE(fd);
+	if (!f) {
+		_set_errno(ENOENT);
+		return -1;
+	}
+	dirEnt_t *ent = (dirEnt_t *)f->base;
+	return buf ? stat__(ent, buf) : stat64__(ent, buf64);
+}
+
+__device__ int fsystemChmod(const char *path, mode_t mode) {
+	char newPath[MAX_PATH]; expandPath(path, newPath);
+	dirEnt_t *ent = (dirEnt_t *)hashFind(&__iob_dir, newPath);
+	if (!ent) {
+		_set_errno(ENOENT);
+		return -1;
+	}
+	ent->stat.st_mode = mode;
 	return 0;
 }
 

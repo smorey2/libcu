@@ -30,8 +30,8 @@ THE SOFTWARE.
 #include <sentinel.h>
 #include <crtdefscu.h>
 #include <stringcu.h>
-#if __OS_WIN
-#define stat64 _stat64
+#if __OS_UNIX
+#define _stat64 stat64
 #endif
 
 enum {
@@ -80,12 +80,12 @@ struct fcntl_stat {
 		memcpy(str, t->Str, strLength);
 		t->Str = str + offset;
 		if (!t->Bit64) t->Ptr = (struct stat *)(str + offset);
-		else t->Ptr64 = (struct stat64 *)(str + offset);
+		else t->Ptr64 = (struct _stat64 *)(str + offset);
 		return end;
 	}
 	sentinelMessage Base;
-	const char *Str; struct stat *Ptr; struct stat64 *Ptr64; bool Bit64; bool LStat;
-	__device__ fcntl_stat(const char *str, struct stat *ptr, struct stat64 *ptr64, bool bit64, bool lstat_) : Base(true, FCNTL_STAT, 1024, SENTINELPREPARE(Prepare)), Str(str), Ptr(ptr), Ptr64(ptr64), Bit64(bit64), LStat(lstat_) { sentinelDeviceSend(&Base, sizeof(fcntl_stat)); }
+	const char *Str; struct stat *Ptr; struct _stat64 *Ptr64; bool Bit64; bool LStat;
+	__device__ fcntl_stat(const char *str, struct stat *ptr, struct _stat64 *ptr64, bool bit64, bool lstat_) : Base(true, FCNTL_STAT, 1024, SENTINELPREPARE(Prepare)), Str(str), Ptr(ptr), Ptr64(ptr64), Bit64(bit64), LStat(lstat_) { sentinelDeviceSend(&Base, sizeof(fcntl_stat)); }
 	int RC;
 };
 
@@ -95,12 +95,12 @@ struct fcntl_fstat {
 		char *end = (char *)(data += 1024);
 		if (end > dataEnd) return nullptr;
 		if (!t->Bit64) t->Ptr = (struct stat *)ptr;
-		else t->Ptr64 = (struct stat64 *)ptr;
+		else t->Ptr64 = (struct _stat64 *)ptr;
 		return end;
 	}
 	sentinelMessage Base;
-	int Handle; struct stat *Ptr; struct stat64 *Ptr64; bool Bit64;
-	__device__ fcntl_fstat(int fd, struct stat *ptr, struct stat64 *ptr64, bool bit64) : Base(true, FCNTL_FSTAT), Handle(fd), Ptr(ptr), Ptr64(ptr64), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(fcntl_fstat)); }
+	int Handle; struct stat *Ptr; struct _stat64 *Ptr64; bool Bit64;
+	__device__ fcntl_fstat(int fd, struct stat *ptr, struct _stat64 *ptr64, bool bit64) : Base(true, FCNTL_FSTAT), Handle(fd), Ptr(ptr), Ptr64(ptr64), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(fcntl_fstat)); }
 	int RC;
 };
 

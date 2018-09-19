@@ -82,19 +82,19 @@ extern "C" {
 		//}
 		__forceinline__ void doRedirect() {
 			//: F0(_fileno(stdin)), F1(_fileno(stdout)), F2(_fileno(stderr)) {
-			FDTYPE p0, p1, p2;
-			CreatePipeline(0, nullptr, nullptr, &p0, &p1, &p2);
-			F0 = _get_osfhandle((int)p0);
-			F1 = _get_osfhandle((int)p1);
-			F2 = _get_osfhandle((int)p2);
-			printf("a1: %d, %d, %d\n", F0, F1, F2);
+			//FDTYPE p0, p1, p2;
+			//CreatePipeline(0, nullptr, nullptr, &p0, &p1, &p2);
+			//F0 = _get_osfhandle((int)p0);
+			//F1 = _get_osfhandle((int)p1);
+			//F2 = _get_osfhandle((int)p2);
+			//printf("a1: %d, %d, %d\n", F0, F1, F2);
 		}
 		//https://stackoverflow.com/questions/5193579/how-make-file-from-handle-in-winapi
 		__forceinline__ void toFiles(FILE **fs) {
-			printf("b: %d, %d, %d\n", F0, F1, F2);
-			fs[0] = _fdopen(_open_osfhandle(F0, _O_RDONLY), "r");
-			fs[1] = _fdopen(_open_osfhandle(F1, _O_WRONLY), "w");
-			fs[2] = _fdopen(_open_osfhandle(F2, _O_RDWR), "rw");
+			//printf("b: %d, %d, %d\n", F0, F1, F2);
+			//fs[0] = _fdopen(_open_osfhandle(F0, _O_RDONLY), "r");
+			//fs[1] = _fdopen(_open_osfhandle(F1, _O_WRONLY), "w");
+			//fs[2] = _fdopen(_open_osfhandle(F2, _O_RDWR), "rw");
 		}
 #else
 		//sentinelRedirect(int f0, int f1, int f2)
