@@ -251,6 +251,8 @@ struct stdio_rewind {
 	__device__ stdio_rewind(FILE *file) : Base(true, STDIO_REWIND), File(file) { sentinelDeviceSend(&Base, sizeof(stdio_rewind)); }
 };
 
+#define __off_t off_t
+
 #if defined(__USE_LARGEFILE)
 #ifndef __USE_LARGEFILE64
 #define __off64_t char
