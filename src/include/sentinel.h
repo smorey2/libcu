@@ -64,59 +64,9 @@ extern "C" {
 #define SENTINELPREPARE(P) ((char *(*)(void*,char*,char*,intptr_t))&P)
 #define SENTINELPOSTFIX(P) ((bool (*)(void*,intptr_t))&P)
 
-	struct sentinelRedirect {
-		int F0; int F1; int F2;
-#if _MSC_VER
-		//sentinelRedirect(int f0, int f1, int f2)
-		//	: F0(_get_osfhandle(f0)), F1(_get_osfhandle(f1)), F2(_get_osfhandle(f2)) {
-		//	printf("a0: %d, %d, %d\n", F0, F1, F2);
-		//}
-		//__forceinline__ sentinelRedirect() {
-		//	//: F0(_fileno(stdin)), F1(_fileno(stdout)), F2(_fileno(stderr)) {
-		//	FDTYPE p0, p1, p2;
-		//	CreatePipeline(0, nullptr, nullptr, &p0, &p1, &p2);
-		//	F0 = _get_osfhandle((int)p0);
-		//	F1 = _get_osfhandle((int)p1);
-		//	F2 = _get_osfhandle((int)p2);
-		//	printf("a1: %d, %d, %d\n", F0, F1, F2);
-		//}
-		__forceinline__ void doRedirect() {
-			//: F0(_fileno(stdin)), F1(_fileno(stdout)), F2(_fileno(stderr)) {
-			//FDTYPE p0, p1, p2;
-			//CreatePipeline(0, nullptr, nullptr, &p0, &p1, &p2);
-			//F0 = _get_osfhandle((int)p0);
-			//F1 = _get_osfhandle((int)p1);
-			//F2 = _get_osfhandle((int)p2);
-			//printf("a1: %d, %d, %d\n", F0, F1, F2);
-		}
-		//https://stackoverflow.com/questions/5193579/how-make-file-from-handle-in-winapi
-		__forceinline__ void toFiles(FILE **fs) {
-			//printf("b: %d, %d, %d\n", F0, F1, F2);
-			//fs[0] = _fdopen(_open_osfhandle(F0, _O_RDONLY), "r");
-			//fs[1] = _fdopen(_open_osfhandle(F1, _O_WRONLY), "w");
-			//fs[2] = _fdopen(_open_osfhandle(F2, _O_RDWR), "rw");
-		}
-#else
-		//sentinelRedirect(int f0, int f1, int f2)
-		//	: F0(f0), F1(f1), F2(f2) {
-		//	printf("a0: %d, %d, %d\n", F0, F1, F2);
-		//}
-		sentinelRedirect()
-			: F0(stdin), F1(stdout), F2(stderr) {
-			printf("a: %d, %d, %d\n", F0, F1, F2);
-		}
-		__forceinline__ void toFiles(int **fs) {
-			printf("b: %d, %d, %d\n", F0, F1, F2);
-			fs[0] = fdopen(F0, _O_RDONLY);
-			fs[1] = fdopen(F1, _O_WRONLY);
-			fs[2] = fdopen(F2, _O_RDWR);
-		}
-#endif
-	};
-
 	struct sentinelClientMessage {
 		sentinelMessage Base;
-		sentinelRedirect Redir;
+		pipelineRedirect Redir;
 		sentinelClientMessage(bool wait, unsigned short op, int size = 0, char *(*prepare)(void*, char*, char*, intptr_t) = nullptr, bool(*postfix)(void*, intptr_t) = nullptr)
 			: Base(wait, op, size, prepare, postfix), Redir() { }
 	};
@@ -165,7 +115,7 @@ extern "C" {
 	extern bool sentinelDefaultExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*, char*, char*, intptr_t));
 	extern void sentinelServerInitialize(sentinelExecutor *executor = nullptr, char *mapHostName = (char *)SENTINEL_NAME, bool hostSentinel = true, bool deviceSentinel = true);
 	extern void sentinelServerShutdown();
-	extern sentinelRedirect sentinelRedirectClientMessage(sentinelMessage *data);
+	extern pipelineRedirect sentinelRedirectClientMessage(sentinelMessage *data);
 #if HAS_DEVICESENTINEL
 	extern __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength);
 #endif

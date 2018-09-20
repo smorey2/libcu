@@ -75,7 +75,10 @@ extern __forceinline__ __device__ int tolower_(int c) { return __curtUpperToLowe
 extern __forceinline__ __device__ int toupper_(int c) { return c & ~(__curtCtypeMap[(unsigned char)c] & 0x20); }
 #define toupper toupper_
 
-#if __OS_UNIX && !defined(_tolower)
+#ifdef __APPLE__
+#define __tolower tolower_
+#define __toupper toupper_
+#elif __OS_UNIX && !defined(_tolower)
 #define _tolower(c) (char)((c)-'A'+'a')
 #define _toupper(c) (char)((c)-'a'+'A')
 #endif

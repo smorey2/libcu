@@ -3,6 +3,7 @@
 # http://www.ssl.berkeley.edu/~jimm/grizzly_docs/SSL/opt/intel/cc/9.0/lib/locale/en_US/mcpcom.msg
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 project(libcu LANGUAGES CXX CUDA)
+set(COMPILE_FLAGSO2 "-Xcicc -O0 -Xcudafe \"--diag_suppress=divide_by_zero\"")
 include(CTest)
 enable_testing()
 

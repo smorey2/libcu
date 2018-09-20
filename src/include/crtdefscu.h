@@ -70,6 +70,9 @@ THE SOFTWARE.
 #define HAVE_STDINT_H
 #define MAX_PATH 260
 #define DELETE 0x00010000L
+#ifdef __APPLE__
+#define _LARGEFILE_SOURCE 1
+#endif
 #if defined(__LP64__) || defined(_LP64)
 # define _WIN64 1
 typedef unsigned int long long _uintptr_t;
