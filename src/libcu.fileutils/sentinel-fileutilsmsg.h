@@ -237,7 +237,7 @@ struct fileutils_dls {
 	}
 	sentinelClientMessage Base;
 	char *Str; int Flags; bool EndSlash;
-	fileutils_dls(char *str, int flags, bool endSlash) : Base(true, FILEUTILS_DLS, 1024, SENTINELPREPARE(Prepare)), Str(str), Flags(flags), EndSlash(endSlash) { Base.Redir.doRedirect(); sentinelClientSend(&Base.Base, sizeof(fileutils_dls)); }
+	fileutils_dls(char *str, int flags, bool endSlash) : Base(true, FILEUTILS_DLS, 1024, SENTINELPREPARE(Prepare)), Str(str), Flags(flags), EndSlash(endSlash) { sentinelClientSend(&Base.Base, sizeof(fileutils_dls)); }
 	int RC;
 };
 

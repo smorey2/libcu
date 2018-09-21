@@ -9,7 +9,7 @@ cd _fileutils
 
 
 # BUILD64
-cmake -DM=64 -DC64=ON -Darch="$CUARCH" -DCMAKE_CUDA_FLAGS="-arch=sm_$CUARCH" ../src
+cmake -DM=64 -DCMAKE_CUDA_FLAGS="-arch=sm_$CUARCH" ../src
 cmake --build . --config Debug
 
 

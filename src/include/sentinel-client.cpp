@@ -4,6 +4,10 @@
 #elif __OS_UNIX
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
 #endif
 #include <stdio.h>
 
@@ -75,11 +79,17 @@ void sentinelClientInitialize(char *mapHostName) {
 	_sentinelClientMap = (sentinelMap *)ROUNDN_(_clientMap, MEMORY_ALIGNMENT);
 	_sentinelClientMapOffset = (intptr_t)((char *)_sentinelClientMap->Offset - (char *)_sentinelClientMap);
 #elif __OS_UNIX
-	_clientMap = mmap(NULL, sizeof(sentinelMap) + MEMORY_ALIGNMENT, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+	struct stat sb;
+    int fd = open(mapHostName, O_RDONLY);
+    if (fd == -1) { perror("open"); exit(1); }
+    if (fstat(fd, &sb) == -1) { perror("fstat"); exit(1); }
+    if (!S_ISREG(sb.st_mode)) { fprintf(stderr, "%s is not a file\n", mapHostName); exit(1); }
+	_clientMap = mmap(NULL, sizeof(sentinelMap) + MEMORY_ALIGNMENT, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, fd, 0);
 	if (!_clientMap) {
 		printf("Could not connect to Sentinel host. Please ensure host application is running.\n");
 		exit(1);
 	}
+	if (close(fd) == -1) { perror("close"); exit(1); }
 	_sentinelClientMap = (sentinelMap *)ROUNDN_(_clientMap, MEMORY_ALIGNMENT);
 	_sentinelClientMapOffset = 0;
 #endif

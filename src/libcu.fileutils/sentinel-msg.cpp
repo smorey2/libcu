@@ -21,8 +21,9 @@ int dpwd(char *str);
 int dcd(char *str);
 
 extern "C" bool sentinelFileUtilsExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*, char*, char*, intptr_t)) {
+	printf("here %d\n", data->OP);
 	if (data->OP < FILEUTILS_DCAT || data->OP > FILEUTILS_DCD) return false;
-	sentinelRedirect redir = sentinelRedirectClientMessage(data);
+	pipelineRedirect redir = sentinelRedirectClientMessage(data);
 	switch (data->OP) {
 	case FILEUTILS_DCAT: { fileutils_dcat *msg = (fileutils_dcat *)data; msg->RC = dcat(msg->Str); return true; }
 	case FILEUTILS_DCHGRP: { fileutils_dchgrp *msg = (fileutils_dchgrp *)data; msg->RC = dchgrp(msg->Str, msg->Gid); return true; }

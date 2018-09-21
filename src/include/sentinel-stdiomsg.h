@@ -30,6 +30,7 @@ THE SOFTWARE.
 #include <sentinel.h>
 #include <crtdefscu.h>
 #include <stringcu.h>
+#include <stdiocu.h>
 
 enum {
 	STDIO_REMOVE = 1,
@@ -250,8 +251,6 @@ struct stdio_rewind {
 	FILE *File;
 	__device__ stdio_rewind(FILE *file) : Base(true, STDIO_REWIND), File(file) { sentinelDeviceSend(&Base, sizeof(stdio_rewind)); }
 };
-
-#define __off_t off_t
 
 #if defined(__USE_LARGEFILE)
 #ifndef __USE_LARGEFILE64

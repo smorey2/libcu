@@ -8,6 +8,9 @@
 #elif __OS_UNIX
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <sys/mman.h>
 #include <pthread.h>
 #define THREADHANDLE pthread_t
@@ -136,11 +139,18 @@ void sentinelServerInitialize(sentinelExecutor *executor, char *mapHostName, boo
 		_sentinelHostMap = _ctx.HostMap = (sentinelMap *)ROUNDN_(_hostMap, MEMORY_ALIGNMENT);
 		_sentinelHostMap->Offset = (intptr_t)_sentinelHostMap;
 #elif __OS_UNIX
-		_hostMap = mmap(NULL, sizeof(sentinelMap) + MEMORY_ALIGNMENT, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+		struct stat sb;
+    	int fd = open(mapHostName, O_RDONLY | O_CREAT);
+    	if (fd == -1) { perror("open"); exit(1); }
+		if (unlink(mapHostName) == -1) { perror("unlink"); exit(1); }
+    	if (fstat(fd, &sb) == -1) { perror("fstat"); exit(1); }
+    	if (!S_ISREG(sb.st_mode)) { fprintf(stderr, "%s is not a file\n", mapHostName); exit(1); }
+		_hostMap = mmap(NULL, sizeof(sentinelMap) + MEMORY_ALIGNMENT, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, fd, 0);
 		if (!_hostMap) {
 			printf("Could not map view of file.\n");
 			exit(1);
 		}
+		if (close(fd) == -1) { perror("close"); exit(1); }
 		_sentinelHostMap = _ctx.HostMap = (sentinelMap *)ROUNDN_(_hostMap, MEMORY_ALIGNMENT);
 		_sentinelHostMap->Offset = 0;
 #endif

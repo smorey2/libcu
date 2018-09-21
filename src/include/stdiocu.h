@@ -31,9 +31,13 @@ THE SOFTWARE.
 #include <stdio.h>
 typedef struct {
 	char *_base;
-	int   _flag;
-	int   _file;
+	int _flag;
+	int _file;
 } cuFILE;
+#ifdef __APPLE__
+#define __off_t off_t
+// #define __off64_t off64_t
+#endif
 #if defined(__CUDA_ARCH__)
 #include <stdarg.h>
 

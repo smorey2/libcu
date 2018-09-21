@@ -4,6 +4,9 @@
 #include "sentinel-fileutilsmsg.h"
 #include <sentinel-client.cpp>
 #include <unistdcu.h>
+#ifdef __APPLE__
+#define _read read
+#endif
 
 __forceinline__ int dmore_(char *str, int fd) { fileutils_dmore msg(str, fd); return msg.RC; }
 
