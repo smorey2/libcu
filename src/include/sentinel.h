@@ -66,9 +66,9 @@ extern "C" {
 
 	struct sentinelClientMessage {
 		sentinelMessage Base;
-		pipelineRedirect Redir;
-		sentinelClientMessage(bool wait, unsigned short op, int size = 0, char *(*prepare)(void*, char*, char*, intptr_t) = nullptr, bool(*postfix)(void*, intptr_t) = nullptr)
-			: Base(wait, op, size, prepare, postfix), Redir() { }
+		pipelineRedir Redir;
+		sentinelClientMessage(pipelineRedir redir, bool wait, unsigned short op, int size = 0, char *(*prepare)(void*, char*, char*, intptr_t) = nullptr, bool(*postfix)(void*, intptr_t) = nullptr)
+			: Base(wait, op, size, prepare, postfix), Redir(redir) { }
 	};
 
 	typedef struct __align__(8) {
@@ -115,13 +115,14 @@ extern "C" {
 	extern bool sentinelDefaultExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*, char*, char*, intptr_t));
 	extern void sentinelServerInitialize(sentinelExecutor *executor = nullptr, char *mapHostName = (char *)SENTINEL_NAME, bool hostSentinel = true, bool deviceSentinel = true);
 	extern void sentinelServerShutdown();
-	extern pipelineRedirect sentinelRedirectClientMessage(sentinelMessage *data);
+	//extern pipelineRedir sentinelRedirectClientMessage(sentinelMessage *data);
 #if HAS_DEVICESENTINEL
 	extern __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength);
 #endif
 #if HAS_HOSTSENTINEL
 	extern void sentinelClientInitialize(char *mapHostName = (char *)SENTINEL_NAME);
 	extern void sentinelClientShutdown();
+	extern pipelineRedir sentinelClientRedir(pipelineRedir *hostRedir);
 	extern void sentinelClientSend(sentinelMessage *msg, int msgLength);
 #endif
 	extern sentinelExecutor *sentinelFindExecutor(const char *name, bool forDevice = true);

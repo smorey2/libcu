@@ -3,9 +3,10 @@
 #include <stdio.h>
 #include "sentinel-fileutilsmsg.h"
 #include <sentinel-client.cpp>
+#include <ext/pipeline.cpp>
 
-__forceinline__ bool dcp_isadir_(char *str) { fileutils_isadir msg(str); return msg.RC; }
-__forceinline__ int dcp_(char *str, char *str2, bool setModes) { fileutils_dcp msg(str, str2, setModes); return msg.RC; }
+__forceinline__ bool dcp_isadir_(pipelineRedir redir, char *str) { fileutils_isadir msg(redir, str); return msg.RC; }
+__forceinline__ int dcp_(pipelineRedir redir, char *str, char *str2, bool setModes) { fileutils_dcp msg(redir, str, str2, setModes); return msg.RC; }
 
 // Build a path name from the specified directory name and file name. If the directory name is NULL, then the original filename is returned.
 // The built path is in a static area, and is overwritten for each call.
@@ -25,8 +26,9 @@ char *buildName(char *dirName, char *fileName) {
 int main(int argc, char	**argv) {
 	atexit(sentinelClientShutdown);
 	sentinelClientInitialize();
+	FDTYPE hostRedir[3]; pipelineRedir clientRedir = sentinelClientRedir(hostRedir);
 	char *lastArg = argv[argc - 1];
-	bool dirflag = dcp_isadir_(lastArg);
+	bool dirflag = dcp_isadir_(clientRedir, lastArg);
 	if (argc > 3 && !dirflag) {
 		fprintf(stderr, "%s: not a directory\n", lastArg);
 		exit(1);
@@ -36,7 +38,7 @@ int main(int argc, char	**argv) {
 		char *destName = lastArg;
 		if (dirflag)
 			destName = buildName(destName, srcName);
-		dcp_(*++argv, destName, false);
+		dcp_(clientRedir, *++argv, destName, false);
 	}
 	exit(0);
 }

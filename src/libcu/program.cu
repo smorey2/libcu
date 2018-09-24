@@ -6,6 +6,7 @@
 #include <assert.h>
 //
 #include <unistdcu.h>
+#include <ext/pipeline.h>
 #define HostDir "C:\\T_\\"
 #define DeviceDir ":\\"
 
@@ -31,6 +32,13 @@ int main() {
 	cudaErrorCheck(cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 5));
 	sentinelServerInitialize();
 	//sentinelRegisterFileUtils();
+
+	//PIDTYPE *pids;
+	//FDTYPE inPipe, outPipe, errFile;
+	//char *pipeArgs = { "C:\\Windows\\System32\\more.com" };
+	//int pipeRet = CreatePipeline(1, &pipeArgs, &pids, &inPipe, &outPipe, &errFile);
+	//free(pids);
+	//goto Error;
 
 	g_testbed<<<1, 1>>>();
 

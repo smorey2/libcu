@@ -3,12 +3,14 @@
 #include <stdio.h>
 #include "sentinel-fileutilsmsg.h"
 #include <sentinel-client.cpp>
+#include <ext/pipeline.cpp>
 
-__forceinline__ int dgrep_(char *str, char *str2, bool ignoreCase, bool tellName, bool tellLine) { fileutils_dgrep msg(str, str2, ignoreCase, tellName, tellLine); return msg.RC; }
+__forceinline__ int dgrep_(pipelineRedir redir, char *str, char *str2, bool ignoreCase, bool tellName, bool tellLine) { fileutils_dgrep msg(redir, str, str2, ignoreCase, tellName, tellLine); return msg.RC; }
 
 int main(int argc, char **argv) {
 	atexit(sentinelClientShutdown);
 	sentinelClientInitialize();
+	FDTYPE hostRedir[3]; pipelineRedir clientRedir = sentinelClientRedir(hostRedir);
 	argc--;
 	argv++;
 	bool ignoreCase = false;
@@ -24,11 +26,11 @@ int main(int argc, char **argv) {
 	}
 	char *word = *argv++;
 	argc--;
-	bool tellName = (argc > 1);
+	bool tellName = argc > 1;
 	//
 	while (argc-- > 0) {
 		char *name = *argv++;
-		if (!dgrep_(name, word, ignoreCase, tellName, tellLine))
+		if (!dgrep_(clientRedir, name, word, ignoreCase, tellName, tellLine))
 			continue;
 	}
 	exit(0);

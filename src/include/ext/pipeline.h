@@ -29,6 +29,7 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
+#include <stdio.h>
 #ifdef _MSC_VER
 #ifndef STRICT
 #define STRICT
@@ -46,61 +47,21 @@ extern "C" {
 #define __BAD_PID -1
 #endif
 
-
-	struct pipelineRedirect {
-		int F0; int F1; int F2;
-#if _MSC_VER
-		//sentinelRedirect(int f0, int f1, int f2)
-		//	: F0(_get_osfhandle(f0)), F1(_get_osfhandle(f1)), F2(_get_osfhandle(f2)) {
-		//	printf("a0: %d, %d, %d\n", F0, F1, F2);
-		//}
-		//__forceinline__ sentinelRedirect() {
-		//	//: F0(_fileno(stdin)), F1(_fileno(stdout)), F2(_fileno(stderr)) {
-		//	FDTYPE p0, p1, p2;
-		//	CreatePipeline(0, nullptr, nullptr, &p0, &p1, &p2);
-		//	F0 = _get_osfhandle((int)p0);
-		//	F1 = _get_osfhandle((int)p1);
-		//	F2 = _get_osfhandle((int)p2);
-		//	printf("a1: %d, %d, %d\n", F0, F1, F2);
-		//}
-		//__forceinline__ void doRedirect() {
-			//: F0(_fileno(stdin)), F1(_fileno(stdout)), F2(_fileno(stderr)) {
-			//FDTYPE p0, p1, p2;
-			//CreatePipeline(0, nullptr, nullptr, &p0, &p1, &p2);
-			//F0 = _get_osfhandle((int)p0);
-			//F1 = _get_osfhandle((int)p1);
-			//F2 = _get_osfhandle((int)p2);
-			//printf("a1: %d, %d, %d\n", F0, F1, F2);
-		//}
-		//https://stackoverflow.com/questions/5193579/how-make-file-from-handle-in-winapi
-		//__forceinline__ void toFiles(FILE **fs) {
-			//printf("b: %d, %d, %d\n", F0, F1, F2);
-			//fs[0] = _fdopen(_open_osfhandle(F0, _O_RDONLY), "r");
-			//fs[1] = _fdopen(_open_osfhandle(F1, _O_WRONLY), "w");
-			//fs[2] = _fdopen(_open_osfhandle(F2, _O_RDWR), "rw");
-		//}
-#else
-		//sentinelRedirect(int f0, int f1, int f2)
-		//	: F0(f0), F1(f1), F2(f2) {
-		//	printf("a0: %d, %d, %d\n", F0, F1, F2);
-		//}
-		// pipelineRedirect()
-		// 	: F0(stdin), F1(stdout), F2(stderr) {
-		// 	printf("a: %d, %d, %d\n", F0, F1, F2);
-		// }
-		// __forceinline__ void toFiles(int **fs) {
-		// 	printf("b: %d, %d, %d\n", F0, F1, F2);
-		// 	fs[0] = fdopen(F0, _O_RDONLY);
-		// 	fs[1] = fdopen(F1, _O_WRONLY);
-		// 	fs[2] = fdopen(F2, _O_RDWR);
-		// }
-#endif
+	struct pipelineRedir {
+		FILE *in;
+		FILE *out;
+		FILE *err;
+		HANDLE hStdInput;
+		HANDLE hStdOutput;
+		HANDLE hStdError;
 	};
 
 	/* Cleanup Children */
 	extern int CleanupChildren(int numPids, PIDTYPE *pids, int child_siginfo);
 	/* Create Pipeline */
-	extern int CreatePipeline(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, FDTYPE *outPipePtr, FDTYPE *errFilePtr);
+	extern int CreatePipeline(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, FDTYPE *outPipePtr, FDTYPE *errFilePtr, pipelineRedir *redirs);
+	/* Read Pipeline */
+	extern void pipelineRedirRead(FDTYPE redir[3]);
 
 #ifdef  __cplusplus
 }

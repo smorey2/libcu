@@ -1,3 +1,4 @@
+#include <ext/pipeline.h>
 #include <sys/types.h>
 #include <sys/statcu.h>
 #include <stdiocu.h>
@@ -80,7 +81,7 @@ __device__ char *timeString(time_t t) {
 }
 
 // Do an LS of a particular file name according to the flags.
-static __device__ void lsFile(char *fullName, char *name, struct stat *statbuf, int flags) {
+static __device__ void lsFile(pipelineRedir *redir, char *fullName, char *name, struct stat *statbuf, int flags) {
 	char *cp;
 	struct passwd *pwd;
 	struct group *grp;
@@ -143,7 +144,7 @@ static __device__ void lsFile(char *fullName, char *name, struct stat *statbuf, 
 
 		sprintf(cp, " %-12s ", timeString(statbuf->st_mtime));
 	}
-	fputs(buf, stdout);
+	fputs(buf, redir->out);
 
 	class_ = name + strlen(name);
 	*class_ = 0;
@@ -169,7 +170,7 @@ static __device__ void lsFile(char *fullName, char *name, struct stat *statbuf, 
 	}
 #endif
 	if (flags & LSF_LONG || ++_col == _cols) {
-		fputc('\n', stdout);
+		fputc('\n', redir->out);
 		_col = 0;
 	}
 }
@@ -197,7 +198,7 @@ __device__ int nameSort(const void *pp1, const void *pp2) {
 }
 
 __device__ int d_dls_rc;
-__global__ void g_dls(char *name, int flags, bool endSlash) {
+__global__ void g_dls(pipelineRedir redir, char *name, int flags, bool endSlash) {
 	if (!name) {
 		// alloc list
 		if (_listSize == 0) {
@@ -219,9 +220,9 @@ __global__ void g_dls(char *name, int flags, bool endSlash) {
 	}
 
 	if ((flags & LSF_DIR) || !S_ISDIR(statbuf.st_mode)) {
-		lsFile(NULL, name, &statbuf, flags);
+		lsFile(&redir, NULL, name, &statbuf, flags);
 		if (~flags & LSF_LONG)
-			fputc('\n', stdout);
+			fputc('\n', redir.out);
 		d_dls_rc = -1;
 		return;
 	}
@@ -298,22 +299,22 @@ __global__ void g_dls(char *name, int flags, bool endSlash) {
 		if (cp) cp++;
 		else cp = name;
 		if (flags & LSF_ALL || *cp != '.') {
-			lsFile(name, cp, &statbuf, flags);
+			lsFile(&redir, name, cp, &statbuf, flags);
 			num++;
 		}
 		free(name);
 	}
 	if ((~flags & LSF_LONG) && (num % _cols))
-		fputc('\n', stdout);
+		fputc('\n', redir.out);
 	_listUsed = 0;
 	d_dls_rc = 0;
 }
-int dls(char *str, int flags, bool endSlash) {
+int dls(pipelineRedir redir, char *str, int flags, bool endSlash) {
 	size_t strLength = strlen(str) + 1;
 	char *d_str;
 	cudaMalloc(&d_str, strLength);
 	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
-	g_dls<<<1, 1>>>(d_str, flags, endSlash);
+	g_dls<<<1, 1>>>(redir, d_str, flags, endSlash);
 	cudaFree(d_str);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dls_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

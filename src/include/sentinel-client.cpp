@@ -30,7 +30,7 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength) {
 #elif __OS_UNIX
 	long id = __sync_fetch_and_add((long *)&map->SetId, SENTINEL_MSGSIZE) - SENTINEL_MSGSIZE;
 #endif
-	sentinelCommand *cmd = (sentinelCommand *)&map->Data[id%sizeof(map->Data)];
+	sentinelCommand *cmd = (sentinelCommand *)&map->Data[id % sizeof(map->Data)];
 	volatile long *control = (volatile long *)&cmd->Control;
 	//while (InterlockedCompareExchange((long *)control, 1, 0) != 0) { }
 	//cmd->Data = (char *)cmd + ROUND8_(sizeof(sentinelCommand));
@@ -46,9 +46,9 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength) {
 	*control = 2;
 	if (msg->Wait) {
 #if __OS_WIN
-		while (InterlockedCompareExchange((long *)control, 5, 4) != 4) { }
+		while (InterlockedCompareExchange((long *)control, 5, 4) != 4) {}
 #elif __OS_UNIX
-		while (__sync_val_compare_and_swap((long *)control, 5, 4) != 4) { }
+		while (__sync_val_compare_and_swap((long *)control, 5, 4) != 4) {}
 #endif
 		memcpy(msg, cmd->Data, msgLength);
 		*control = 0;
@@ -80,10 +80,10 @@ void sentinelClientInitialize(char *mapHostName) {
 	_sentinelClientMapOffset = (intptr_t)((char *)_sentinelClientMap->Offset - (char *)_sentinelClientMap);
 #elif __OS_UNIX
 	struct stat sb;
-    int fd = open(mapHostName, O_RDONLY);
-    if (fd == -1) { perror("open"); exit(1); }
-    if (fstat(fd, &sb) == -1) { perror("fstat"); exit(1); }
-    if (!S_ISREG(sb.st_mode)) { fprintf(stderr, "%s is not a file\n", mapHostName); exit(1); }
+	int fd = open(mapHostName, O_RDONLY);
+	if (fd == -1) { perror("open"); exit(1); }
+	if (fstat(fd, &sb) == -1) { perror("fstat"); exit(1); }
+	if (!S_ISREG(sb.st_mode)) { fprintf(stderr, "%s is not a file\n", mapHostName); exit(1); }
 	_clientMap = mmap(NULL, sizeof(sentinelMap) + MEMORY_ALIGNMENT, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, fd, 0);
 	if (!_clientMap) {
 		printf("Could not connect to Sentinel host. Please ensure host application is running.\n");
@@ -102,6 +102,19 @@ void sentinelClientShutdown() {
 #elif __OS_UNIX
 	if (_clientMap) { munmap(_clientMap, sizeof(sentinelMap) + MEMORY_ALIGNMENT); _clientMap = nullptr; }
 #endif
+}
+
+//static void carot(char *a, FDTYPE in, FDTYPE out, FDTYPE err) {
+//	DWORD dwBytesWritten;
+//	BOOL bErrorFlag = WriteFile(out, "TEST", 4, &dwBytesWritten, NULL);
+//}
+static char *sentinelClientRedirPipelineArgs[] = { "^0" };
+pipelineRedir sentinelClientRedir(FDTYPE *hostRedir) {
+	pipelineRedir redirs[1];
+	CreatePipeline(1, sentinelClientRedirPipelineArgs, nullptr, &hostRedir[0], &hostRedir[1], &hostRedir[2], redirs);
+	fprintf(redirs[0].out, "ME");
+	fflush(redirs[0].out);
+	return redirs[0];
 }
 
 #endif

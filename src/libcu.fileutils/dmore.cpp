@@ -3,25 +3,29 @@
 #include <stdio.h>
 #include "sentinel-fileutilsmsg.h"
 #include <sentinel-client.cpp>
+#include <ext/pipeline.cpp>
 #include <unistdcu.h>
 #ifdef __APPLE__
 #define _read read
 #endif
 
-__forceinline__ int dmore_(char *str, int fd) { fileutils_dmore msg(str, fd); return msg.RC; }
+__forceinline__ int dmore_(pipelineRedir redir, char *str, int fd) { fileutils_dmore msg(redir, str, fd); return msg.RC; }
 
 int main(int argc, char **argv) {
+	atexit(sentinelClientShutdown);
+	sentinelClientInitialize();
+	FDTYPE hostRedir[3]; pipelineRedir clientRedir = sentinelClientRedir(hostRedir);
 	while (argc-- > 1) {
 		char *name = *(++argv);
 		int fd = -1;
 		while (true) {
-			fd = dmore_(name, fd);
+			fd = dmore_(clientRedir, name, fd);
 			if (fd == -1)
 				break;
 			static char buf[80];
 			if (_read(0, buf, sizeof(buf)) < 0) {
 				if (fd > -1)
-					fd = dmore_(nullptr, fd); // close(fd);
+					fd = dmore_(clientRedir, nullptr, fd); // close(fd);
 				exit(0);
 			}
 			unsigned char ch = buf[0];
@@ -29,11 +33,11 @@ int main(int argc, char **argv) {
 			switch (ch) {
 			case 'N':
 			case 'n':
-				fd = dmore_(nullptr, fd); // close(fd);
+				fd = dmore_(clientRedir, nullptr, fd); // close(fd);
 				break;
 			case 'Q':
 			case 'q':
-				fd = dmore_(nullptr, fd); // close(fd);
+				fd = dmore_(clientRedir, nullptr, fd); // close(fd);
 				exit(0);
 			}
 		}

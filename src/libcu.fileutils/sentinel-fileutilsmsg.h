@@ -65,7 +65,7 @@ struct fileutils_dcat {
 	}
 	sentinelClientMessage Base;
 	char *Str;
-	fileutils_dcat(char *str) : Base(true, FILEUTILS_DCAT, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelClientSend(&Base.Base, sizeof(fileutils_dcat)); }
+	fileutils_dcat(pipelineRedir redir, char *str) : Base(redir, true, FILEUTILS_DCAT, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelClientSend(&Base.Base, sizeof(fileutils_dcat)); }
 	int RC;
 };
 
@@ -81,7 +81,7 @@ struct fileutils_dchgrp {
 	}
 	sentinelClientMessage Base;
 	char *Str; int Gid;
-	fileutils_dchgrp(char *str, int gid) : Base(true, FILEUTILS_DCHGRP, 1024, SENTINELPREPARE(Prepare)), Str(str), Gid(gid) { sentinelClientSend(&Base.Base, sizeof(fileutils_dchgrp)); }
+	fileutils_dchgrp(pipelineRedir redir, char *str, int gid) : Base(redir, true, FILEUTILS_DCHGRP, 1024, SENTINELPREPARE(Prepare)), Str(str), Gid(gid) { sentinelClientSend(&Base.Base, sizeof(fileutils_dchgrp)); }
 	int RC;
 };
 
@@ -97,7 +97,7 @@ struct fileutils_getgrnam {
 	}
 	sentinelClientMessage Base;
 	char *Str;
-	fileutils_getgrnam(char *str) : Base(true, FILEUTILS_GETGRNAM, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelClientSend(&Base.Base, sizeof(fileutils_getgrnam)); }
+	fileutils_getgrnam(pipelineRedir redir, char *str) : Base(redir, true, FILEUTILS_GETGRNAM, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelClientSend(&Base.Base, sizeof(fileutils_getgrnam)); }
 	struct group *RC;
 };
 
@@ -113,7 +113,7 @@ struct fileutils_dchmod {
 	}
 	sentinelClientMessage Base;
 	char *Str; int Mode;
-	fileutils_dchmod(char *str, int mode) : Base(true, FILEUTILS_DCHMOD, 1024, SENTINELPREPARE(Prepare)), Str(str), Mode(mode) { sentinelClientSend(&Base.Base, sizeof(fileutils_dchmod)); }
+	fileutils_dchmod(pipelineRedir redir, char *str, int mode) : Base(redir, true, FILEUTILS_DCHMOD, 1024, SENTINELPREPARE(Prepare)), Str(str), Mode(mode) { sentinelClientSend(&Base.Base, sizeof(fileutils_dchmod)); }
 	int RC;
 };
 
@@ -129,7 +129,7 @@ struct fileutils_dchown {
 	}
 	sentinelClientMessage Base;
 	char *Str; int Uid;
-	fileutils_dchown(char *str, int uid) : Base(true, FILEUTILS_DCHOWN, 1024, SENTINELPREPARE(Prepare)), Str(str), Uid(uid) { sentinelClientSend(&Base.Base, sizeof(fileutils_dchown)); }
+	fileutils_dchown(pipelineRedir redir, char *str, int uid) : Base(redir, true, FILEUTILS_DCHOWN, 1024, SENTINELPREPARE(Prepare)), Str(str), Uid(uid) { sentinelClientSend(&Base.Base, sizeof(fileutils_dchown)); }
 	int RC;
 };
 
@@ -145,7 +145,7 @@ struct fileutils_getpwnam {
 	}
 	sentinelClientMessage Base;
 	char *Str;
-	fileutils_getpwnam(char *str) : Base(true, FILEUTILS_GETPWNAM, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelClientSend(&Base.Base, sizeof(fileutils_getpwnam)); }
+	fileutils_getpwnam(pipelineRedir redir, char *str) : Base(redir, true, FILEUTILS_GETPWNAM, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelClientSend(&Base.Base, sizeof(fileutils_getpwnam)); }
 	struct passwd *RC;
 };
 
@@ -165,7 +165,7 @@ struct fileutils_dcmp {
 	}
 	sentinelClientMessage Base;
 	char *Str; char *Str2;
-	fileutils_dcmp(char *str, char *str2) : Base(true, FILEUTILS_DCMP, 1024, SENTINELPREPARE(Prepare)), Str(str), Str2(str2) { sentinelClientSend(&Base.Base, sizeof(fileutils_dcmp)); }
+	fileutils_dcmp(pipelineRedir redir, char *str, char *str2) : Base(redir, true, FILEUTILS_DCMP, 1024, SENTINELPREPARE(Prepare)), Str(str), Str2(str2) { sentinelClientSend(&Base.Base, sizeof(fileutils_dcmp)); }
 	int RC;
 };
 
@@ -185,7 +185,7 @@ struct fileutils_dcp {
 	}
 	sentinelClientMessage Base;
 	char *Str; char *Str2; bool SetModes;
-	fileutils_dcp(char *str, char *str2, bool setModes) : Base(true, FILEUTILS_DCP, 1024, SENTINELPREPARE(Prepare)), Str(str), Str2(str2), SetModes(setModes) { sentinelClientSend(&Base.Base, sizeof(fileutils_dcp)); }
+	fileutils_dcp(pipelineRedir redir, char *str, char *str2, bool setModes) : Base(redir, true, FILEUTILS_DCP, 1024, SENTINELPREPARE(Prepare)), Str(str), Str2(str2), SetModes(setModes) { sentinelClientSend(&Base.Base, sizeof(fileutils_dcp)); }
 	int RC;
 };
 
@@ -201,7 +201,7 @@ struct fileutils_isadir {
 	}
 	sentinelClientMessage Base;
 	char *Str;
-	fileutils_isadir(char *str) : Base(true, FILEUTILS_ISADIR, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelClientSend(&Base.Base, sizeof(fileutils_isadir)); }
+	fileutils_isadir(pipelineRedir redir, char *str) : Base(redir, true, FILEUTILS_ISADIR, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelClientSend(&Base.Base, sizeof(fileutils_isadir)); }
 	bool RC;
 };
 
@@ -221,7 +221,7 @@ struct fileutils_dgrep {
 	}
 	sentinelClientMessage Base;
 	char *Str; char *Str2; bool IgnoreCase; bool TellName; bool TellLine;
-	fileutils_dgrep(char *str, char *str2, bool ignoreCase, bool tellName, bool tellLine) : Base(true, FILEUTILS_DGREP, 1024, SENTINELPREPARE(Prepare)), Str(str), Str2(str2), IgnoreCase(ignoreCase), TellName(tellName), TellLine(tellLine) { sentinelClientSend(&Base.Base, sizeof(fileutils_dgrep)); }
+	fileutils_dgrep(pipelineRedir redir, char *str, char *str2, bool ignoreCase, bool tellName, bool tellLine) : Base(redir, true, FILEUTILS_DGREP, 1024, SENTINELPREPARE(Prepare)), Str(str), Str2(str2), IgnoreCase(ignoreCase), TellName(tellName), TellLine(tellLine) { sentinelClientSend(&Base.Base, sizeof(fileutils_dgrep)); }
 	int RC;
 };
 
@@ -237,7 +237,7 @@ struct fileutils_dls {
 	}
 	sentinelClientMessage Base;
 	char *Str; int Flags; bool EndSlash;
-	fileutils_dls(char *str, int flags, bool endSlash) : Base(true, FILEUTILS_DLS, 1024, SENTINELPREPARE(Prepare)), Str(str), Flags(flags), EndSlash(endSlash) { sentinelClientSend(&Base.Base, sizeof(fileutils_dls)); }
+	fileutils_dls(pipelineRedir redir, char *str, int flags, bool endSlash) : Base(redir, true, FILEUTILS_DLS, 1024, SENTINELPREPARE(Prepare)), Str(str), Flags(flags), EndSlash(endSlash) { sentinelClientSend(&Base.Base, sizeof(fileutils_dls)); }
 	int RC;
 };
 
@@ -253,7 +253,7 @@ struct fileutils_dmkdir {
 	}
 	sentinelClientMessage Base;
 	char *Str; unsigned short Mode;
-	fileutils_dmkdir(char *str, unsigned short mode) : Base(true, FILEUTILS_DMKDIR, 1024, SENTINELPREPARE(Prepare)), Str(str), Mode(mode) { sentinelClientSend(&Base.Base, sizeof(fileutils_dmkdir)); }
+	fileutils_dmkdir(pipelineRedir redir, char *str, unsigned short mode) : Base(redir, true, FILEUTILS_DMKDIR, 1024, SENTINELPREPARE(Prepare)), Str(str), Mode(mode) { sentinelClientSend(&Base.Base, sizeof(fileutils_dmkdir)); }
 	int RC;
 };
 
@@ -269,7 +269,7 @@ struct fileutils_dmore {
 	}
 	sentinelClientMessage Base;
 	char *Str; int Fd;
-	fileutils_dmore(char *str, int fd) : Base(true, FILEUTILS_DMORE, 1024, SENTINELPREPARE(Prepare)), Str(str), Fd(fd) { sentinelClientSend(&Base.Base, sizeof(fileutils_dmore)); }
+	fileutils_dmore(pipelineRedir redir, char *str, int fd) : Base(redir, true, FILEUTILS_DMORE, 1024, SENTINELPREPARE(Prepare)), Str(str), Fd(fd) { sentinelClientSend(&Base.Base, sizeof(fileutils_dmore)); }
 	int RC;
 };
 
@@ -289,7 +289,7 @@ struct fileutils_dmv {
 	}
 	sentinelClientMessage Base;
 	char *Str; char *Str2;
-	fileutils_dmv(char *str, char *str2) : Base(true, FILEUTILS_DMV, 1024, SENTINELPREPARE(Prepare)), Str(str), Str2(str2) { sentinelClientSend(&Base.Base, sizeof(fileutils_dmv)); }
+	fileutils_dmv(pipelineRedir redir, char *str, char *str2) : Base(redir, true, FILEUTILS_DMV, 1024, SENTINELPREPARE(Prepare)), Str(str), Str2(str2) { sentinelClientSend(&Base.Base, sizeof(fileutils_dmv)); }
 	int RC;
 };
 
@@ -305,7 +305,7 @@ struct fileutils_drm {
 	}
 	sentinelClientMessage Base;
 	char *Str;
-	fileutils_drm(char *str) : Base(true, FILEUTILS_DRM, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelClientSend(&Base.Base, sizeof(fileutils_drm)); }
+	fileutils_drm(pipelineRedir redir, char *str) : Base(redir, true, FILEUTILS_DRM, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelClientSend(&Base.Base, sizeof(fileutils_drm)); }
 	int RC;
 };
 
@@ -321,7 +321,7 @@ struct fileutils_drmdir {
 	}
 	sentinelClientMessage Base;
 	char *Str;
-	fileutils_drmdir(char *str) : Base(true, FILEUTILS_DRMDIR, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelClientSend(&Base.Base, sizeof(fileutils_drmdir)); }
+	fileutils_drmdir(pipelineRedir redir, char *str) : Base(redir, true, FILEUTILS_DRMDIR, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelClientSend(&Base.Base, sizeof(fileutils_drmdir)); }
 	int RC;
 };
 
@@ -333,7 +333,7 @@ struct fileutils_dpwd {
 		return end;
 	}
 	sentinelClientMessage Base;
-	fileutils_dpwd() : Base(true, FILEUTILS_DPWD, 1024, SENTINELPREPARE(Prepare)) { sentinelClientSend(&Base.Base, sizeof(fileutils_dpwd)); }
+	fileutils_dpwd(pipelineRedir redir) : Base(redir, true, FILEUTILS_DPWD, 1024, SENTINELPREPARE(Prepare)) { sentinelClientSend(&Base.Base, sizeof(fileutils_dpwd)); }
 	int RC;
 	char *Ptr;
 };
@@ -350,7 +350,7 @@ struct fileutils_dcd {
 	}
 	sentinelClientMessage Base;
 	char *Str;
-	fileutils_dcd(char *str) : Base(true, FILEUTILS_DCD, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelClientSend(&Base.Base, sizeof(fileutils_dcd)); }
+	fileutils_dcd(pipelineRedir redir, char *str) : Base(redir, true, FILEUTILS_DCD, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelClientSend(&Base.Base, sizeof(fileutils_dcd)); }
 	int RC;
 };
 

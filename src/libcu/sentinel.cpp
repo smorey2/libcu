@@ -140,11 +140,11 @@ void sentinelServerInitialize(sentinelExecutor *executor, char *mapHostName, boo
 		_sentinelHostMap->Offset = (intptr_t)_sentinelHostMap;
 #elif __OS_UNIX
 		struct stat sb;
-    	int fd = open(mapHostName, O_RDONLY | O_CREAT);
-    	if (fd == -1) { perror("open"); exit(1); }
+		int fd = open(mapHostName, O_RDONLY | O_CREAT);
+		if (fd == -1) { perror("open"); exit(1); }
 		if (unlink(mapHostName) == -1) { perror("unlink"); exit(1); }
-    	if (fstat(fd, &sb) == -1) { perror("fstat"); exit(1); }
-    	if (!S_ISREG(sb.st_mode)) { fprintf(stderr, "%s is not a file\n", mapHostName); exit(1); }
+		if (fstat(fd, &sb) == -1) { perror("fstat"); exit(1); }
+		if (!S_ISREG(sb.st_mode)) { fprintf(stderr, "%s is not a file\n", mapHostName); exit(1); }
 		_hostMap = mmap(NULL, sizeof(sentinelMap) + MEMORY_ALIGNMENT, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, fd, 0);
 		if (!_hostMap) {
 			printf("Could not map view of file.\n");
@@ -248,20 +248,20 @@ void sentinelServerShutdown() {
 #endif
 }
 
-pipelineRedirect sentinelRedirectClientMessage(sentinelMessage *data) {
-	//FILE *files[3]; ((sentinelClientMessage *)data)->Redir.toFiles(files);
-	//FILE *out = files[1];
-	//printf("before");
-	//fprintf(out, "TEST\n");
-	//fflush(out);
-	//
-	pipelineRedirect last;
-	memset((void *)&last, 0, sizeof(last));
-	//last.In = _dup2(redir.In, 0); if (last.In == -1) { perror("_dup(0) failure"); exit(1); }
-	//last.Out = _dup2(redir.Out, 1); if (last.Out == -1) { perror("_dup(1) failure"); exit(1); }
-	//last.Err = _dup2(redir.Err, 2); if (last.Err == -1) { perror("_dup(2) failure"); exit(1); }
-	return last;
-}
+//pipelineRedir sentinelRedirectClientMessage(sentinelMessage *data) {
+//	//FILE *files[3]; ((sentinelClientMessage *)data)->Redir.toFiles(files);
+//	//FILE *out = files[1];
+//	//printf("before");
+//	//fprintf(out, "TEST\n");
+//	//fflush(out);
+//	//
+//	pipelineRedirect last;
+//	memset((void *)&last, 0, sizeof(last));
+//	//last.In = _dup2(redir.In, 0); if (last.In == -1) { perror("_dup(0) failure"); exit(1); }
+//	//last.Out = _dup2(redir.Out, 1); if (last.Out == -1) { perror("_dup(1) failure"); exit(1); }
+//	//last.Err = _dup2(redir.Err, 2); if (last.Err == -1) { perror("_dup(2) failure"); exit(1); }
+//	return last;
+//}
 
 sentinelExecutor *sentinelFindExecutor(const char *name, bool forDevice) {
 	sentinelExecutor *list = forDevice ? _ctx.DeviceList : _ctx.HostList;
