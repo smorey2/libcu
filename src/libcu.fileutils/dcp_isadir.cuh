@@ -1,9 +1,10 @@
+#include <ext/pipeline.h>
 #include <unistdcu.h>
 #include <string.h>
 
 // Return TRUE if a filename is a directory. Nonexistant files return FALSE.
 __device__ __managed__ bool m_isadir_rc;
-__global__ void g_isadir(char *name) {
+__global__ void g_isadir(pipelineRedir redir, char *name) {
 	struct stat statbuf;
 	if (stat(name, &statbuf) < 0) {
 		m_isadir_rc = false;
@@ -13,12 +14,14 @@ __global__ void g_isadir(char *name) {
 	return;
 }
 
-bool dcp_isadir_(char *str) {
+bool dcp_isadir_(pipelineRedir redir, char *str) {
+	redir.Open();
 	size_t strLength = strlen(str) + 1;
 	char *d_str;
 	cudaMalloc(&d_str, strLength);
 	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
-	g_isadir<<<1, 1>>>(d_str);
+	g_isadir<<<1, 1>>>(redir, d_str);
 	cudaFree(d_str);
+	redir.Close();
 	return m_isadir_rc;
 }

@@ -36,6 +36,7 @@
     <ClInclude Include="..\include\pwdcu.h" />
     <ClInclude Include="..\include\sentinel-direntmsg.h" />
     <ClInclude Include="..\include\sentinel-fcntlmsg.h" />
+    <ClInclude Include="..\include\sentinel-hostmsg.h" />
     <ClInclude Include="..\include\sentinel-timemsg.h" />
     <ClInclude Include="..\include\setjmpcu.h" />
     <ClInclude Include="..\include\sys\timecu.h" />
@@ -62,7 +63,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\include\sentinel-client.cpp" />
-    <ClCompile Include="..\include\ext\pipeline.cpp" />
+    <None Include="..\include\ext\pipeline.cpp" />
     <ClCompile Include="sentinel-msg.cpp" />
     <ClCompile Include="sentinel.cpp" />
     <ClCompile Include="cuda_runtime.cpp" />

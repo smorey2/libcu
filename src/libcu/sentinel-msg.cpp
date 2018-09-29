@@ -11,6 +11,7 @@
 #elif __OS_UNIX
 #include <unistd.h>
 #endif
+#include <sentinel-hostmsg.h>
 #include <sentinel-direntmsg.h>
 #include <sentinel-fcntlmsg.h>
 #include <sentinel-unistdmsg.h>
@@ -62,7 +63,15 @@ int unsetenv(const char *name) {
 
 #endif
 
-bool sentinelDefaultExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*, char*, char*, intptr_t)) {
+bool sentinelDefaultHostExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*, char*, char*, intptr_t)) {
+	if (data->OP > TIME_STRFTIME) return false;
+	switch (data->OP) {
+	case HOST_GETPROCESSID: { host_getprocessid *msg = (host_getprocessid *)data; msg->RC = GetCurrentProcessId(); return true; }
+	}
+	return false;
+}
+
+bool sentinelDefaultDeviceExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*, char*, char*, intptr_t)) {
 	if (data->OP > TIME_STRFTIME) return false;
 	switch (data->OP) {
 	case STDIO_REMOVE: { stdio_remove *msg = (stdio_remove *)data; msg->RC = remove(msg->Str); return true; }

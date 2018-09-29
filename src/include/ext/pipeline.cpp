@@ -173,35 +173,31 @@ end:
 	return pid;
 }
 
-static int __StartRedir(pipelineRedir *redir, FDTYPE inputId, FDTYPE outputId, FDTYPE errorId) {
+static int __StartRedir(FDTYPE process, pipelineRedir *redir, FDTYPE inputId, FDTYPE outputId, FDTYPE errorId) {
 	HANDLE hProcess = GetCurrentProcess();
 	// Duplicate all the handles which will be passed off as stdin, stdout and stderr of the child process. The duplicate handles are set to
 	// be inheritable, so the child process can use them.
 	if (inputId == __BAD_FD) {
 		HANDLE h;
-		if (CreatePipe(&redir->hStdInput, &h, WinStdSecAttrs(), 0) != FALSE) CloseHandle(h);
+		if (CreatePipe(&redir->Input, &h, WinStdSecAttrs(), 0) != FALSE) CloseHandle(h);
 	}
-	else DuplicateHandle(hProcess, inputId, hProcess, &redir->hStdInput, 0, TRUE, DUPLICATE_SAME_ACCESS);
-	if (redir->hStdInput == __BAD_FD) goto end;
+	else DuplicateHandle(hProcess, inputId, process, &redir->Input, 0, TRUE, DUPLICATE_SAME_ACCESS);
+	if (redir->Input == __BAD_FD) goto end;
 	if (outputId == __BAD_FD) {
-		redir->hStdOutput = CreateFile("NUL:", GENERIC_WRITE, 0, WinStdSecAttrs(), OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		redir->Output = CreateFile("NUL:", GENERIC_WRITE, 0, WinStdSecAttrs(), OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	}
-	else DuplicateHandle(hProcess, outputId, hProcess, &redir->hStdOutput, 0, TRUE, DUPLICATE_SAME_ACCESS);
-	if (redir->hStdOutput == __BAD_FD) goto end;
+	else DuplicateHandle(hProcess, outputId, process, &redir->Output, 0, TRUE, DUPLICATE_SAME_ACCESS);
+	if (redir->Output == __BAD_FD) goto end;
 	if (errorId == __BAD_FD) { // If handle was not set, errors should be sent to an infinitely deep sink.
-		redir->hStdError = CreateFile("NUL:", GENERIC_WRITE, 0, WinStdSecAttrs(), OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		redir->Error = CreateFile("NUL:", GENERIC_WRITE, 0, WinStdSecAttrs(), OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	}
-	else DuplicateHandle(hProcess, errorId, hProcess, &redir->hStdError, 0, TRUE, DUPLICATE_SAME_ACCESS);
-	if (redir->hStdError == __BAD_FD) goto end;
-	//
-	redir->in = __Fdopen_r(redir->hStdInput);
-	redir->out = __Fdopen_w(redir->hStdOutput);
-	redir->err = __Fdopen_w(redir->hStdError);
+	else DuplicateHandle(hProcess, errorId, process, &redir->Error, 0, TRUE, DUPLICATE_SAME_ACCESS);
+	if (redir->Error == __BAD_FD) goto end;
 	return 0;
 end:
-	if (redir->hStdInput != __BAD_FD) CloseHandle(redir->hStdInput);
-	if (redir->hStdOutput != __BAD_FD) CloseHandle(redir->hStdOutput);
-	if (redir->hStdError != __BAD_FD) CloseHandle(redir->hStdError);
+	if (redir->Input != __BAD_FD) CloseHandle(redir->Input);
+	if (redir->Output != __BAD_FD) CloseHandle(redir->Output);
+	if (redir->Error != __BAD_FD) CloseHandle(redir->Error);
 	return -1;
 }
 
@@ -276,7 +272,7 @@ static PIDTYPE __StartProcess(char **argv, char *env, FDTYPE inputId, FDTYPE out
 	return pid;
 }
 
-static int __StartRedir(pipelineRedir redir, FDTYPE inputId, FDTYPE outputId, FDTYPE errorId) {
+static int __StartRedir(FDTYPE process, pipelineRedir *redir, FDTYPE inputId, FDTYPE outputId, FDTYPE errorId) {
 	if (inputId != __BAD_FD) dup2(inputId, 0);
 	if (outputId != __BAD_FD) dup2(outputId, 1);
 	if (errorId != __BAD_FD) dup2(errorId, 2);
@@ -464,7 +460,7 @@ static FILE *GetAioFilehandle(const char *input) {
 #define FILE_TEXT   3           /* input only:   input is actual text */
 
 /* Create Pipeline */
-int CreatePipeline(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, FDTYPE *outPipePtr, FDTYPE *errFilePtr, pipelineRedir *redirs) {
+int CreatePipeline(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, FDTYPE *outPipePtr, FDTYPE *errFilePtr, FDTYPE process, pipelineRedir *redirs) {
 	ReapDetachedPids();
 	if (inPipePtr != NULL) *inPipePtr = __BAD_FD;
 	if (outPipePtr != NULL) *outPipePtr = __BAD_FD;
@@ -643,12 +639,7 @@ int CreatePipeline(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, 
 
 		// Now fork the child
 		if (argv[0][0] != '^') { PIDTYPE pid = StartProcess(argv, nullptr, inputId, outputId, errorId); pids[numPids] = pid; }
-		else {
-			__StartRedir(&redirs[atoi(&argv[0][1])], inputId, outputId, errorId);
-			//redirs[atoi(&argv[0][1])] = { __Fdopen_r(inputId), __Fdopen_w(outputId), __Fdopen_w(errorId) };
-			//fprintf(redirs[0].out, "REDIR1");
-			//fflush(redirs[0].out);
-		}
+		else { __StartRedir(process, &redirs[atoi(&argv[0][1])], inputId, outputId, errorId); }
 
 		// Restore in case of pipe_dup_err
 		errorId = origErrorId;
@@ -686,15 +677,33 @@ error:
 	goto cleanup;
 }
 
-void pipelineRedirRead(FDTYPE redir[3]) {
-	DWORD dwRead, dwWritten;
-	CHAR chBuf[4096];
-	HANDLE hParentStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+void pipelineRedir::Open() {
+	in = __Fdopen_r(Input);
+	out = __Fdopen_w(Output);
+	err = __Fdopen_w(Error);
+}
+
+static CHAR AckBuf[] = { 0, 1, 0 };
+void pipelineRedir::Close() {
+	fflush(out);
+	fwrite(AckBuf, sizeof(AckBuf), 1, out);
+	fflush(out);
+	fclose(in);
+	fclose(out);
+	fclose(err);
+}
+
+void pipelineRedir::Read() {
+	DWORD read, written;
+	CHAR buf[4096];
+	HANDLE stdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+	bool foundAck = false;
 	for (;;) {
-		BOOL bSuccess = ReadFile(redir[1], chBuf, 4096, &dwRead, NULL);
-		if (!bSuccess || dwRead == 0) break;
-		bSuccess = WriteFile(hParentStdOut, chBuf, dwRead, &dwWritten, NULL);
-		if (!bSuccess) break;
+		BOOL success = ReadFile(Output, buf, sizeof(buf), &read, NULL);
+		if (!success || read == 0) break;
+		if (read >= sizeof(AckBuf) && !memcmp(buf + read - sizeof(AckBuf), AckBuf, sizeof(AckBuf))) { read -= sizeof(AckBuf); foundAck = true; } //: Ack
+		success = WriteFile(stdOutput, buf, read, &written, NULL);
+		if (foundAck || !success) break;
 	}
 }
 

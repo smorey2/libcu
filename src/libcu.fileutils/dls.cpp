@@ -12,15 +12,15 @@
 #define	LSF_MULT	0x08
 #define LSF_ALL		0x10		// List files starting with `.'
 #define LSF_CLASS	0x20		// Classify files (append symbol)
-__forceinline__ int dls_(pipelineRedir redir, char *str, int flags, bool endSlash) { fileutils_dls msg(redir, str, flags, endSlash); return msg.RC; }
+__forceinline__ int dls_(pipelineRedir *redir, char *str, int flags, bool endSlash) { fileutils_dls msg(redir[0], str, flags, endSlash); redir[1].Read(); return msg.RC; }
 
 int main(int argc, const char **argv) {
 	atexit(sentinelClientShutdown);
 	sentinelClientInitialize();
-	FDTYPE hostRedir[3]; pipelineRedir clientRedir = sentinelClientRedir(hostRedir);
+	pipelineRedir redir[2]; sentinelClientRedir(redir);
 
 	// setup
-	dls_(clientRedir, nullptr, 1, false);
+	dls_(redir, nullptr, 1, false);
 
 	// flags
 	int flags = 0;
@@ -52,11 +52,10 @@ int main(int argc, const char **argv) {
 		strcpy(name, *argv);
 		bool endSlash = *name && (name[strlen(name) - 1] == '/');
 
-		if (dls_(clientRedir, name, flags, endSlash))
+		if (dls_(redir, name, flags, endSlash))
 			continue;
 	}
 
 	/*fflush(stdout);*/
-	pipelineRedirRead(hostRedir);
 	exit(0);
 }

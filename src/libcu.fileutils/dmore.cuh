@@ -1,10 +1,11 @@
+#include <ext/pipeline.h>
 #include <sys/statcu.h>
 #include <stdiocu.h>
 #include <unistdcu.h>
 #include <fcntlcu.h>
 
 __device__ int d_dmore_rc;
-__global__ void g_dmore(char *name, int fd) {
+__global__ void g_dmore(pipelineRedir redir, char *name, int fd) {
 	if (!name) {
 		close(fd);
 		d_dmore_rc = -1;
@@ -48,12 +49,14 @@ __global__ void g_dmore(char *name, int fd) {
 		close(fd);
 	d_dmore_rc = -1;
 }
-int dmore(char *str, int fd) {
+int dmore(pipelineRedir redir, char *str, int fd) {
+	redir.Open();
 	size_t strLength = strlen(str) + 1;
 	char *d_str;
 	cudaMalloc(&d_str, strLength);
 	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
-	g_dmore<<<1, 1>>>(d_str, fd);
+	g_dmore<<<1, 1>>>(redir, d_str, fd);
 	cudaFree(d_str);
+	redir.Close();
 	int rc; cudaMemcpyFromSymbol(&rc, d_dmore_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

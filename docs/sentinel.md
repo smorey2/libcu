@@ -6,20 +6,23 @@ describe sentinel
 ## Interface
 
 These are the methods to access Sentinel's functionality:
-* `sentinelDefaultExecutor` - the built-in default executor auto-registered as base on `sentinelServerInitialize`
+* `sentinelDefaultHostExecutor` - the built-in default host executor auto-registered as base on `sentinelServerInitialize`
+* `sentinelDefaultDeviceExecutor` - the built-in default device executor auto-registered as base on `sentinelServerInitialize`
 * `sentinelServerInitialize` - initializes the server side Sentinel creating its assets and registering the `sentinelDefaultExecutor` and the `executor` if provided.
 * `sentinelServerShutdown` - shutsdown the server side Sentinel and its assets
 * `sentinelDeviceSend` - used in the message constructor to send message(s) on the device bus
 * `sentinelClientInitialize` - initializes the client side Sentinel establishing a connection to the server
 * `sentinelClientShutdown` - shutsdown the client side Sentinel
+* `sentinelClientRedir` - used in the client side to create a redir pipeline
 * `sentinelClientSend` - used in the message constructor to send message(s) on the host bus
 * `sentinelFindExecutor` - finds the `sentinelExecutor` with the given `name` on the host or device
 * `sentinelRegisterExecutor` - registers the `sentinelExecutor` on the host or device
 * `sentinelUnregisterExecutor` - un-registers the `sentinelExecutor` on the host or device
 * `sentinelRegisterFileUtils` - registers the `sentinelRegisterFileUtils` for use with file-system utilities
 ```
-extern bool sentinelDefaultExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*,char*,char*,intptr_t));
-extern void sentinelServerInitialize(sentinelExecutor *executor = nullptr, char *mapHostName = SENTINEL_NAME, bool hostSentinel = true, bool deviceSentinel = true);
+extern bool sentinelDefaultHostExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*,char*,char*,intptr_t));
+extern bool sentinelDefaultDeviceExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*,char*,char*,intptr_t));
+extern void sentinelServerInitialize(sentinelExecutor *deviceExecutor = nullptr, char *mapHostName = SENTINEL_NAME, bool hostSentinel = true, bool deviceSentinel = true);
 extern void sentinelServerShutdown();
 #if HAS_DEVICESENTINEL
 	extern __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength);
@@ -27,6 +30,7 @@ extern void sentinelServerShutdown();
 #if HAS_HOSTSENTINEL
 	extern void sentinelClientInitialize(char *mapHostName = SENTINEL_NAME);
 	extern void sentinelClientShutdown();
+	extern void sentinelClientRedir(pipelineRedir *redir);
 	extern void sentinelClientSend(sentinelMessage *msg, int msgLength);
 #endif
 extern sentinelExecutor *sentinelFindExecutor(const char *name, bool forDevice = true);

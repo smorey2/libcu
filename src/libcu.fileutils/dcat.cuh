@@ -1,3 +1,4 @@
+#include <ext/pipeline.h>
 #include <stdiocu.h>
 #include <errnocu.h>
 
@@ -10,7 +11,7 @@ __device__ void dumpfile(FILE *f) {
 }
 
 __device__ int d_dcat_rc;
-__global__ void g_dcat(char *str) {
+__global__ void g_dcat(pipelineRedir redir, char *str) {
 	FILE *f = fopen(str, "r");
 	if (!f)
 		d_dcat_rc = errno;
@@ -20,12 +21,14 @@ __global__ void g_dcat(char *str) {
 		d_dcat_rc = 0;
 	}
 }
-int dcat(char *str) {
+int dcat(pipelineRedir redir, char *str) {
+	redir.Open();
 	size_t strLength = strlen(str) + 1;
 	char *d_str;
 	cudaMalloc(&d_str, strLength);
 	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
-	g_dcat<<<1, 1>>>(d_str);
+	g_dcat<<<1, 1>>>(redir, d_str);
 	cudaFree(d_str);
+	redir.Close();
 	int rc; cudaMemcpyFromSymbol(&rc, d_dcat_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

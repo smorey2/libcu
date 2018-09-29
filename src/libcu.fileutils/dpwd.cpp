@@ -5,14 +5,14 @@
 #include <sentinel-client.cpp>
 #include <ext/pipeline.cpp>
 
-__forceinline__ int dpwd_(pipelineRedir redir, char *ptr) { fileutils_dpwd msg(redir); strcpy(ptr, msg.Ptr); return msg.RC; }
+__forceinline__ int dpwd_(pipelineRedir *redir, char *ptr) { fileutils_dpwd msg(redir[0]); strcpy(ptr, msg.Ptr); redir[1].Read(); return msg.RC; }
 
 int main(int argc, char **argv) {
 	atexit(sentinelClientShutdown);
 	sentinelClientInitialize();
-	FDTYPE hostRedir[3]; pipelineRedir clientRedir = sentinelClientRedir(hostRedir);
+	pipelineRedir redir[2]; sentinelClientRedir(redir);
 	char pwd[FILENAME_MAX];
-	if (dpwd_(clientRedir, pwd)) {
+	if (dpwd_(redir, pwd)) {
 		fprintf(stderr, "pwd: cannot get current directory\n");
 		exit(1);
 	}

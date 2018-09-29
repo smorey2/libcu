@@ -1,6 +1,7 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
 #include <assert.h>
+#include <ext/pipeline.cpp>
 
 #define ROUND8_(x) (((x)+7)&~7)
 #define panic(fmt, ...) { printf(fmt, __VA_ARGS__); asm("trap;"); }

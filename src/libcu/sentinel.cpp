@@ -33,7 +33,8 @@ void sentinelMap::Dump() {
 }
 
 static sentinelContext _ctx;
-static sentinelExecutor _baseExecutor = { nullptr, "base", sentinelDefaultExecutor, nullptr };
+static sentinelExecutor _baseHostExecutor = { nullptr, "base", sentinelDefaultHostExecutor, nullptr };
+static sentinelExecutor _baseDeviceExecutor = { nullptr, "base", sentinelDefaultDeviceExecutor, nullptr };
 
 // HOSTSENTINEL
 #if HAS_HOSTSENTINEL
@@ -120,10 +121,10 @@ static void *_hostMap = nullptr;
 static bool _sentinelDevice = false;
 static int *_deviceMap[SENTINEL_DEVICEMAPS];
 #endif
-void sentinelServerInitialize(sentinelExecutor *executor, char *mapHostName, bool hostSentinel, bool deviceSentinel) {
-	// create host map
+void sentinelServerInitialize(sentinelExecutor *deviceExecutor, char *mapHostName, bool hostSentinel, bool deviceSentinel) {
 #if HAS_HOSTSENTINEL
 	if (hostSentinel) {
+		// create host map
 #if __OS_WIN
 		_hostMapHandle = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(sentinelMap) + MEMORY_ALIGNMENT, mapHostName);
 		if (!_hostMapHandle) {
@@ -154,12 +155,24 @@ void sentinelServerInitialize(sentinelExecutor *executor, char *mapHostName, boo
 		_sentinelHostMap = _ctx.HostMap = (sentinelMap *)ROUNDN_(_hostMap, MEMORY_ALIGNMENT);
 		_sentinelHostMap->Offset = 0;
 #endif
+		// register executor
+		sentinelRegisterExecutor(&_baseHostExecutor, true, false);
+
+		// launch threads
+#if __OS_WIN
+		_threadHostHandle = (HANDLE)_beginthreadex(0, 0, sentinelHostThread, nullptr, 0, 0);
+#elif __OS_UNIX
+		int err; if ((err = pthread_create(&_threadHostHandle, NULL, &sentinelDeviceThread, NULL))) {
+			printf("Could not create host thread (%s).\n", strerror(err));
+			exit(1);
+		}
+#endif
 	}
 #endif
 
-	// create device maps
 #if HAS_DEVICESENTINEL
 	if (deviceSentinel) {
+		// create device maps
 		_sentinelDevice = true;
 		sentinelMap *d_deviceMap[SENTINEL_DEVICEMAPS];
 		for (int i = 0; i < SENTINEL_DEVICEMAPS; i++) {
@@ -174,29 +187,13 @@ void sentinelServerInitialize(sentinelExecutor *executor, char *mapHostName, boo
 #endif
 		}
 		cudaErrorCheckF(cudaMemcpyToSymbol(_sentinelDeviceMap, &d_deviceMap, sizeof(d_deviceMap)), goto initialize_error);
-	}
-#endif
 
-	// register executor
-	sentinelRegisterExecutor(&_baseExecutor, true);
-	if (executor)
-		sentinelRegisterExecutor(executor, true);
+		// register executor
+		sentinelRegisterExecutor(&_baseDeviceExecutor, true, true);
+		if (deviceExecutor)
+			sentinelRegisterExecutor(deviceExecutor, true, true);
 
-	// launch threads
-#if HAS_HOSTSENTINEL
-	if (hostSentinel) {
-#if __OS_WIN
-		_threadHostHandle = (HANDLE)_beginthreadex(0, 0, sentinelHostThread, nullptr, 0, 0);
-#elif __OS_UNIX
-		int err; if ((err = pthread_create(&_threadHostHandle, NULL, &sentinelDeviceThread, NULL))) {
-			printf("Could not create host thread (%s).\n", strerror(err));
-			exit(1);
-		}
-#endif
-	}
-#endif
-#if HAS_DEVICESENTINEL
-	if (deviceSentinel) {
+		// launch threads
 		//memset(_threadDeviceHandle, 0, sizeof(_threadDeviceHandle));
 #if __OS_WIN
 		for (int i = 0; i < SENTINEL_DEVICEMAPS; i++)
@@ -243,25 +240,10 @@ void sentinelServerShutdown() {
 			if (_threadDeviceHandle[i]) { pthread_cancel(_threadDeviceHandle[i]); _threadDeviceHandle[i] = 0; }
 #endif
 			if (_deviceMap[i]) { cudaErrorCheckA(cudaFreeHost(_deviceMap[i])); _deviceMap[i] = nullptr; }
-		}
-	}
-#endif
 }
-
-//pipelineRedir sentinelRedirectClientMessage(sentinelMessage *data) {
-//	//FILE *files[3]; ((sentinelClientMessage *)data)->Redir.toFiles(files);
-//	//FILE *out = files[1];
-//	//printf("before");
-//	//fprintf(out, "TEST\n");
-//	//fflush(out);
-//	//
-//	pipelineRedirect last;
-//	memset((void *)&last, 0, sizeof(last));
-//	//last.In = _dup2(redir.In, 0); if (last.In == -1) { perror("_dup(0) failure"); exit(1); }
-//	//last.Out = _dup2(redir.Out, 1); if (last.Out == -1) { perror("_dup(1) failure"); exit(1); }
-//	//last.Err = _dup2(redir.Err, 2); if (last.Err == -1) { perror("_dup(2) failure"); exit(1); }
-//	return last;
-//}
+		}
+#endif
+	}
 
 sentinelExecutor *sentinelFindExecutor(const char *name, bool forDevice) {
 	sentinelExecutor *list = forDevice ? _ctx.DeviceList : _ctx.HostList;

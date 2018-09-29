@@ -1,18 +1,21 @@
+#include <ext/pipeline.h>
 #include <sys/statcu.h>
 #include <unistdcu.h>
 #include "fileutils.h"
 
 __device__ int d_drm_rc;
-__global__ void g_drm(char *str) {
+__global__ void g_drm(pipelineRedir redir, char *str) {
 	struct stat sbuf;
 	d_drm_rc = (!LSTAT(str, &sbuf) && unlink(str));
 }
-int drm(char *str) {
+int drm(pipelineRedir redir, char *str) {
+	redir.Open();
 	size_t strLength = strlen(str) + 1;
 	char *d_str;
 	cudaMalloc(&d_str, strLength);
 	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
-	g_drm<<<1, 1>>>(d_str);
+	g_drm<<<1, 1>>>(redir, d_str);
 	cudaFree(d_str);
+	redir.Close();
 	int rc; cudaMemcpyFromSymbol(&rc, d_drm_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

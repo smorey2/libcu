@@ -310,11 +310,13 @@ __global__ void g_dls(pipelineRedir redir, char *name, int flags, bool endSlash)
 	d_dls_rc = 0;
 }
 int dls(pipelineRedir redir, char *str, int flags, bool endSlash) {
+	redir.Open();
 	size_t strLength = strlen(str) + 1;
 	char *d_str;
 	cudaMalloc(&d_str, strLength);
 	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
 	g_dls<<<1, 1>>>(redir, d_str, flags, endSlash);
 	cudaFree(d_str);
+	redir.Close();
 	int rc; cudaMemcpyFromSymbol(&rc, d_dls_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

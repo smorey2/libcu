@@ -7,13 +7,13 @@
 #include <grpcu.h>
 
 #define	isdecimal(ch) ((ch) >= '0' && (ch) <= '9')
-__forceinline__ struct group *dchgrp_getgrnam_(pipelineRedir redir, char *str) { fileutils_getgrnam msg(redir, str); return msg.RC; }
-__forceinline__ int dchgrp_(pipelineRedir redir, char *str, int gid) { fileutils_dchgrp msg(redir, str, gid); return msg.RC; }
+__forceinline__ struct group *dchgrp_getgrnam_(pipelineRedir *redir, char *str) { fileutils_getgrnam msg(redir[0], str); redir[1].Read(); return msg.RC; }
+__forceinline__ int dchgrp_(pipelineRedir *redir, char *str, int gid) { fileutils_dchgrp msg(redir[0], str, gid); redir[1].Read(); return msg.RC; }
 
 int main(int argc, char **argv) {
 	atexit(sentinelClientShutdown);
 	sentinelClientInitialize();
-	FDTYPE hostRedir[3]; pipelineRedir clientRedir = sentinelClientRedir(hostRedir);
+	pipelineRedir redir[2]; sentinelClientRedir(redir);
 	char *cp = argv[1];
 	int gid;
 	if (isdecimal(*cp)) {
@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
 		}
 	}
 	else {
-		struct group *grp = dchgrp_getgrnam_(clientRedir, cp);
+		struct group *grp = dchgrp_getgrnam_(redir, cp);
 		if (!grp) {
 			fprintf(stderr, "Unknown group name\n");
 			exit(1);
@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
 	argv++;
 	while (argc-- > 1) {
 		argv++;
-		if (dchgrp_(clientRedir, *argv, gid))
+		if (dchgrp_(redir, *argv, gid))
 			perror(*argv);
 	}
 	exit(0);

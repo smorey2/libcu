@@ -104,6 +104,9 @@
     <ClInclude Include="locale\mblocal.h">
       <Filter>locale</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\sentinel-hostmsg.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="libcu.cu" />
@@ -142,9 +145,6 @@
     <ClCompile Include="cuda_runtime.cpp" />
     <ClCompile Include="sentinel.cpp" />
     <ClCompile Include="sentinel-msg.cpp" />
-    <ClCompile Include="..\include\ext\pipeline.cpp">
-      <Filter>include\ext</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Libcu.Native.nuspec" />
@@ -193,6 +193,9 @@
     </None>
     <None Include="..\include\sentinel-client.cpp">
       <Filter>include</Filter>
+    </None>
+    <None Include="..\include\ext\pipeline.cpp">
+      <Filter>include\ext</Filter>
     </None>
   </ItemGroup>
 </Project>

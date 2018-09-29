@@ -7,12 +7,12 @@
 
 #define	isoctal(ch)	((ch) >= '0' && (ch) <= '7')
 
-__forceinline__ int dchmod_(pipelineRedir redir, char *str, int mode) { fileutils_dchmod msg(redir, str, mode); return msg.RC; }
+__forceinline__ int dchmod_(pipelineRedir *redir, char *str, int mode) { fileutils_dchmod msg(redir[0], str, mode); redir[1].Read(); return msg.RC; }
 
 int main(int argc, char **argv) {
 	atexit(sentinelClientShutdown);
 	sentinelClientInitialize();
-	FDTYPE hostRedir[3]; pipelineRedir clientRedir = sentinelClientRedir(hostRedir);
+	pipelineRedir redir[2]; sentinelClientRedir(redir);
 	int	mode = 0;
 	char *cp = argv[1];
 	while (isoctal(*cp))
@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
 	argc--;
 	argv++;
 	while (argc-- > 1) {
-		if (dchmod_(clientRedir, argv[1], mode))
+		if (dchmod_(redir, argv[1], mode))
 			perror(argv[1]);
 		argv++;
 	}

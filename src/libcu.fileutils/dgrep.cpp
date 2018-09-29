@@ -5,12 +5,12 @@
 #include <sentinel-client.cpp>
 #include <ext/pipeline.cpp>
 
-__forceinline__ int dgrep_(pipelineRedir redir, char *str, char *str2, bool ignoreCase, bool tellName, bool tellLine) { fileutils_dgrep msg(redir, str, str2, ignoreCase, tellName, tellLine); return msg.RC; }
+__forceinline__ int dgrep_(pipelineRedir *redir, char *str, char *str2, bool ignoreCase, bool tellName, bool tellLine) { fileutils_dgrep msg(redir[0], str, str2, ignoreCase, tellName, tellLine); redir[1].Read(); return msg.RC; }
 
 int main(int argc, char **argv) {
 	atexit(sentinelClientShutdown);
 	sentinelClientInitialize();
-	FDTYPE hostRedir[3]; pipelineRedir clientRedir = sentinelClientRedir(hostRedir);
+	pipelineRedir redir[2]; sentinelClientRedir(redir);
 	argc--;
 	argv++;
 	bool ignoreCase = false;
@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
 	//
 	while (argc-- > 0) {
 		char *name = *argv++;
-		if (!dgrep_(clientRedir, name, word, ignoreCase, tellName, tellLine))
+		if (!dgrep_(redir, name, word, ignoreCase, tellName, tellLine))
 			continue;
 	}
 	exit(0);

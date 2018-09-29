@@ -1,5 +1,5 @@
 /*
-pipeline.h - xxx
+sentinel-hostmsg.h - messages for sentinel
 The MIT License
 
 Copyright (c) 2016 Sky Morey
@@ -23,50 +23,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef _EXT_PIPELINE_H
-#define _EXT_PIPELINE_H
-#ifdef  __cplusplus
-extern "C" {
-#endif
+#pragma once
+#ifndef _SENTINEL_HOSTMSG_H
+#define _SENTINEL_HOSTMSG_H
 
-#include <stdio.h>
-#ifdef _MSC_VER
-#ifndef STRICT
-#define STRICT
-#endif
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-	typedef HANDLE FDTYPE;
-	typedef HANDLE PIDTYPE;
-#define __BAD_FD INVALID_HANDLE_VALUE
-#define __BAD_PID INVALID_HANDLE_VALUE
-#else
-	typedef int FDTYPE;
-	typedef int PIDTYPE;
-#define __BAD_FD -1
-#define __BAD_PID -1
-#endif
+#include <sentinel.h>
 
-	struct pipelineRedir {
-		FILE *in;
-		FILE *out;
-		FILE *err;
-		FDTYPE Input;
-		FDTYPE Output;
-		FDTYPE Error;
-		/* Ack Pipeline */
-		void Open();
-		void Close();
-		/* Read Pipeline */
-		void Read();
-	};
+enum {
+	HOST_GETPROCESSID = 1,
+};
 
-	/* Cleanup Children */
-	extern int CleanupChildren(int numPids, PIDTYPE *pids, int child_siginfo);
-	/* Create Pipeline */
-	extern int CreatePipeline(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, FDTYPE *outPipePtr, FDTYPE *errFilePtr, FDTYPE process, pipelineRedir *redirs);
+struct host_getprocessid {
+	sentinelMessage Base;
+	host_getprocessid() : Base(true, HOST_GETPROCESSID) { sentinelClientSend(&Base, sizeof(host_getprocessid)); }
+	DWORD RC;
+};
 
-#ifdef  __cplusplus
-}
-#endif
-#endif  /* _EXT_PIPELINE_H */
+#endif  /* _SENTINEL_HOSTMSG_H */

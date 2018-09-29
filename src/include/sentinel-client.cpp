@@ -1,4 +1,5 @@
 #include <sentinel.h>
+#include <sentinel-hostmsg.h>
 #if __OS_WIN
 #include <windows.h>
 #elif __OS_UNIX
@@ -104,17 +105,12 @@ void sentinelClientShutdown() {
 #endif
 }
 
-//static void carot(char *a, FDTYPE in, FDTYPE out, FDTYPE err) {
-//	DWORD dwBytesWritten;
-//	BOOL bErrorFlag = WriteFile(out, "TEST", 4, &dwBytesWritten, NULL);
-//}
+__forceinline__ DWORD getprocessid_() { host_getprocessid msg; return msg.RC; }
+
 static char *sentinelClientRedirPipelineArgs[] = { "^0" };
-pipelineRedir sentinelClientRedir(FDTYPE *hostRedir) {
-	pipelineRedir redirs[1];
-	CreatePipeline(1, sentinelClientRedirPipelineArgs, nullptr, &hostRedir[0], &hostRedir[1], &hostRedir[2], redirs);
-	fprintf(redirs[0].out, "ME");
-	fflush(redirs[0].out);
-	return redirs[0];
+void sentinelClientRedir(pipelineRedir *redir) {
+	HANDLE process = OpenProcess(PROCESS_DUP_HANDLE, FALSE, getprocessid_());
+	CreatePipeline(1, sentinelClientRedirPipelineArgs, nullptr, &redir[1].Input, &redir[1].Output, &redir[1].Error, process, redir);
 }
 
 #endif

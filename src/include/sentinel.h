@@ -112,17 +112,17 @@ extern "C" {
 	extern __constant__ const sentinelMap *_sentinelDeviceMap[SENTINEL_DEVICEMAPS];
 #endif
 
-	extern bool sentinelDefaultExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*, char*, char*, intptr_t));
-	extern void sentinelServerInitialize(sentinelExecutor *executor = nullptr, char *mapHostName = (char *)SENTINEL_NAME, bool hostSentinel = true, bool deviceSentinel = true);
+	extern bool sentinelDefaultHostExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*, char*, char*, intptr_t));
+	extern bool sentinelDefaultDeviceExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*, char*, char*, intptr_t));
+	extern void sentinelServerInitialize(sentinelExecutor *deviceExecutor = nullptr, char *mapHostName = (char *)SENTINEL_NAME, bool hostSentinel = true, bool deviceSentinel = true);
 	extern void sentinelServerShutdown();
-	//extern pipelineRedir sentinelRedirectClientMessage(sentinelMessage *data);
 #if HAS_DEVICESENTINEL
 	extern __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength);
 #endif
 #if HAS_HOSTSENTINEL
 	extern void sentinelClientInitialize(char *mapHostName = (char *)SENTINEL_NAME);
 	extern void sentinelClientShutdown();
-	extern pipelineRedir sentinelClientRedir(pipelineRedir *hostRedir);
+	extern void sentinelClientRedir(pipelineRedir *redir);
 	extern void sentinelClientSend(sentinelMessage *msg, int msgLength);
 #endif
 	extern sentinelExecutor *sentinelFindExecutor(const char *name, bool forDevice = true);
