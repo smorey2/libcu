@@ -8,12 +8,15 @@ __global__ void g_getgrnam(pipelineRedir redir, char *name) {
 }
 struct group *dchgrp_getgrnam(pipelineRedir redir, char *str) {
 	redir.Open();
-	size_t strLength = strlen(str) + 1;
 	char *d_str;
-	cudaMalloc(&d_str, strLength);
-	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
+	if (str) {
+		size_t strLength = strlen(str) + 1;
+		cudaMalloc(&d_str, strLength);
+		cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
+	}
+	else d_str = 0;
 	g_getgrnam<<<1, 1>>>(redir, d_str);
-	cudaFree(d_str);
+	if (d_str) cudaFree(d_str);
 	redir.Close();
 	return m_getgrnam_rc;
 }

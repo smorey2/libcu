@@ -210,15 +210,18 @@ __global__ void g_dls(pipelineRedir redir, char *name, int flags, bool endSlash)
 			_listSize = LISTSIZE;
 		}
 		_listUsed = 0;
-	}
-
-	struct stat statbuf;
-	if (LSTAT(name, &statbuf) < 0) {
-		perror(name);
 		d_dls_rc = -1;
 		return;
 	}
 
+	struct stat statbuf;
+	if (LSTAT(name, &statbuf) < 0) {
+		fperror(redir.out, name);
+		d_dls_rc = -1;
+		return;
+	}
+
+	printf("c: %s %x %x\n", name, flags, statbuf.st_mode);
 	if ((flags & LSF_DIR) || !S_ISDIR(statbuf.st_mode)) {
 		lsFile(&redir, NULL, name, &statbuf, flags);
 		if (~flags & LSF_LONG)
@@ -227,15 +230,16 @@ __global__ void g_dls(pipelineRedir redir, char *name, int flags, bool endSlash)
 		return;
 	}
 
+	printf("d: \n");
 	// Do all the files in a directory.
 	DIR *dirp = opendir(name);
 	if (dirp == NULL) {
-		perror(name);
+		fperror(redir.out, name);
 		d_dls_rc = -1;
 		return;
 	}
 	if (flags & LSF_MULT)
-		printf("\n%s:\n", name);
+		fprintf(redir.out, "\n%s:\n", name);
 	struct dirent *dp;
 	char fullName[PATHLEN];
 	while (dp = readdir(dirp)) {
@@ -291,7 +295,7 @@ __global__ void g_dls(pipelineRedir redir, char *name, int flags, bool endSlash)
 	for (num = i = 0; i < _listUsed; i++) {
 		name = _list[i];
 		if (LSTAT(name, &statbuf) < 0) {
-			perror(name);
+			fperror(redir.out, name);
 			free(name);
 			continue;
 		}
@@ -311,12 +315,15 @@ __global__ void g_dls(pipelineRedir redir, char *name, int flags, bool endSlash)
 }
 int dls(pipelineRedir redir, char *str, int flags, bool endSlash) {
 	redir.Open();
-	size_t strLength = strlen(str) + 1;
 	char *d_str;
-	cudaMalloc(&d_str, strLength);
-	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
+	if (str) {
+		size_t strLength = strlen(str) + 1;
+		cudaMalloc(&d_str, strLength);
+		cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
+	}
+	else d_str = 0;
 	g_dls<<<1, 1>>>(redir, d_str, flags, endSlash);
-	cudaFree(d_str);
+	if (d_str) cudaFree(d_str);
 	redir.Close();
 	int rc; cudaMemcpyFromSymbol(&rc, d_dls_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

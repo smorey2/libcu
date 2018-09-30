@@ -75,6 +75,11 @@ __device__ int expandPath(const char *path, char *newPath) {
 		if (path[0] != '\\' && path[0] != '/') { while (*s) *d++ = *s++; *d++ = '\\'; } // relative
 		else *d++ = *s++; // absolute
 	}
+	// match if cwd
+	if (path[0] == '.' && path[1] == 0) {
+		d[0] = 0;
+		return d - (unsigned char *)newPath;
+	}
 	// add path
 	s = (unsigned char *)path;
 	int i = 0; int c;
@@ -93,6 +98,30 @@ __device__ int expandPath(const char *path, char *newPath) {
 	// remove trailing '\.' && '\'
 	d[c == '.' && i == 2 ? -2 : i == 1 ? -1 : 0] = 0;
 	return d - (unsigned char *)newPath;
+}
+
+static __device__ dirEnt_t *expandAndFindEnt(const char *path, char *newPath, int *pathLength = 0) {
+	int len = expandPath(path, newPath);
+	if (pathLength) *pathLength = len;
+	dirEnt_t *ent = !strcmp(newPath, ":\\")
+		? &__iob_root
+		: (dirEnt_t *)hashFind(&__iob_dir, newPath);
+	return ent;
+}
+
+static __device__ dirEnt_t *findDirInPath(const char *path, const char **file) {
+	char *file2 = strrchr((char *)path, '\\');
+	if (!file2) {
+		_set_errno(EINVAL);
+		return nullptr;
+	}
+	*file2 = 0;
+	dirEnt_t *ent = !strcmp(path, ":\\")
+		? &__iob_root
+		: (dirEnt_t *)hashFind(&__iob_dir, path);
+	*file2 = '\\';
+	*file = file2 + 1;
+	return ent;
 }
 
 static __device__ dirEnt_t *createEnt(dirEnt_t *parentEnt, const char *path, const char *name, int type, int extraSize) {
@@ -135,28 +164,6 @@ static __device__ void freeEnt(dirEnt_t *ent) {
 	else __iob_root.u.list = nullptr;
 }
 
-static __device__ dirEnt_t *findDir(const char *path) {
-	dirEnt_t *ent = !strcmp(path, ":")
-		? &__iob_root
-		: (dirEnt_t *)hashFind(&__iob_dir, path);
-	return ent;
-}
-
-static __device__ dirEnt_t *findDirInPath(const char *path, const char **file) {
-	char *file2 = strrchr((char *)path, '\\');
-	if (!file2) {
-		_set_errno(EINVAL);
-		return nullptr;
-	}
-	*file2 = 0;
-	dirEnt_t *ent = !strcmp(path, ":")
-		? &__iob_root
-		: (dirEnt_t *)hashFind(&__iob_dir, path);
-	*file2 = '\\';
-	*file = file2 + 1;
-	return ent;
-}
-
 __device__ mode_t fsystemUmask(mode_t mask) {
 	mode_t r = __umask;
 	__umask = mask;
@@ -170,8 +177,8 @@ __device__ int fsystemChdir(const char *path) {
 }
 
 __device__ dirEnt_t *fsystemOpendir(const char *path) {
-	char newPath[MAX_PATH]; expandPath(path, newPath);
-	dirEnt_t *ent = findDir(newPath);
+	char newPath[MAX_PATH];
+	dirEnt_t *ent = expandAndFindEnt(path, newPath);
 	if (!ent || ent->dir.d_type != DIRTYPE_DIR) {
 		_set_errno(!ent ? ENOENT : ENOTDIR);
 		return nullptr;
@@ -180,17 +187,17 @@ __device__ dirEnt_t *fsystemOpendir(const char *path) {
 }
 
 __device__ int fsystemRename(const char *old, const char *new_) {
-	char oldPath[MAX_PATH], newPath[MAX_PATH]; int oldPathLength = expandPath(old, oldPath);
-	dirEnt_t *ent = (dirEnt_t *)hashFind(&__iob_dir, oldPath);
+	char oldPath[MAX_PATH], newPath[MAX_PATH]; int oldPathLength;
+	dirEnt_t *ent = expandAndFindEnt(old, oldPath, &oldPathLength);
 	if (!ent) {
 		_set_errno(ENOENT);
 		return -1;
 	}
 	register char *oldPathEnd = oldPath + oldPathLength - 1; while (*oldPathEnd && *oldPathEnd != '\\') oldPathEnd--;
 	strcpy(oldPathEnd + 1, new_);
-	int newPathLength = expandPath(oldPath, newPath);
 	//
-	dirEnt_t *ent2 = (dirEnt_t *)hashFind(&__iob_dir, newPath);
+	int newPathLength;
+	dirEnt_t *ent2 = expandAndFindEnt(oldPath, newPath, &newPathLength);
 	if (ent2) {
 		_set_errno(EEXIST);
 		return -1;
@@ -214,8 +221,8 @@ __device__ int fsystemRename(const char *old, const char *new_) {
 }
 
 __device__ int fsystemUnlink(const char *path, bool enotdir) {
-	char newPath[MAX_PATH]; expandPath(path, newPath);
-	dirEnt_t *ent = (dirEnt_t *)hashFind(&__iob_dir, newPath);
+	char newPath[MAX_PATH];
+	dirEnt_t *ent = expandAndFindEnt(path, newPath);
 	if (!ent) {
 		_set_errno(ENOENT);
 		return -1;
@@ -274,8 +281,8 @@ static __device__ int stat64__(dirEnt_t *ent, struct _stat64 *buf) {
 }
 
 __device__ int fsystemStat(const char *path, struct stat *buf, struct _stat64 *buf64, bool lstat_) {
-	char newPath[MAX_PATH]; expandPath(path, newPath);
-	dirEnt_t *ent = (dirEnt_t *)hashFind(&__iob_dir, newPath);
+	char newPath[MAX_PATH];
+	dirEnt_t *ent = expandAndFindEnt(path, newPath);
 	if (!ent) {
 		_set_errno(ENOENT);
 		return -1;
@@ -294,8 +301,8 @@ __device__ int fsystemFStat(int fd, struct stat *buf, struct _stat64 *buf64) {
 }
 
 __device__ int fsystemChmod(const char *path, mode_t mode) {
-	char newPath[MAX_PATH]; expandPath(path, newPath);
-	dirEnt_t *ent = (dirEnt_t *)hashFind(&__iob_dir, newPath);
+	char newPath[MAX_PATH];
+	dirEnt_t *ent = expandAndFindEnt(path, newPath);
 	if (!ent) {
 		_set_errno(ENOENT);
 		return -1;
@@ -305,11 +312,11 @@ __device__ int fsystemChmod(const char *path, mode_t mode) {
 }
 
 __device__ dirEnt_t *fsystemMkdir(const char *__restrict path, int mode, int *r) {
-	char newPath[MAX_PATH]; expandPath(path, newPath);
-	dirEnt_t *dirEnt = (dirEnt_t *)hashFind(&__iob_dir, newPath);
-	if (dirEnt) {
+	char newPath[MAX_PATH];
+	dirEnt_t *ent = expandAndFindEnt(path, newPath);
+	if (ent) {
 		*r = 1;
-		return dirEnt;
+		return ent;
 	}
 	const char *name;
 	dirEnt_t *parentEnt = findDirInPath(newPath, &name);
@@ -319,17 +326,17 @@ __device__ dirEnt_t *fsystemMkdir(const char *__restrict path, int mode, int *r)
 		return nullptr;
 	}
 	// create directory
-	dirEnt = createEnt(parentEnt, newPath, name, DIRTYPE_DIR, 0);
+	ent = createEnt(parentEnt, newPath, name, DIRTYPE_DIR, 0);
 	*r = 0;
-	return dirEnt;
+	return ent;
 }
 
 __device__ dirEnt_t *fsystemMkfifo(const char *__restrict path, int mode, int *r) {
-	char newPath[MAX_PATH]; expandPath(path, newPath);
-	dirEnt_t *dirEnt = (dirEnt_t *)hashFind(&__iob_dir, newPath);
-	if (dirEnt) {
+	char newPath[MAX_PATH];
+	dirEnt_t *ent = expandAndFindEnt(path, newPath);
+	if (ent) {
 		*r = 1;
-		return dirEnt;
+		return ent;
 	}
 	const char *name;
 	dirEnt_t *parentEnt = findDirInPath(newPath, &name);
@@ -339,16 +346,16 @@ __device__ dirEnt_t *fsystemMkfifo(const char *__restrict path, int mode, int *r
 		return nullptr;
 	}
 	// create directory
-	dirEnt = createEnt(parentEnt, newPath, name, DIRTYPE_FIFO, 0);
+	ent = createEnt(parentEnt, newPath, name, DIRTYPE_FIFO, 0);
 	*r = 0;
-	return dirEnt;
+	return ent;
 }
 
 
 __device__ dirEnt_t *fsystemAccess(const char *__restrict path, int mode, int *r) {
-	char newPath[MAX_PATH]; expandPath(path, newPath);
-	dirEnt_t *dirEnt = (dirEnt_t *)hashFind(&__iob_dir, newPath);
-	if (!dirEnt) {
+	char newPath[MAX_PATH];
+	dirEnt_t *ent = expandAndFindEnt(path, newPath);
+	if (!ent) {
 		_set_errno(ENOENT);
 		*r = -1;
 		return nullptr;
@@ -356,21 +363,21 @@ __device__ dirEnt_t *fsystemAccess(const char *__restrict path, int mode, int *r
 	//if ((mode & 2) && false) {
 	//	_set_errno(EACCES);
 	//	*r = -1;
-	//	return dirEnt;
+	//	return ent;
 	//}
 	*r = 0;
-	return dirEnt;
+	return ent;
 }
 
 __device__ dirEnt_t *fsystemOpen(const char *__restrict path, int mode, int *fd) {
-	char newPath[MAX_PATH]; expandPath(path, newPath);
-	dirEnt_t *fileEnt = (dirEnt_t *)hashFind(&__iob_dir, newPath);
-	if (fileEnt) {
+	char newPath[MAX_PATH];
+	dirEnt_t *ent = expandAndFindEnt(path, newPath);
+	if (ent) {
 		if (mode & O_TRUNC)
-			memfileTruncate(fileEnt->u.file, 0);
+			memfileTruncate(ent->u.file, 0);
 		file_t *f; *fd = fileGet(&f);
-		f->base = (char *)fileEnt;
-		return fileEnt;
+		f->base = (char *)ent;
+		return ent;
 	}
 	if ((mode & 0xF) == O_RDONLY) {
 		_set_errno(EINVAL); // So illegal mode.
@@ -385,20 +392,20 @@ __device__ dirEnt_t *fsystemOpen(const char *__restrict path, int mode, int *fd)
 		return nullptr;
 	}
 	// create file
-	fileEnt = createEnt(parentEnt, newPath, name, DIRTYPE_FILE, memfileSize(nullptr));
-	fileEnt->u.file = (vsysfile *)((char *)fileEnt + ROUND64_(sizeof(dirEnt_t)));
-	memfileMemOpen(fileEnt->u.file);
+	ent = createEnt(parentEnt, newPath, name, DIRTYPE_FILE, memfileSize(nullptr));
+	ent->u.file = (vsysfile *)((char *)ent + ROUND64_(sizeof(dirEnt_t)));
+	memfileMemOpen(ent->u.file);
 	// set to file
 	file_t *f; *fd = fileGet(&f);
-	f->base = (char *)fileEnt;
-	return fileEnt;
+	f->base = (char *)ent;
+	return ent;
 }
 
 __device__ void fsystemClose(int fd) {
 	file_t *f = GETFILE(fd);
 	if (f->flag & DELETE) {
-		dirEnt_t *fileEnt = (dirEnt_t *)f->base;
-		fsystemUnlink(fileEnt->path, false);
+		dirEnt_t *ent = (dirEnt_t *)f->base;
+		fsystemUnlink(ent->path, false);
 	}
 	fileFree(fd);
 }

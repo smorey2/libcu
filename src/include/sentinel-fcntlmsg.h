@@ -57,12 +57,12 @@ struct fcntl_fcntl {
 
 struct fcntl_open {
 	static __forceinline__ __device__ char *Prepare(fcntl_open *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelMessage Base;
@@ -78,7 +78,7 @@ struct fcntl_stat {
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		if (!t->Bit64) t->Ptr = (struct stat *)(str + offset);
 		else t->Ptr64 = (struct _stat64 *)(str + offset);
 		return end;
@@ -111,7 +111,7 @@ struct fcntl_chmod {
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelMessage Base;
@@ -127,7 +127,7 @@ struct fcntl_mkdir {
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelMessage Base;
@@ -143,7 +143,7 @@ struct fcntl_mkfifo {
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelMessage Base;

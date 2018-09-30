@@ -7,12 +7,15 @@ __global__ void g_dchmod(pipelineRedir redir, char *str, mode_t mode) {
 }
 int dchmod(pipelineRedir redir, char *str, int mode) {
 	redir.Open();
-	size_t strLength = strlen(str) + 1;
 	char *d_str;
-	cudaMalloc(&d_str, strLength);
-	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
+	if (str) {
+		size_t strLength = strlen(str) + 1;
+		cudaMalloc(&d_str, strLength);
+		cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
+	}
+	else d_str = 0;
 	g_dchmod<<<1, 1>>>(redir, d_str, mode);
-	cudaFree(d_str);
+	if (d_str) cudaFree(d_str);
 	redir.Close();
 	int rc; cudaMemcpyFromSymbol(&rc, d_dchmod_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

@@ -291,8 +291,10 @@ extern __device__ int ferror_(FILE *stream);
 __END_NAMESPACE_STD;
 
 __BEGIN_NAMESPACE_STD;
-/* Print a message describing the meaning of the value of errno.  */
-//__forceinline__ __device__ void perror_(const char *s) { printf(s); }
+/* Print a message describing the meaning of the value of errno. */
+extern __device__ void fperror_(FILE *stream, const char *s); //: ext
+#define fperror fperror_
+/* Print a message describing the meaning of the value of errno. */
 extern __device__ void perror_(const char *s);
 #define perror perror_
 __END_NAMESPACE_STD;
@@ -317,6 +319,7 @@ several optimizing inline functions and macros.  */
 __END_DECLS;
 
 #else
+#define fperror(s, e) 0
 #define ISHOSTFILE(stream) false
 #if __OS_WIN
 #define snprintf _snprintf

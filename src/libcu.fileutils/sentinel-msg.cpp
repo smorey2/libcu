@@ -21,7 +21,6 @@ int dpwd(pipelineRedir redir, char *str);
 int dcd(pipelineRedir redir, char *str);
 
 extern "C" bool sentinelFileUtilsExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*, char*, char*, intptr_t)) {
-	pipelineRedir redir = ((fileutils_dmkdir *)data)->Base.Redir;
 	if (data->OP < FILEUTILS_DCAT || data->OP > FILEUTILS_DCD) return false;
 	switch (data->OP) {
 	case FILEUTILS_DCAT: { fileutils_dcat *msg = (fileutils_dcat *)data; msg->RC = dcat(msg->Base.Redir, msg->Str); return true; }

@@ -47,17 +47,17 @@ enum {
 
 struct unistd_access {
 	static __forceinline__ __device__ char *Prepare(unistd_access *t, char *data, char *dataEnd, intptr_t offset) {
-		int nameLength = t->Name ? (int)strlen(t->Name) + 1 : 0;
-		char *name = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += nameLength);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
+		char *str = (char *)(data += ROUND8_(sizeof(*t)));
+		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
-		memcpy(name, t->Name, nameLength);
-		t->Name = name + offset;
+		memcpy(str, t->Str, strLength);
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelMessage Base;
-	const char *Name; int Type;
-	__device__ unistd_access(const char *name, int type) : Base(true, UNISTD_ACCESS, 1024, SENTINELPREPARE(Prepare)), Name(name), Type(type) { sentinelDeviceSend(&Base, sizeof(unistd_access)); }
+	const char *Str; int Type;
+	__device__ unistd_access(const char *str, int type) : Base(true, UNISTD_ACCESS, 1024, SENTINELPREPARE(Prepare)), Str(str), Type(type) { sentinelDeviceSend(&Base, sizeof(unistd_access)); }
 	int RC;
 };
 
@@ -113,12 +113,12 @@ struct unistd_write {
 
 struct unistd_chown {
 	static __forceinline__ __device__ char *Prepare(unistd_chown *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelMessage Base;
@@ -134,7 +134,7 @@ struct unistd_chdir {
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelMessage Base;
@@ -165,12 +165,12 @@ struct unistd_dup {
 
 struct unistd_unlink {
 	static __forceinline__ __device__ char *Prepare(unistd_unlink *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelMessage Base;
@@ -186,7 +186,7 @@ struct unistd_rmdir {
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelMessage Base;

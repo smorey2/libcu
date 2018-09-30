@@ -9,12 +9,15 @@ __global__ void g_dchown(pipelineRedir redir, char *str, int uid) {
 }
 int dchown(pipelineRedir redir, char *str, int uid) {
 	redir.Open();
-	size_t strLength = strlen(str) + 1;
 	char *d_str;
-	cudaMalloc(&d_str, strLength);
-	cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
+	if (str) {
+		size_t strLength = strlen(str) + 1;
+		cudaMalloc(&d_str, strLength);
+		cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
+	}
+	else d_str = 0;
 	g_dchown<<<1, 1>>>(redir, d_str, uid);
-	cudaFree(d_str);
+	if (d_str) cudaFree(d_str);
 	redir.Close();
 	int rc; cudaMemcpyFromSymbol(&rc, d_dchown_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

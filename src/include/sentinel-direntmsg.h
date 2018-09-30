@@ -47,7 +47,7 @@ struct dirent_opendir {
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelMessage Base;

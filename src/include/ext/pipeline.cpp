@@ -193,6 +193,9 @@ static int __StartRedir(FDTYPE process, pipelineRedir *redir, FDTYPE inputId, FD
 	}
 	else DuplicateHandle(hProcess, errorId, process, &redir->Error, 0, TRUE, DUPLICATE_SAME_ACCESS);
 	if (redir->Error == __BAD_FD) goto end;
+	redir->in = NULL;
+	redir->out = NULL;
+	redir->err = NULL;
 	return 0;
 end:
 	if (redir->Input != __BAD_FD) CloseHandle(redir->Input);
@@ -678,9 +681,9 @@ error:
 }
 
 void pipelineRedir::Open() {
-	in = __Fdopen_r(Input);
-	out = __Fdopen_w(Output);
-	err = __Fdopen_w(Error);
+	if (!in) in = __Fdopen_r(Input);
+	if (!out) out = __Fdopen_w(Output);
+	if (!err) err = __Fdopen_w(Error);
 }
 
 static CHAR AckBuf[] = { 0, 1, 0 };
@@ -688,9 +691,9 @@ void pipelineRedir::Close() {
 	fflush(out);
 	fwrite(AckBuf, sizeof(AckBuf), 1, out);
 	fflush(out);
-	fclose(in);
-	fclose(out);
-	fclose(err);
+	//fclose(in);
+	//fclose(out);
+	//fclose(err);
 }
 
 void pipelineRedir::Read() {

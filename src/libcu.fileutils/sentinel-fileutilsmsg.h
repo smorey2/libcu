@@ -55,12 +55,12 @@ enum {
 
 struct fileutils_dcat {
 	static __forceinline__ char *Prepare(fileutils_dcat *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelClientMessage Base;
@@ -71,12 +71,12 @@ struct fileutils_dcat {
 
 struct fileutils_dchgrp {
 	static __forceinline__ char *Prepare(fileutils_dchgrp *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelClientMessage Base;
@@ -87,12 +87,12 @@ struct fileutils_dchgrp {
 
 struct fileutils_getgrnam {
 	static __forceinline__ char *Prepare(fileutils_getgrnam *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelClientMessage Base;
@@ -103,12 +103,12 @@ struct fileutils_getgrnam {
 
 struct fileutils_dchmod {
 	static __forceinline__ char *Prepare(fileutils_dchmod *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelClientMessage Base;
@@ -119,12 +119,12 @@ struct fileutils_dchmod {
 
 struct fileutils_dchown {
 	static __forceinline__ char *Prepare(fileutils_dchown *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelClientMessage Base;
@@ -135,12 +135,12 @@ struct fileutils_dchown {
 
 struct fileutils_getpwnam {
 	static __forceinline__ char *Prepare(fileutils_getpwnam *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelClientMessage Base;
@@ -151,16 +151,16 @@ struct fileutils_getpwnam {
 
 struct fileutils_dcmp {
 	static __forceinline__ char *Prepare(fileutils_dcmp *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
-		int str2Length = (t->Str2 ? (int)strlen(t->Str2) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
+		int str2Length = t->Str2 ? (int)strlen(t->Str2) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *str2 = (char *)(data += strLength);
 		char *end = (char *)(data += str2Length);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
 		memcpy(str2, t->Str2, str2Length);
-		t->Str = str + offset;
-		t->Str2 = str2 + offset;
+		if (t->Str) t->Str = str + offset;
+		if (t->Str2) t->Str2 = str2 + offset;
 		return end;
 	}
 	sentinelClientMessage Base;
@@ -171,16 +171,16 @@ struct fileutils_dcmp {
 
 struct fileutils_dcp {
 	static __forceinline__ char *Prepare(fileutils_dcp *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
-		int str2Length = (t->Str2 ? (int)strlen(t->Str2) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
+		int str2Length = t->Str2 ? (int)strlen(t->Str2) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *str2 = (char *)(data += strLength);
 		char *end = (char *)(data += str2Length);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
 		memcpy(str2, t->Str2, str2Length);
-		t->Str = str + offset;
-		t->Str2 = str2 + offset;
+		if (t->Str) t->Str = str + offset;
+		if (t->Str2) t->Str2 = str2 + offset;
 		return end;
 	}
 	sentinelClientMessage Base;
@@ -191,12 +191,12 @@ struct fileutils_dcp {
 
 struct fileutils_isadir {
 	static __forceinline__ char *Prepare(fileutils_isadir *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelClientMessage Base;
@@ -207,16 +207,16 @@ struct fileutils_isadir {
 
 struct fileutils_dgrep {
 	static __forceinline__ char *Prepare(fileutils_dgrep *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
-		int str2Length = (t->Str2 ? (int)strlen(t->Str2) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
+		int str2Length = t->Str2 ? (int)strlen(t->Str2) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *str2 = (char *)(data += strLength);
 		char *end = (char *)(data += str2Length);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
 		memcpy(str2, t->Str2, str2Length);
-		t->Str = str + offset;
-		t->Str2 = str2 + offset;
+		if (t->Str) t->Str = str + offset;
+		if (t->Str) t->Str2 = str2 + offset;
 		return end;
 	}
 	sentinelClientMessage Base;
@@ -227,12 +227,12 @@ struct fileutils_dgrep {
 
 struct fileutils_dls {
 	static __forceinline__ char *Prepare(fileutils_dls *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelClientMessage Base;
@@ -243,12 +243,12 @@ struct fileutils_dls {
 
 struct fileutils_dmkdir {
 	static __forceinline__ char *Prepare(fileutils_dmkdir *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelClientMessage Base;
@@ -259,12 +259,12 @@ struct fileutils_dmkdir {
 
 struct fileutils_dmore {
 	static __forceinline__ char *Prepare(fileutils_dmore *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelClientMessage Base;
@@ -275,16 +275,16 @@ struct fileutils_dmore {
 
 struct fileutils_dmv {
 	static __forceinline__ char *Prepare(fileutils_dmv *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
-		int str2Length = (t->Str2 ? (int)strlen(t->Str2) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
+		int str2Length = t->Str2 ? (int)strlen(t->Str2) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *str2 = (char *)(data += strLength);
 		char *end = (char *)(data += str2Length);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
 		memcpy(str2, t->Str2, str2Length);
-		t->Str = str + offset;
-		t->Str2 = str2 + offset;
+		if (t->Str) t->Str = str + offset;
+		if (t->Str2) t->Str2 = str2 + offset;
 		return end;
 	}
 	sentinelClientMessage Base;
@@ -295,12 +295,12 @@ struct fileutils_dmv {
 
 struct fileutils_drm {
 	static __forceinline__ char *Prepare(fileutils_drm *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelClientMessage Base;
@@ -311,12 +311,12 @@ struct fileutils_drm {
 
 struct fileutils_drmdir {
 	static __forceinline__ char *Prepare(fileutils_drmdir *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelClientMessage Base;
@@ -340,12 +340,12 @@ struct fileutils_dpwd {
 
 struct fileutils_dcd {
 	static __forceinline__ char *Prepare(fileutils_dcd *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelClientMessage Base;

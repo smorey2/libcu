@@ -66,7 +66,7 @@ struct stdio_remove {
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelMessage Base;
@@ -85,8 +85,8 @@ struct stdio_rename {
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
 		memcpy(str2, t->Str2, str2Length);
-		t->Str = str + offset;
-		t->Str2 = str2 + offset;
+		if (t->Str) t->Str = str + offset;
+		if (t->Str2) t->Str2 = str2 + offset;
 		return end;
 	}
 	sentinelMessage Base;
@@ -119,8 +119,8 @@ struct stdio_freopen {
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
 		memcpy(str2, t->Str2, str2Length);
-		t->Str = str + offset;
-		t->Str2 = str2 + offset;
+		if (t->Str) t->Str = str + offset;
+		if (t->Str2) t->Str2 = str2 + offset;
 		return end;
 	}
 	sentinelMessage Base;
@@ -180,7 +180,7 @@ struct stdio_fputs {
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		if (t->Str) t->Str = str + offset;
 		return end;
 	}
 	sentinelMessage Base;

@@ -121,7 +121,7 @@ bool sentinelDefaultDeviceExecutor(void *tag, sentinelMessage *data, int length,
 	case STDLIB_UNSETENV: { stdlib_unsetenv *msg = (stdlib_unsetenv *)data; msg->RC = unsetenv(msg->Str); return true; }
 	case STDLIB_MKTEMP: { stdlib_mktemp *msg = (stdlib_mktemp *)data; msg->RC = mktemp(msg->Str); return true; }
 	case STDLIB_MKSTEMP: { stdlib_mkstemp *msg = (stdlib_mkstemp *)data; msg->RC = mkstemp(msg->Str); return true; }
-	case UNISTD_ACCESS: { unistd_access *msg = (unistd_access *)data; msg->RC = access(msg->Name, msg->Type); return true; }
+	case UNISTD_ACCESS: { unistd_access *msg = (unistd_access *)data; msg->RC = access(msg->Str, msg->Type); return true; }
 	case UNISTD_LSEEK: { unistd_lseek *msg = (unistd_lseek *)data;
 		if (!msg->Bit64) msg->RC = lseek(msg->Handle, (long)msg->Offset, msg->Whence);
 #ifdef __USE_LARGEFILE64
@@ -176,7 +176,7 @@ bool sentinelDefaultDeviceExecutor(void *tag, sentinelMessage *data, int length,
 	case DIRENT_REWINDDIR: { dirent_rewinddir *msg = (dirent_rewinddir *)data; rewinddir(msg->Ptr); return true; }
 	case TIME_TIME: { time_time *msg = (time_time *)data; msg->RC = time(nullptr); return true; }
 	case TIME_MKTIME: { time_mktime *msg = (time_mktime *)data; msg->RC = mktime(msg->Tp); return true; }
-	case TIME_STRFTIME: { time_strftime *msg = (time_strftime *)data; msg->RC = strftime((char *)msg->Ptr, msg->Maxsize, msg->Fmt, &msg->Tp); return true; }
+	case TIME_STRFTIME: { time_strftime *msg = (time_strftime *)data; msg->RC = strftime((char *)msg->Ptr, msg->Maxsize, msg->Str, &msg->Tp); return true; }
 	}
 	return false;
 }
