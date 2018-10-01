@@ -58,9 +58,9 @@ static __device__ void fileFree(int fd) {
 __device__ char __cwd[MAX_PATH] = ":\\";
 __device__ dirEnt_t __iob_root = {
 #ifdef __APPLE__
-{ 0, 0, 0, 0, 1, ":\\" }, {}, nullptr, nullptr
+{ 0, 0, 0, 0, 1, ":\\" }, { 0, 0, 0x4000 }, nullptr, nullptr
 #else
-{ 0, 0, 0, 1, ":\\" }, {}, nullptr, nullptr
+{ 0, 0, 0, 1, ":\\" }, { 0, 0, 0x4000 }, nullptr, nullptr
 #endif
 };
 static __device__ hash_t __iob_dir = HASHINIT;
@@ -75,28 +75,26 @@ __device__ int expandPath(const char *path, char *newPath) {
 		if (path[0] != '\\' && path[0] != '/') { while (*s) *d++ = *s++; *d++ = '\\'; } // relative
 		else *d++ = *s++; // absolute
 	}
-	// match if cwd
-	if (path[0] == '.' && path[1] == 0) {
-		d[0] = 0;
-		return d - (unsigned char *)newPath;
-	}
-	// add path
-	s = (unsigned char *)path;
-	int i = 0; int c;
-	while (*s) {
-		c = *s;
-		if (c == '/') c = '\\'; // switch from unix path
-		if (c == '\\') {
-			// directory reached
-			if (i == 2 && s[-1] == '.') d -= 2; // self directory
-			else if (i == 3 && s[-1] == '.' && s[-2] == '.') { d -= 4; while (*d >= *newPath && *d != '\\') *d--; } // parent directory
-			i = 0;
+	// add path if not .
+	if (path[0] != '.' && path[1] != 0) {
+		s = (unsigned char *)path;
+		int i = 0; int c;
+		while (*s) {
+			c = *s;
+			if (c == '/') c = '\\'; // switch from unix path
+			if (c == '\\') {
+				// directory reached
+				if (i == 2 && s[-1] == '.') d -= 2; // self directory
+				else if (i == 3 && s[-1] == '.' && s[-2] == '.') { d -= 4; while (*d >= *newPath && *d != '\\') *d--; } // parent directory
+				i = 0;
+			}
+			// advance
+			*d++ = c; s++; i++;
 		}
-		// advance
-		*d++ = c; s++; i++;
+		// remove trailing '\.' && '\'
+		d[c == '.' && i == 2 ? -2 : i == 1 ? -1 : 0] = 0;
 	}
-	// remove trailing '\.' && '\'
-	d[c == '.' && i == 2 ? -2 : i == 1 ? -1 : 0] = 0;
+	else d[-1] = 0; // terminate if .
 	return d - (unsigned char *)newPath;
 }
 
