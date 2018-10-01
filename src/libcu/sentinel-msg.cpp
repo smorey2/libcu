@@ -66,7 +66,11 @@ int unsetenv(const char *name) {
 bool sentinelDefaultHostExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*, char*, char*, intptr_t)) {
 	if (data->OP > TIME_STRFTIME) return false;
 	switch (data->OP) {
+#if __OS_WIN
 	case HOST_GETPROCESSID: { host_getprocessid *msg = (host_getprocessid *)data; msg->RC = GetCurrentProcessId(); return true; }
+#elif __OS_UNIX
+	case HOST_GETPROCESSID: { host_getprocessid *msg = (host_getprocessid *)data; msg->RC = getpid(); return true; }
+#endif
 	}
 	return false;
 }

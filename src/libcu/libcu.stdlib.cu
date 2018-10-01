@@ -4,7 +4,7 @@
 #include <ext/pipeline.cpp>
 
 #define ROUND8_(x) (((x)+7)&~7)
-#define panic(fmt, ...) { printf(fmt, __VA_ARGS__); asm("trap;"); }
+// #define panic(fmt, ...) { printf(fmt, __VA_ARGS__); asm("trap;"); }
 
 #ifdef	__cplusplus
 #define __BEGIN_DECLS extern "C" {

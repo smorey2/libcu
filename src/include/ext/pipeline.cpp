@@ -217,6 +217,7 @@ end:
 #define __WaitPid waitpid
 #define __Dup dup
 #define __Fdopen_r(FD) fdopen((FD), "r")
+#define __Fdopen_w(FD) fdopen((FD), "w")
 #define __Open_r(NAME) open((NAME), O_RDONLY, 0)
 static int __Open_w(const char *filename, int append) { return open(filename, O_WRONLY | O_CREAT | (append ? O_APPEND : O_TRUNC), 0666); }
 static int __Rewind(FDTYPE fd) { return lseek(fd, 0L, SEEK_SET); }
@@ -476,17 +477,17 @@ int CreatePipeline(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, 
 		printf("didn't specify command to execute");
 		goto error;
 	}
-	const char *input = nullptr;	// Describes input for pipeline, depending on "inputFile".  NULL means take input from stdin/pipe.
-	int inputFile = FILE_NAME;		// 1 means input is name of input file.
+	const char *input; input = nullptr;	// Describes input for pipeline, depending on "inputFile".  NULL means take input from stdin/pipe.
+	int inputFile; inputFile = FILE_NAME;		// 1 means input is name of input file.
 	// 2 means input is filehandle name.
 	// 0 means input holds actual text to be input to command. */
-	const char *output = nullptr;	// Holds name of output file to pipe to, or NULL if output goes to stdout/pipe.
-	int outputFile = FILE_NAME;		// 0 means output is the name of output file.
+	const char *output; output = nullptr;	// Holds name of output file to pipe to, or NULL if output goes to stdout/pipe.
+	int outputFile; outputFile = FILE_NAME;		// 0 means output is the name of output file.
 	// 1 means output is the name of output file, and append.
 	// 2 means output is filehandle name.
 	// All this is ignored if output is NULL */
-	const char *error = nullptr;	// Holds name of stderr file to pipe to, or NULL if stderr goes to stderr/pipe.
-	int errorFile = FILE_NAME;		// 0 means error is the name of error file.
+	const char *error; error = nullptr;	// Holds name of stderr file to pipe to, or NULL if stderr goes to stderr/pipe.
+	int errorFile; errorFile = FILE_NAME;		// 0 means error is the name of error file.
 	// 1 means error is the name of error file, and append.
 	// 2 means error is filehandle name.
 	// All this is ignored if error is NULL */
@@ -686,17 +687,15 @@ void pipelineRedir::Open() {
 	if (!err) err = __Fdopen_w(Error);
 }
 
-static CHAR AckBuf[] = { 0, 1, 0 };
+static char AckBuf[] = { 0, 1, 0 };
 void pipelineRedir::Close() {
 	fflush(out);
 	fwrite(AckBuf, sizeof(AckBuf), 1, out);
 	fflush(out);
-	//fclose(in);
-	//fclose(out);
-	//fclose(err);
 }
 
 void pipelineRedir::Read() {
+#if __OS_WIN
 	DWORD read, written;
 	CHAR buf[4096];
 	HANDLE stdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -708,6 +707,7 @@ void pipelineRedir::Read() {
 		success = WriteFile(stdOutput, buf, read, &written, NULL);
 		if (foundAck || !success) break;
 	}
+#endif
 }
 
 #pragma region tinytcl

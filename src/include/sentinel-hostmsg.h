@@ -36,7 +36,7 @@ enum {
 struct host_getprocessid {
 	sentinelMessage Base;
 	host_getprocessid() : Base(true, HOST_GETPROCESSID) { sentinelClientSend(&Base, sizeof(host_getprocessid)); }
-	DWORD RC;
+	int RC;
 };
 
 #endif  /* _SENTINEL_HOSTMSG_H */
