@@ -105,12 +105,15 @@ void sentinelClientShutdown() {
 #endif
 }
 
-__forceinline__ DWORD getprocessid_() { host_getprocessid msg; return msg.RC; }
+__forceinline__ int getprocessid_() { host_getprocessid msg; return msg.RC; }
 
-static char *sentinelClientRedirPipelineArgs[] = { "^0" };
+static char *sentinelClientRedirPipelineArgs[] = { (char *)"^0" };
 void sentinelClientRedir(pipelineRedir *redir) {
+#if __OS_WIN
 	HANDLE process = OpenProcess(PROCESS_DUP_HANDLE, FALSE, getprocessid_());
 	CreatePipeline(1, sentinelClientRedirPipelineArgs, nullptr, &redir[1].Input, &redir[1].Output, &redir[1].Error, process, redir);
+#elif __OS_UNIX
+#endif
 }
 
 #endif

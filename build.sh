@@ -15,7 +15,7 @@ cmake -DM=64 -DC64=ON -Darch="$CUARCH" -DCMAKE_CUDA_FLAGS="-arch=sm_$CUARCH" ../
 cd ..
 cmake --build build64 --config Debug
 cd build64
-#make test
+make test
 cd ..
 
 

@@ -465,6 +465,12 @@ static FILE *GetAioFilehandle(const char *input) {
 
 /* Create Pipeline */
 int CreatePipeline(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, FDTYPE *outPipePtr, FDTYPE *errFilePtr, FDTYPE process, pipelineRedir *redirs) {
+	FDTYPE pipeIds[2] = { __BAD_FD, __BAD_FD }; // File ids for pipe that's being created.
+	FDTYPE inputId = __BAD_FD;			// Readable file id input to current command in pipeline (could be file or pipe).  __BAD_FD means use stdin.
+	FDTYPE outputId = __BAD_FD;			// Writable file id for output from current command in pipeline (could be file or pipe). __BAD_FD means use stdout.
+	FDTYPE errorId = __BAD_FD;			// Writable file id for all standard error output from all commands in pipeline.  __BAD_FD means use stderr.
+	FDTYPE lastOutputId = __BAD_FD;		// Write file id for output from last command in pipeline (could be file or pipe). -1 means use stdout.
+
 	ReapDetachedPids();
 	if (inPipePtr != NULL) *inPipePtr = __BAD_FD;
 	if (outPipePtr != NULL) *outPipePtr = __BAD_FD;
@@ -491,8 +497,8 @@ int CreatePipeline(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, 
 	// 1 means error is the name of error file, and append.
 	// 2 means error is filehandle name.
 	// All this is ignored if error is NULL */
-	int cmdCount = 1; // Count of number of distinct commands found in argc/argv.
-	int lastBar = -1;
+	int cmdCount; cmdCount = 1; // Count of number of distinct commands found in argc/argv.
+	int lastBar; lastBar = -1;
 	for (int i = 0; i < argc; i++) {
 		const char *arg = argv[i];
 		if ((arg[0] == '|' && !arg[1]) || (arg[0] == '|' && arg[1] == '&' && !arg[2])) {
@@ -531,12 +537,6 @@ int CreatePipeline(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, 
 
 	/* Must do this before vfork(), so do it now */
 	//save_environ = JimSaveEnv(JimBuildEnv(interp));
-
-	FDTYPE pipeIds[2] = { __BAD_FD, __BAD_FD }; // File ids for pipe that's being created.
-	FDTYPE inputId = __BAD_FD;			// Readable file id input to current command in pipeline (could be file or pipe).  __BAD_FD means use stdin.
-	FDTYPE outputId = __BAD_FD;			// Writable file id for output from current command in pipeline (could be file or pipe). __BAD_FD means use stdout.
-	FDTYPE errorId = __BAD_FD;			// Writable file id for all standard error output from all commands in pipeline.  __BAD_FD means use stderr.
-	FDTYPE lastOutputId = __BAD_FD;		// Write file id for output from last command in pipeline (could be file or pipe). -1 means use stdout.
 
 	// Set up the redirected input source for the pipeline, if so requested.
 	if (input) {

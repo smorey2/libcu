@@ -5,7 +5,7 @@
 #include <sentinel-client.cpp>
 #include <ext/pipeline.cpp>
 #include <unistdcu.h>
-#ifdef __APPLE__
+#ifndef _MSC_VER
 #define _read read
 #endif
 
