@@ -16,8 +16,7 @@
 *
 *----------------------------------------------------------------------
 */
-__device__ char *Tcl_ErrnoId()
-{
+__device__ char *Tcl_ErrnoId() {
 	switch (errno) {
 #ifdef ERANGE
 	case ERANGE: return (char *)"ERANGE";
@@ -41,8 +40,7 @@ __device__ char *Tcl_ErrnoId()
 *
 *----------------------------------------------------------------------
 */
-__device__ char *Tcl_SignalId(int sig)
-{
+__device__ char *Tcl_SignalId(int sig) {
 	return (char *)"unknown signal";
 }
 
@@ -60,7 +58,6 @@ __device__ char *Tcl_SignalId(int sig)
 *
 *----------------------------------------------------------------------
 */
-__device__ char *Tcl_SignalMsg(int sig)
-{
+__device__ char *Tcl_SignalMsg(int sig) {
 	return (char *)"unknown signal";
 }

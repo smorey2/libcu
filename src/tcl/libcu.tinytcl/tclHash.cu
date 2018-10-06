@@ -44,8 +44,7 @@ static __device__ Tcl_HashEntry *OneWordCreate(Tcl_HashTable *tablePtr, const ch
 *
 *----------------------------------------------------------------------
 */
-__device__ void Tcl_InitHashTable(register Tcl_HashTable *tablePtr, int keyType)
-{
+__device__ void Tcl_InitHashTable(register Tcl_HashTable *tablePtr, int keyType) {
 	tablePtr->buckets = tablePtr->staticBuckets;
 	tablePtr->staticBuckets[0] = tablePtr->staticBuckets[1] = 0;
 	tablePtr->staticBuckets[2] = tablePtr->staticBuckets[3] = 0;
@@ -84,8 +83,7 @@ __device__ void Tcl_InitHashTable(register Tcl_HashTable *tablePtr, int keyType)
 *
 *----------------------------------------------------------------------
 */
-__device__ void Tcl_DeleteHashEntry(Tcl_HashEntry *entryPtr)
-{
+__device__ void Tcl_DeleteHashEntry(Tcl_HashEntry *entryPtr) {
 	if (*entryPtr->bucketPtr == entryPtr) {
 		*entryPtr->bucketPtr = entryPtr->nextPtr;
 	}
@@ -118,8 +116,7 @@ __device__ void Tcl_DeleteHashEntry(Tcl_HashEntry *entryPtr)
 *
 *----------------------------------------------------------------------
 */
-__device__ void Tcl_DeleteHashTable(register Tcl_HashTable *tablePtr)
-{
+__device__ void Tcl_DeleteHashTable(register Tcl_HashTable *tablePtr) {
 	// Free up all the entries in the table.
 	for (int i = 0; i < tablePtr->numBuckets; i++) {
 		register Tcl_HashEntry *hPtr = tablePtr->buckets[i];
@@ -153,8 +150,7 @@ __device__ void Tcl_DeleteHashTable(register Tcl_HashTable *tablePtr)
 *
 *----------------------------------------------------------------------
 */
-__device__ Tcl_HashEntry *Tcl_FirstHashEntry(Tcl_HashTable *tablePtr, Tcl_HashSearch *searchPtr)
-{
+__device__ Tcl_HashEntry *Tcl_FirstHashEntry(Tcl_HashTable *tablePtr, Tcl_HashSearch *searchPtr) {
 	searchPtr->tablePtr = tablePtr;
 	searchPtr->nextIndex = 0;
 	searchPtr->nextEntryPtr = NULL;
@@ -176,8 +172,7 @@ __device__ Tcl_HashEntry *Tcl_FirstHashEntry(Tcl_HashTable *tablePtr, Tcl_HashSe
 *
 *----------------------------------------------------------------------
 */
-__device__ Tcl_HashEntry *Tcl_NextHashEntry(register Tcl_HashSearch *searchPtr)
-{
+__device__ Tcl_HashEntry *Tcl_NextHashEntry(register Tcl_HashSearch *searchPtr) {
 	while (searchPtr->nextEntryPtr == NULL) {
 		if (searchPtr->nextIndex >= searchPtr->tablePtr->numBuckets) {
 			return NULL;
@@ -204,8 +199,7 @@ __device__ Tcl_HashEntry *Tcl_NextHashEntry(register Tcl_HashSearch *searchPtr)
 *
 *----------------------------------------------------------------------
 */
-__device__ char *Tcl_HashStats(Tcl_HashTable *tablePtr)
-{
+__device__ char *Tcl_HashStats(Tcl_HashTable *tablePtr) {
 #define NUM_COUNTERS 10
 	int i;
 	// Compute a histogram of bucket usage.
@@ -257,8 +251,7 @@ __device__ char *Tcl_HashStats(Tcl_HashTable *tablePtr)
 *
 *----------------------------------------------------------------------
 */
-static __device__ unsigned int HashString(register const char *string)
-{
+static __device__ unsigned int HashString(register const char *string) {
 	// I tried a zillion different hash functions and asked many other people for advice.  Many people had their own favorite functions,
 	// all different, but no-one had much idea why they were good ones. I chose the one below (multiply by 9 and add new character)
 	// because of the following reasons:
@@ -293,8 +286,7 @@ static __device__ unsigned int HashString(register const char *string)
 *
 *----------------------------------------------------------------------
 */
-static __device__ Tcl_HashEntry *StringFind(Tcl_HashTable *tablePtr, const char *key)
-{
+static __device__ Tcl_HashEntry *StringFind(Tcl_HashTable *tablePtr, const char *key) {
 	int index = HashString(key) & tablePtr->mask;
 	// Search all of the entries in the appropriate bucket.
 	register const char *p1, *p2;
@@ -327,8 +319,7 @@ static __device__ Tcl_HashEntry *StringFind(Tcl_HashTable *tablePtr, const char 
 *
 *----------------------------------------------------------------------
 */
-static __device__ Tcl_HashEntry *StringCreate(Tcl_HashTable *tablePtr, const char *key, int *newPtr)
-{
+static __device__ Tcl_HashEntry *StringCreate(Tcl_HashTable *tablePtr, const char *key, int *newPtr) {
 	register Tcl_HashEntry *hPtr;
 	int index = HashString(key) & tablePtr->mask;
 	// Search all of the entries in this bucket.
@@ -375,8 +366,7 @@ static __device__ Tcl_HashEntry *StringCreate(Tcl_HashTable *tablePtr, const cha
 *
 *----------------------------------------------------------------------
 */
-static __device__ Tcl_HashEntry *OneWordFind(Tcl_HashTable *tablePtr, register const char *key)
-{
+static __device__ Tcl_HashEntry *OneWordFind(Tcl_HashTable *tablePtr, register const char *key) {
 	int index = RANDOM_INDEX(tablePtr, key);
 	// Search all of the entries in the appropriate bucket.
 	for (register Tcl_HashEntry *hPtr = tablePtr->buckets[index]; hPtr != NULL; hPtr = hPtr->nextPtr) {
@@ -403,8 +393,7 @@ static __device__ Tcl_HashEntry *OneWordFind(Tcl_HashTable *tablePtr, register c
 *
 *----------------------------------------------------------------------
 */
-static __device__ Tcl_HashEntry *OneWordCreate(Tcl_HashTable *tablePtr, register const char *key, int *newPtr)
-{
+static __device__ Tcl_HashEntry *OneWordCreate(Tcl_HashTable *tablePtr, register const char *key, int *newPtr) {
 	register Tcl_HashEntry *hPtr;
 	int index = RANDOM_INDEX(tablePtr, key);
 	// Search all of the entries in this bucket.
@@ -446,8 +435,7 @@ static __device__ Tcl_HashEntry *OneWordCreate(Tcl_HashTable *tablePtr, register
 *
 *----------------------------------------------------------------------
 */
-static __device__ Tcl_HashEntry *ArrayFind(Tcl_HashTable *tablePtr, const char *key)
-{
+static __device__ Tcl_HashEntry *ArrayFind(Tcl_HashTable *tablePtr, const char *key) {
 	int *arrayPtr = (int *)key;
 	register int *iPtr1, *iPtr2;
 	int index, count;
@@ -485,8 +473,7 @@ static __device__ Tcl_HashEntry *ArrayFind(Tcl_HashTable *tablePtr, const char *
 *
 *----------------------------------------------------------------------
 */
-static __device__ Tcl_HashEntry *ArrayCreate(Tcl_HashTable *tablePtr, register const char *key, int *newPtr)
-{
+static __device__ Tcl_HashEntry *ArrayCreate(Tcl_HashTable *tablePtr, register const char *key, int *newPtr) {
 	register Tcl_HashEntry *hPtr;
 	int *arrayPtr = (int *)key;
 	register int *iPtr1, *iPtr2;
@@ -540,8 +527,7 @@ static __device__ Tcl_HashEntry *ArrayCreate(Tcl_HashTable *tablePtr, register c
 *
 *----------------------------------------------------------------------
 */
-static __device__ Tcl_HashEntry *BogusFind(Tcl_HashTable *tablePtr, const char *key)
-{
+static __device__ Tcl_HashEntry *BogusFind(Tcl_HashTable *tablePtr, const char *key) {
 	panic("called Tcl_FindHashEntry on deleted table");
 	return NULL;
 }
@@ -560,8 +546,7 @@ static __device__ Tcl_HashEntry *BogusFind(Tcl_HashTable *tablePtr, const char *
 *
 *----------------------------------------------------------------------
 */
-static __device__ Tcl_HashEntry *BogusCreate(Tcl_HashTable *tablePtr, const char *key, int *newPtr)
-{
+static __device__ Tcl_HashEntry *BogusCreate(Tcl_HashTable *tablePtr, const char *key, int *newPtr) {
 	panic("called Tcl_CreateHashEntry on deleted table");
 	return NULL;
 }
@@ -581,8 +566,7 @@ static __device__ Tcl_HashEntry *BogusCreate(Tcl_HashTable *tablePtr, const char
 *
 *----------------------------------------------------------------------
 */
-static __device__ void RebuildTable(register Tcl_HashTable *tablePtr)
-{
+static __device__ void RebuildTable(register Tcl_HashTable *tablePtr) {
 	int oldSize = tablePtr->numBuckets;
 	Tcl_HashEntry **oldBuckets = tablePtr->buckets;
 	// Allocate and initialize the new bucket array, and set up hashing constants for new array size.

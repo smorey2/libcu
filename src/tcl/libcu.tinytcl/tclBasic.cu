@@ -109,8 +109,7 @@ static __constant__ CmdInfo _builtInCmds[] = {
 *
 *----------------------------------------------------------------------
 */
-__device__ Tcl_Interp *Tcl_CreateInterp()
-{
+__device__ Tcl_Interp *Tcl_CreateInterp() {
 	register Interp *iPtr = (Interp *)_allocFast(sizeof(Interp));
 	memset(iPtr, 0, sizeof(*iPtr));
 	iPtr->result = iPtr->resultSpace;
@@ -184,8 +183,7 @@ __device__ Tcl_Interp *Tcl_CreateInterp()
 *
 *----------------------------------------------------------------------
 */
-__device__ void Tcl_DeleteInterp(Tcl_Interp *interp)
-{
+__device__ void Tcl_DeleteInterp(Tcl_Interp *interp) {
 	Interp *iPtr = (Interp *)interp;
 
 	// If the interpreter is in use, delay the deletion until later.
@@ -276,8 +274,7 @@ __device__ void Tcl_DeleteInterp(Tcl_Interp *interp)
 *
 *----------------------------------------------------------------------
 */
-__device__ void Tcl_CreateCommand(Tcl_Interp *interp, const char *cmdName, Tcl_CmdProc *proc, ClientData clientData, Tcl_CmdDeleteProc *deleteProc)
-{
+__device__ void Tcl_CreateCommand(Tcl_Interp *interp, const char *cmdName, Tcl_CmdProc *proc, ClientData clientData, Tcl_CmdDeleteProc *deleteProc) {
 	Interp *iPtr = (Interp *)interp;
 	register Command *cmdPtr;
 	int new_;
@@ -313,8 +310,7 @@ __device__ void Tcl_CreateCommand(Tcl_Interp *interp, const char *cmdName, Tcl_C
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_DeleteCommand(Tcl_Interp *interp, char *cmdName)
-{
+__device__ int Tcl_DeleteCommand(Tcl_Interp *interp, char *cmdName) {
 	Interp *iPtr = (Interp *)interp;
 	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&iPtr->commandTable, cmdName);
 	if (hPtr == NULL) {
@@ -346,8 +342,7 @@ __device__ int Tcl_DeleteCommand(Tcl_Interp *interp, char *cmdName)
 *
 *-----------------------------------------------------------------
 */
-__device__ int Tcl_Eval(Tcl_Interp *interp, char *cmd, int flags, char **termPtr)
-{
+__device__ int Tcl_Eval(Tcl_Interp *interp, char *cmd, int flags, char **termPtr) {
 #define NUM_CHARS 200
 #define NUM_ARGS 10
 	register Interp *iPtr = (Interp *)interp;
@@ -630,8 +625,7 @@ done:
 *
 *----------------------------------------------------------------------
 */
-__device__ Tcl_Trace Tcl_CreateTrace(Tcl_Interp *interp, int level, Tcl_CmdTraceProc *proc, ClientData clientData)
-{
+__device__ Tcl_Trace Tcl_CreateTrace(Tcl_Interp *interp, int level, Tcl_CmdTraceProc *proc, ClientData clientData) {
 	register Interp *iPtr = (Interp *)interp;
 	register Trace *tracePtr = (Trace *)_allocFast(sizeof(Trace));
 	tracePtr->level = level;
@@ -656,8 +650,7 @@ __device__ Tcl_Trace Tcl_CreateTrace(Tcl_Interp *interp, int level, Tcl_CmdTrace
 *
 *----------------------------------------------------------------------
 */
-__device__ void Tcl_DeleteTrace(Tcl_Interp *interp, Tcl_Trace trace)
-{
+__device__ void Tcl_DeleteTrace(Tcl_Interp *interp, Tcl_Trace trace) {
 	register Interp *iPtr = (Interp *)interp;
 	register Trace *tracePtr = (Trace *)trace;
 	if (iPtr->tracePtr == tracePtr) {
@@ -690,8 +683,7 @@ __device__ void Tcl_DeleteTrace(Tcl_Interp *interp, Tcl_Trace trace)
 *
 *----------------------------------------------------------------------
 */
-__device__ void Tcl_AddErrorInfo(Tcl_Interp *interp, char *message)
-{
+__device__ void Tcl_AddErrorInfo(Tcl_Interp *interp, char *message) {
 	register Interp *iPtr = (Interp *)interp;
 	// If an error is already being logged, then the new errorInfo is the concatenation of the old info and the new message.
 	// If this is the first piece of info for the error, then the new errorInfo is the concatenation of the message in interp->result and the new message.
@@ -721,8 +713,7 @@ __device__ void Tcl_AddErrorInfo(Tcl_Interp *interp, char *message)
 *
 *----------------------------------------------------------------------
 */
-__device__ int _Tcl_VarEval(Tcl_Interp *interp, va_list va)
-{
+__device__ int _Tcl_VarEval(Tcl_Interp *interp, va_list va) {
 #define FIXED_SIZE 200
 	// Copy the strings one after the other into a single larger string.  Use stack-allocated space for small commands, but if
 	// the commands gets too large than call _allocFast to create the space.
@@ -773,8 +764,7 @@ __device__ int _Tcl_VarEval(Tcl_Interp *interp, va_list va)
 *
 *----------------------------------------------------------------------
 */
-__device__ int TclGLOBAL_Eval(Tcl_Interp *interp, char *command)
-{
+__device__ int TclGLOBAL_Eval(Tcl_Interp *interp, char *command) {
 	register Interp *iPtr = (Interp *)interp;
 	CallFrame *savedVarFramePtr = iPtr->varFramePtr;
 	iPtr->varFramePtr = NULL;

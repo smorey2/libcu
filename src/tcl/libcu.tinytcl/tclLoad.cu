@@ -23,8 +23,7 @@
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_LoadCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_LoadCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc < 2 || argc > 3) {
 		Tcl_AppendResult(interp, "bad # args: ", args[0], 0);
 		return TCL_ERROR;

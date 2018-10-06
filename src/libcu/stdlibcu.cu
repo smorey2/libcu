@@ -692,7 +692,7 @@ __device__ hash_t __env_dir = HASHINIT;
 __device__ char *getenv_(const char *name) {
 	if (ISHOSTENV(name)) { stdlib_getenv msg(name); return msg.RC; }
 	char *r = (char *)hashFind(&__env_dir, name);
-	if (!r && (!strcmp(name, "HOME") || !strcmp(name, "PATH"))) r = (char *)":\\";
+	//if (!r && (!strcmp(name, ":HOME") || !strcmp(name, ":PATH"))) r = (char *)":\\";
 	return r;
 }
 

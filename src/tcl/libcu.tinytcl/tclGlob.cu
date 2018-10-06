@@ -38,8 +38,7 @@ static __device__ int DoGlob(Tcl_Interp *interp, char *dir, char *rem);
 *
 *----------------------------------------------------------------------
 */
-static __device__ void AppendResult(Tcl_Interp *interp, char *dir, char *separator, char *name, int nameLength)
-{
+static __device__ void AppendResult(Tcl_Interp *interp, char *dir, char *separator, char *name, int nameLength) {
 	// Next, see if we can put together a valid list element from dir and name by calling Tcl_AppendResult.
 	int dirFlags;
 	if (*dir == 0) {
@@ -90,8 +89,7 @@ static __device__ void AppendResult(Tcl_Interp *interp, char *dir, char *separat
 *----------------------------------------------------------------------
 */
 #undef STATIC_SIZE
-static __device__ int DoGlob(Tcl_Interp *interp, char *dir, char *rem)
-{
+static __device__ int DoGlob(Tcl_Interp *interp, char *dir, char *rem) {
 #define STATIC_SIZE 200 // When generating information for the next lower call, use static areas if the name is short, and malloc if the name is longer.
 	// When this procedure is entered, the name to be globbed may already have been partly expanded by ancestor invocations of
 	// DoGlob.  The part that's already been expanded is in "dir" (this may initially be empty), and the part still to expand
@@ -285,8 +283,7 @@ static __device__ int DoGlob(Tcl_Interp *interp, char *dir, char *rem)
 *----------------------------------------------------------------------
 */
 #if TCL_GETWD
-__device__ char *Tcl_TildeSubst(Tcl_Interp *interp, char *name)
-{
+__device__ char *Tcl_TildeSubst(Tcl_Interp *interp, char *name) {
 #define STATIC_BUF_SIZE 50
 	static char staticBuf[STATIC_BUF_SIZE];
 	static int curSize = STATIC_BUF_SIZE;
@@ -349,8 +346,7 @@ __device__ char *Tcl_TildeSubst(Tcl_Interp *interp, char *name)
 	return curBuf;
 }
 #else
-__device__ char *Tcl_TildeSubst(Tcl_Interp *interp, char *name)
-{
+__device__ char *Tcl_TildeSubst(Tcl_Interp *interp, char *name) {
 	return name;
 }
 #endif
@@ -369,8 +365,7 @@ __device__ char *Tcl_TildeSubst(Tcl_Interp *interp, char *name)
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_GlobCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_GlobCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc < 2) {
 	notEnoughArgs:
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " ?-nocomplain? name ?name ...?\"", (char *)NULL);

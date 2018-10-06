@@ -1,5 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include <host_defines.h>
+//#include <host_defines.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -44,7 +44,7 @@ int unsetenv(const char *name) {
 }
 #define mktemp _mktemp
 #define mkstemp(p) _open(_mktemp(p), O_CREAT | O_EXCL | O_RDWR)
-#define access _access
+#define access(a, b) (b)!=1?_access(a,b):0
 #define lseek _lseek
 #define close _close
 #define read _read
@@ -120,7 +120,7 @@ bool sentinelDefaultDeviceExecutor(void *tag, sentinelMessage *data, int length,
 #elif __OS_UNIX
 	case STDLIB_EXIT: { stdlib_exit *msg = (stdlib_exit *)data; exit(msg->Status); return true; }
 #endif
-	case STDLIB_GETENV: { stdlib_getenv *msg = (stdlib_getenv *)data; msg->RC = getenv(msg->Str); return true; }
+	case STDLIB_GETENV: { stdlib_getenv *msg = (stdlib_getenv *)data; msg->RC = getenv(msg->Str); *hostPrepare = SENTINELPREPARE(stdlib_getenv::HostPrepare); return true; }
 	case STDLIB_SETENV: { stdlib_setenv *msg = (stdlib_setenv *)data; msg->RC = setenv(msg->Str, msg->Str2, msg->Replace); return true; }
 	case STDLIB_UNSETENV: { stdlib_unsetenv *msg = (stdlib_unsetenv *)data; msg->RC = unsetenv(msg->Str); return true; }
 	case STDLIB_MKTEMP: { stdlib_mktemp *msg = (stdlib_mktemp *)data; msg->RC = mktemp(msg->Str); return true; }

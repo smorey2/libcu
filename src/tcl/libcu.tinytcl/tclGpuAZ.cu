@@ -23,8 +23,7 @@ static __device__ int StoreStatData(Tcl_Interp *interp, char *varName, struct st
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_CdCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_CdCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc > 2) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " dirName\"", (char *)NULL);
 		return TCL_ERROR;
@@ -65,8 +64,7 @@ __device__ int Tcl_CdCmd(ClientData dummy, Tcl_Interp *interp, int argc, const c
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_CloseCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_CloseCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 2) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " fileId\"", (char *)NULL);
 		return TCL_ERROR;
@@ -112,8 +110,7 @@ __device__ int Tcl_CloseCmd(ClientData dummy, Tcl_Interp *interp, int argc, cons
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_EofCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_EofCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 2) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " fileId\"", (char *)NULL);
 		return TCL_ERROR;
@@ -145,8 +142,7 @@ __device__ int Tcl_EofCmd(ClientData notUsed, Tcl_Interp *interp, int argc, cons
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_ExecCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_ExecCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 #if 1
 	return 0;
 #else
@@ -216,8 +212,7 @@ __device__ int Tcl_ExecCmd(ClientData dummy, Tcl_Interp *interp, int argc, const
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_ExitCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_ExitCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 1 && argc != 2) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " ?returnCode?\"", (char *)NULL);
 		return TCL_ERROR;
@@ -247,8 +242,7 @@ __device__ int Tcl_ExitCmd(ClientData dummy, Tcl_Interp *interp, int argc, const
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_FileCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_FileCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	char *p;
 	if (argc < 3) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " option name ?arg ...?\"", (char *)NULL);
@@ -550,8 +544,7 @@ __device__ int Tcl_FileCmd(ClientData dummy, Tcl_Interp *interp, int argc, const
 *
 *----------------------------------------------------------------------
 */
-static __device__ int StoreStatData(Tcl_Interp *interp, char *varName, struct stat *statPtr)
-{
+static __device__ int StoreStatData(Tcl_Interp *interp, char *varName, struct stat *statPtr) {
 	char string[30];
 	//sprintf(string, "%d", (int)statPtr->st_dev);
 	//if (Tcl_SetVar2(interp, varName, (char *)"dev", string, TCL_LEAVE_ERR_MSG) == NULL) {
@@ -613,8 +606,7 @@ static __device__ int StoreStatData(Tcl_Interp *interp, char *varName, struct st
 *
 *----------------------------------------------------------------------
 */
-static __device__ const char *GetFileType(int mode)
-{
+static __device__ const char *GetFileType(int mode) {
 	if (S_ISREG(mode)) return "file";
 	else if (S_ISDIR(mode)) return "directory";
 	else if (S_ISCHR(mode)) return "characterSpecial";
@@ -639,8 +631,7 @@ static __device__ const char *GetFileType(int mode)
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_FlushCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_FlushCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 2) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " fileId\"", (char *)NULL);
 		return TCL_ERROR;
@@ -679,8 +670,7 @@ __device__ int Tcl_FlushCmd(ClientData notUsed, Tcl_Interp *interp, int argc, co
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_GetsCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_GetsCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[]) {
 #define BUF_SIZE 200
 	if (argc != 2 && argc != 3) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " fileId ?varName?\"", (char *)NULL);
@@ -759,8 +749,7 @@ __device__ int Tcl_GetsCmd(ClientData notUsed, Tcl_Interp *interp, int argc, con
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_OpenCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_OpenCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[]) {
 	Interp *iPtr = (Interp *)interp;
 	char *access;
 	if (argc == 2) {
@@ -870,7 +859,8 @@ __device__ int Tcl_OpenCmd(ClientData notUsed, Tcl_Interp *interp, int argc, con
 		//	}
 		//	if (filePtr->f != NULL) {
 		//		filePtr->f2 = _fdopen(inPipe, "w");
-		//	} else {
+		//	}
+		//	else {
 		//		filePtr->f = _fdopen(inPipe, "w");
 		//	}
 		//}
@@ -921,8 +911,7 @@ error:
 *----------------------------------------------------------------------
 */
 #define MAXPATHLEN 1024
-__device__ int Tcl_PwdCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_PwdCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 1) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], "\"", (char *)NULL);
 		return TCL_ERROR;
@@ -954,8 +943,7 @@ __device__ int Tcl_PwdCmd(ClientData dummy, Tcl_Interp *interp, int argc, const 
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_PutsCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_PutsCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	int i = 1;
 	bool newline = true;
 	if (argc >= 2 && !strcmp(args[1], "-nonewline")) {
@@ -1023,8 +1011,7 @@ __device__ int Tcl_PutsCmd(ClientData dummy, Tcl_Interp *interp, int argc, const
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_ReadCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_ReadCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 #define READ_BUF_SIZE 4096
 	if (argc != 2 && argc != 3) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " fileId ?numBytes?\" or \"", args[0], " ?-nonewline? fileId\"", (char *)NULL);
@@ -1111,8 +1098,7 @@ __device__ int Tcl_ReadCmd(ClientData dummy, Tcl_Interp *interp, int argc, const
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_SeekCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_SeekCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 3 && argc != 4) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " fileId offset ?origin?\"", (char *)NULL);
 		return TCL_ERROR;
@@ -1165,8 +1151,7 @@ __device__ int Tcl_SeekCmd(ClientData notUsed, Tcl_Interp *interp, int argc, con
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_SourceCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_SourceCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 2) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " fileName\"", (char *)NULL);
 		return TCL_ERROR;
@@ -1188,8 +1173,7 @@ __device__ int Tcl_SourceCmd(ClientData dummy, Tcl_Interp *interp, int argc, con
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_TellCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_TellCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 2) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " fileId\"", (char *)NULL);
 		return TCL_ERROR;
@@ -1216,8 +1200,7 @@ __device__ int Tcl_TellCmd(ClientData notUsed, Tcl_Interp *interp, int argc, con
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_TimeCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_TimeCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	int count;
 	if (argc == 2) {
 		count = 1;
@@ -1268,8 +1251,7 @@ __device__ int Tcl_TimeCmd(ClientData dummy, Tcl_Interp *interp, int argc, const
 *
 *----------------------------------------------------------------------
 */
-static __device__ int CleanupChildren(Tcl_Interp *interp, int numPids, int *pidPtr, int errorId)
-{
+static __device__ int CleanupChildren(Tcl_Interp *interp, int numPids, int *pidPtr, int errorId) {
 	//	int result = TCL_OK;
 	//	int i, pid;
 	//#define WAIT_STATUS_TYPE int
@@ -1351,8 +1333,7 @@ static __device__ int CleanupChildren(Tcl_Interp *interp, int numPids, int *pidP
 *-----------------------------------------------------------------------------
 */
 #define GetCurrentProcessId 1
-__device__ int Tcl_PidCmd(ClientData clientData, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_PidCmd(ClientData clientData, Tcl_Interp *interp, int argc, const char *args[]) {
 	char buf[10];
 	if (argc != 1) {
 		Tcl_AppendResult(interp, "bad # args: ", args[0], (char *)NULL);

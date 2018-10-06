@@ -64,7 +64,7 @@ struct time_strftime {
 	}
 	static __forceinline__ __device__ bool Postfix(time_strftime *t, intptr_t offset) {
 		char *ptr = (char *)t->Ptr - offset;
-		if ((int)t->RC > 0) memcpy((void *)t->Buf, ptr, t->RC);
+		if (t->RC > 0) memcpy((void *)t->Buf, ptr, t->RC);
 		return true;
 	}
 	sentinelMessage Base;

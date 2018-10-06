@@ -27,7 +27,7 @@ THE SOFTWARE.
 #ifndef _SENTINEL_H
 #define _SENTINEL_H
 #include <crtdefscu.h>
-#include <host_defines.h>
+//#include <host_defines.h>
 #include <stdio.h>
 #include <ext/pipeline.h>
 #if _MSC_VER

@@ -28,8 +28,7 @@ static __device__ void ProcDeleteProc(ClientData clientData);
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_ProcCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_ProcCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 4) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " name args body\"", (char *)NULL);
 		return TCL_ERROR;
@@ -132,8 +131,7 @@ procError:
 *
 *----------------------------------------------------------------------
 */
-__device__ int TclGetFrame(Tcl_Interp *interp, char *string, CallFrame **framePtrPtr)
-{
+__device__ int TclGetFrame(Tcl_Interp *interp, char *string, CallFrame **framePtrPtr) {
 	register Interp *iPtr = (Interp *)interp;
 	if (iPtr->varFramePtr == NULL) {
 		iPtr->result = (char *)"already at top level";
@@ -195,8 +193,7 @@ __device__ int TclGetFrame(Tcl_Interp *interp, char *string, CallFrame **framePt
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_UplevelCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_UplevelCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	register Interp *iPtr = (Interp *)interp;
 	if (argc < 2) {
 	uplevelSyntax:
@@ -254,8 +251,7 @@ __device__ int Tcl_UplevelCmd(ClientData dummy, Tcl_Interp *interp, int argc, co
 *
 *----------------------------------------------------------------------
 */
-__device__ Proc *TclFindProc(Interp *iPtr, char *procName)
-{
+__device__ Proc *TclFindProc(Interp *iPtr, char *procName) {
 	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&iPtr->commandTable, procName);
 	if (hPtr == NULL) {
 		return NULL;
@@ -282,8 +278,7 @@ __device__ Proc *TclFindProc(Interp *iPtr, char *procName)
 *
 *----------------------------------------------------------------------
 */
-__device__ Proc *TclIsProc(Command *cmdPtr)
-{
+__device__ Proc *TclIsProc(Command *cmdPtr) {
 	if (cmdPtr->proc == InterpProc) {
 		return (Proc *)cmdPtr->clientData;
 	}
@@ -304,8 +299,7 @@ __device__ Proc *TclIsProc(Command *cmdPtr)
 *
 *----------------------------------------------------------------------
 */
-static __device__ int InterpProc(ClientData clientData, Tcl_Interp *interp, int argc, const char *args[])
-{
+static __device__ int InterpProc(ClientData clientData, Tcl_Interp *interp, int argc, const char *args[]) {
 	register Proc *procPtr = (Proc *)clientData;
 	register Interp *iPtr = (Interp *)interp;
 	int result;
@@ -419,8 +413,7 @@ procDone:
 *
 *----------------------------------------------------------------------
 */
-static __device__ void ProcDeleteProc(ClientData clientData)
-{
+static __device__ void ProcDeleteProc(ClientData clientData) {
 	register Proc *procPtr = (Proc *)clientData;
 	if (--procPtr->uses <= 0) {
 		_freeFast((char *)procPtr->command);

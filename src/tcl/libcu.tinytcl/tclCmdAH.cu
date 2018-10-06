@@ -24,8 +24,7 @@
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_BreakCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_BreakCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 1) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], "\"", (char *)NULL);
 		return TCL_ERROR;
@@ -47,8 +46,7 @@ __device__ int Tcl_BreakCmd(ClientData dummy, Tcl_Interp *interp, int argc, cons
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_CaseCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_CaseCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	int i, result;
 	if (argc < 3) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " string ?in? patList body ... ?default body?\"", (char *)NULL);
@@ -155,8 +153,7 @@ cleanup:
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_CatchCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_CatchCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 2 && argc != 3) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " command ?varName?\"", (char *)NULL);
 		return TCL_ERROR;
@@ -187,8 +184,7 @@ __device__ int Tcl_CatchCmd(ClientData dummy, Tcl_Interp *interp, int argc, cons
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_ConcatCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_ConcatCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc < 2) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " arg ?arg ...?\"", (char *)NULL);
 		return TCL_ERROR;
@@ -214,8 +210,7 @@ __device__ int Tcl_ConcatCmd(ClientData dummy, Tcl_Interp *interp, int argc, con
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_ContinueCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_ContinueCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 1) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], "\"", (char *)NULL);
 		return TCL_ERROR;
@@ -237,8 +232,7 @@ __device__ int Tcl_ContinueCmd(ClientData dummy, Tcl_Interp *interp, int argc, c
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_ErrorCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_ErrorCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	Interp *iPtr = (Interp *)interp;
 	if (argc < 2 || argc > 4) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " message ?errorInfo? ?errorCode?\"", (char *)NULL);
@@ -270,8 +264,7 @@ __device__ int Tcl_ErrorCmd(ClientData dummy, Tcl_Interp *interp, int argc, cons
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_EvalCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_EvalCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc < 2) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " arg ?arg ...?\"", (char *)NULL);
 		return TCL_ERROR;
@@ -308,8 +301,7 @@ __device__ int Tcl_EvalCmd(ClientData dummy, Tcl_Interp *interp, int argc, const
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_ExprCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_ExprCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc < 2) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " arg ?arg ...?\"", (char *)NULL);
 		return TCL_ERROR;
@@ -339,8 +331,7 @@ __device__ int Tcl_ExprCmd(ClientData dummy, Tcl_Interp *interp, int argc, const
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_ForCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_ForCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 5) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " start test next command\"", (char *)NULL);
 		return TCL_ERROR;
@@ -404,8 +395,7 @@ __device__ int Tcl_ForCmd(ClientData dummy, Tcl_Interp *interp, int argc, const 
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_ForeachCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_ForeachCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 4) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " varName list command\"", (char *)NULL);
 		return TCL_ERROR;
@@ -464,8 +454,7 @@ __device__ int Tcl_ForeachCmd(ClientData dummy, Tcl_Interp *interp, int argc, co
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_FormatCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_FormatCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	register char *format;	// Used to read characters from the format string.
 	char newFormat[40];		// A new format specifier is generated here.
 	int width;			// Field width from field specifier, or 0 if no width given.

@@ -11,14 +11,12 @@
 
 #include "tclInt.h"
 
-__device__ int Tcl_GetIndex(Tcl_Interp *interp, const char *string, const char *table[], char *msg, int flags, int *indexPtr, bool insensitive)
-{
+__device__ int Tcl_GetIndex(Tcl_Interp *interp, const char *string, const char *table[], char *msg, int flags, int *indexPtr, bool insensitive) {
 	panic("Not Implemented");
 	return TCL_OK;
 }
 
-__device__ int Tcl_GetIndex2(Tcl_Interp *interp, const char *string, const void *structTable[], int offset, char *msg, int flags, int *indexPtr, bool insensitive)
-{
+__device__ int Tcl_GetIndex2(Tcl_Interp *interp, const char *string, const void *structTable[], int offset, char *msg, int flags, int *indexPtr, bool insensitive) {
 	panic("Not Implemented");
 	return TCL_OK;
 }
@@ -38,8 +36,7 @@ __device__ int Tcl_GetIndex2(Tcl_Interp *interp, const char *string, const void 
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_GetInt(Tcl_Interp *interp, const char *string, int *intPtr)
-{
+__device__ int Tcl_GetInt(Tcl_Interp *interp, const char *string, int *intPtr) {
 	char *end;
 	long i = strtol(string, &end, 0);
 	while (*end != '\0' && isspace(*end)) {
@@ -68,8 +65,7 @@ __device__ int Tcl_GetInt(Tcl_Interp *interp, const char *string, int *intPtr)
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_GetWideInt(Tcl_Interp *interp, const char *string, int64_t *intPtr)
-{
+__device__ int Tcl_GetWideInt(Tcl_Interp *interp, const char *string, int64_t *intPtr) {
 	char *end;
 	int64_t i = strtoll(string, &end, 0);
 	while (*end != '\0' && isspace(*end)) {
@@ -98,8 +94,7 @@ __device__ int Tcl_GetWideInt(Tcl_Interp *interp, const char *string, int64_t *i
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_GetDouble(Tcl_Interp *interp, const char *string, double *doublePtr)
-{
+__device__ int Tcl_GetDouble(Tcl_Interp *interp, const char *string, double *doublePtr) {
 	char *end;
 	double d = strtod(string, &end);
 	while (*end != '\0' && isspace(*end)) {
@@ -128,8 +123,7 @@ __device__ int Tcl_GetDouble(Tcl_Interp *interp, const char *string, double *dou
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_GetBoolean(Tcl_Interp *interp, const char *string, bool *boolPtr)
-{
+__device__ int Tcl_GetBoolean(Tcl_Interp *interp, const char *string, bool *boolPtr) {
 	char c, lowerCase[10]; // Convert the input string to all lower-case.
 	int i;
 	for (i = 0; i < 9; i++) {
@@ -194,7 +188,6 @@ __device__ int Tcl_GetBoolean(Tcl_Interp *interp, const char *string, bool *bool
 *
 *----------------------------------------------------------------------
 */
-__device__ char *Tcl_GetByteArray(Tcl_Interp *interp, const char *string, int *arrayLength)
-{
+__device__ char *Tcl_GetByteArray(Tcl_Interp *interp, const char *string, int *arrayLength) {
 	return TCL_OK;
 }

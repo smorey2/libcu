@@ -72,6 +72,17 @@ struct stdlib_getenv {
 		if (t->Str) t->Str = str + offset;
 		return end;
 	}
+	static __forceinline__ __host__ char *HostPrepare(stdlib_getenv *t, char *data, char *dataEnd, intptr_t offset) {
+		if (!t->RC) return data;
+		int ptrLength = t->RC ? (int)strlen(t->RC) + 1 : 0;
+		if (ptrLength > 1024) { ptrLength = 1024; t->RC[ptrLength] = 0; }
+		char *ptr = (char *)(data += ROUND8_(sizeof(*t)));
+		char *end = (char *)(data += ptrLength);
+		if (end > dataEnd) return nullptr;
+		memcpy(ptr, t->RC, ptrLength);
+		t->RC = (char *)(ptr - offset);
+		return end;
+	}
 	sentinelMessage Base;
 	const char *Str;
 	__device__ stdlib_getenv(const char *str) : Base(true, STDLIB_GETENV, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_getenv)); }

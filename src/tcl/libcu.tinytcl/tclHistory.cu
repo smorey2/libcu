@@ -79,8 +79,7 @@ static __device__ int SubsAndEval(Interp *iPtr, char *cmd, char *old, char *new_
 *
 *----------------------------------------------------------------------
 */
-static __device__ void InitHistory(register Interp *iPtr)
-{
+static __device__ void InitHistory(register Interp *iPtr) {
 	if (iPtr->numEvents != 0) {
 		return;
 	}
@@ -111,8 +110,7 @@ static __device__ void InitHistory(register Interp *iPtr)
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_RecordAndEval(Tcl_Interp *interp, char *cmd, int flags)
-{
+__device__ int Tcl_RecordAndEval(Tcl_Interp *interp, char *cmd, int flags) {
 	register Interp *iPtr = (Interp *)interp;
 	if (iPtr->numEvents == 0) {
 		InitHistory(iPtr);
@@ -169,8 +167,7 @@ __device__ int Tcl_RecordAndEval(Tcl_Interp *interp, char *cmd, int flags)
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_HistoryCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_HistoryCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	register Interp *iPtr = (Interp *)interp;
 	register HistoryEvent *eventPtr;
 	if (iPtr->numEvents == 0) {
@@ -407,8 +404,7 @@ __device__ int Tcl_HistoryCmd(ClientData dummy, Tcl_Interp *interp, int argc, co
 *
 *----------------------------------------------------------------------
 */
-static __device__ void MakeSpace(HistoryEvent *hPtr, int size)
-{
+static __device__ void MakeSpace(HistoryEvent *hPtr, int size) {
 	if (hPtr->bytesAvl < size) {
 		_freeFast(hPtr->command);
 		hPtr->command = (char *)_allocFast((unsigned)size);
@@ -431,8 +427,7 @@ static __device__ void MakeSpace(HistoryEvent *hPtr, int size)
 *
 *----------------------------------------------------------------------
 */
-static __device__ void InsertRev(Interp *iPtr, register HistoryRev *revPtr)
-{
+static __device__ void InsertRev(Interp *iPtr, register HistoryRev *revPtr) {
 	register HistoryRev *curPtr, *prevPtr;
 	for (curPtr = iPtr->revPtr, prevPtr = NULL; curPtr != NULL; prevPtr = curPtr, curPtr = curPtr->nextPtr) {
 		// If this revision includes the new one (or vice versa) then just eliminate the one that is a subset of the other.
@@ -480,8 +475,7 @@ static __device__ void InsertRev(Interp *iPtr, register HistoryRev *revPtr)
 *
 *----------------------------------------------------------------------
 */
-static __device__ void RevCommand(register Interp *iPtr, char *string)
-{
+static __device__ void RevCommand(register Interp *iPtr, char *string) {
 	if (iPtr->evalFirst == NULL || iPtr->revDisables > 0) {
 		return;
 	}
@@ -509,8 +503,7 @@ static __device__ void RevCommand(register Interp *iPtr, char *string)
 *
 *----------------------------------------------------------------------
 */
-static __device__ void RevResult(register Interp *iPtr, char *string)
-{
+static __device__ void RevResult(register Interp *iPtr, char *string) {
 	if (iPtr->evalFirst == NULL || iPtr->revDisables > 0) {
 		return;
 	}
@@ -558,8 +551,7 @@ static __device__ void RevResult(register Interp *iPtr, char *string)
 *
 *----------------------------------------------------------------------
 */
-static __device__ void DoRevs(register Interp *iPtr)
-{
+static __device__ void DoRevs(register Interp *iPtr) {
 	if (iPtr->revPtr == NULL) {
 		return;
 	}
@@ -613,8 +605,7 @@ static __device__ void DoRevs(register Interp *iPtr)
 *
 *----------------------------------------------------------------------
 */
-static __device__ HistoryEvent *GetEvent(register Interp *iPtr, char *string)
-{
+static __device__ HistoryEvent *GetEvent(register Interp *iPtr, char *string) {
 	// First check for a numeric specification of an event.
 	int index;
 	if (isdigit(*string) || *string == '-') {
@@ -673,8 +664,7 @@ static __device__ HistoryEvent *GetEvent(register Interp *iPtr, char *string)
 *
 *----------------------------------------------------------------------
 */
-static __device__ int SubsAndEval(register Interp *iPtr, char *cmd, char *old, char *new_)
-{
+static __device__ int SubsAndEval(register Interp *iPtr, char *cmd, char *old, char *new_) {
 	// Figure out how much space it will take to hold the substituted command (and complain if the old string doesn't appear in the original command).
 	int oldLength = strlen(old);
 	int newLength = strlen(new_);
@@ -731,8 +721,7 @@ static __device__ int SubsAndEval(register Interp *iPtr, char *cmd, char *old, c
 *
 *----------------------------------------------------------------------
 */
-static __device__ char *GetWords(register Interp *iPtr, char *command, char *words)
-{
+static __device__ char *GetWords(register Interp *iPtr, char *command, char *words) {
 	// Figure out whether we're looking for a numerical range or for a pattern.
 	char *pattern = NULL;
 	int first = 0; // First word desired. -1 means last word only.

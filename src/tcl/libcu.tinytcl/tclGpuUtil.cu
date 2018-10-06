@@ -37,8 +37,7 @@ static __device__ int waitTableUsed = 0;	// Number of entries in waitTable that 
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_EvalFile(Tcl_Interp *interp, char *fileName)
-{
+__device__ int Tcl_EvalFile(Tcl_Interp *interp, char *fileName) {
 	int result;
 	Interp *iPtr = (Interp *)interp;
 	char *oldScriptFile = iPtr->scriptFile;
@@ -108,8 +107,7 @@ error:
 *
 *----------------------------------------------------------------------
 */
-__device__ void Tcl_DetachPids(int numPids, int *pidPtr)
-{
+__device__ void Tcl_DetachPids(int numPids, int *pidPtr) {
 	int count;
 	int pid;
 	register WaitInfo *waitPtr;
@@ -135,8 +133,7 @@ __device__ void Tcl_DetachPids(int numPids, int *pidPtr)
 }
 
 //#undef mktemp
-__device__ void mktemp(char *buf, int size)
-{
+__device__ void mktemp(char *buf, int size) {
 	//TCHAR lpTempPathBuffer[MAX_PATH];
 	//DWORD dwRetVal = GetTempPath(MAX_PATH, lpTempPathBuffer); 
 	//if (dwRetVal > MAX_PATH || (dwRetVal == 0))
@@ -146,8 +143,7 @@ __device__ void mktemp(char *buf, int size)
 	panic("mktemp failed");
 }
 
-static __device__ int TclPipe(int pipefd[2])
-{
+static __device__ int TclPipe(int pipefd[2]) {
 	//if (CreatePipe(&pipefd[0], &pipefd[1], NULL, 0)) {
 	//	return 0;
 	//}
@@ -194,8 +190,7 @@ static __device__ int TclPipe(int pipefd[2])
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_CreatePipeline(Tcl_Interp *interp, int argc, const char *args[], int **pidArrayPtr, int *inPipePtr, int *outPipePtr, int *errFilePtr)
-{
+__device__ int Tcl_CreatePipeline(Tcl_Interp *interp, int argc, const char *args[], int **pidArrayPtr, int *inPipePtr, int *outPipePtr, int *errFilePtr) {
 	if (inPipePtr != NULL) {
 		*inPipePtr = -1;
 	}
@@ -560,8 +555,7 @@ error:
 *
 *----------------------------------------------------------------------
 */
-__device__ char *Tcl_OSError(Tcl_Interp *interp)
-{
+__device__ char *Tcl_OSError(Tcl_Interp *interp) {
 	char *id = Tcl_ErrnoId();
 	Tcl_SetErrorCode(interp, "UNIX", id, (char *)NULL);
 	return id;
@@ -582,8 +576,7 @@ __device__ char *Tcl_OSError(Tcl_Interp *interp)
 *
 *----------------------------------------------------------------------
 */
-__device__ void TclMakeFileTable(Interp *iPtr, int index)
-{
+__device__ void TclMakeFileTable(Interp *iPtr, int index) {
 	int i;
 	// If the table doesn't even exist, then create it and initialize entries for standard files.
 #ifdef DEBUG_FDS
@@ -672,8 +665,7 @@ __device__ void TclMakeFileTable(Interp *iPtr, int index)
 *
 *----------------------------------------------------------------------
 */
-__device__ int TclGetOpenFile(Tcl_Interp *interp, char *string, OpenFile_ **filePtrPtr)
-{
+__device__ int TclGetOpenFile(Tcl_Interp *interp, char *string, OpenFile_ **filePtrPtr) {
 	int fd = 0; // Initial value needed only to stop compiler warnings.
 	Interp *iPtr = (Interp *)interp;
 	if (string[0] == 'f' && string[1] == 'i' && string[2] == 'l' && string[3] == 'e') {

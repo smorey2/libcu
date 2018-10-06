@@ -206,7 +206,7 @@ struct stdio_fread {
 	}
 	static __forceinline__ __device__ bool Postfix(stdio_fread *t, intptr_t offset) {
 		char *ptr = (char *)t->Ptr - offset;
-		if ((int)t->RC > 0) memcpy(t->Buf, ptr, t->RC);
+		if (t->RC > 0) memcpy(t->Buf, ptr, t->RC);
 		return true;
 	}
 	sentinelMessage Base;

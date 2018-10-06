@@ -22,8 +22,7 @@ typedef struct {
 static __device__ char *TraceVarProc(ClientData clientData, Tcl_Interp *interp, char *name1, char *name2, int flags);
 
 // Resize the regexp cache
-static __device__ void expand_regexp_cache(Interp *iPtr, int newsize)
-{
+static __device__ void expand_regexp_cache(Interp *iPtr, int newsize) {
 	int i;
 	if (newsize > iPtr->num_regexps) {
 		// Expand the cache
@@ -65,8 +64,7 @@ static __device__ void expand_regexp_cache(Interp *iPtr, int newsize)
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_RegexpCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_RegexpCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	bool noCase = false;
 	bool indices = false;
 	int i;
@@ -214,8 +212,7 @@ __device__ int Tcl_RegexpCmd(ClientData dummy, Tcl_Interp *interp, int argc, con
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_RegsubCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_RegsubCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc < 5) {
 	wrongNumArgs:
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " ?-nocase? ?-all? exp string subSpec varName\"", (char *)NULL);
@@ -401,8 +398,7 @@ done:
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_RenameCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_RenameCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	Interp *iPtr = (Interp *)interp;
 	if (argc != 3) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " oldName newName\"", (char *)NULL);
@@ -447,8 +443,7 @@ __device__ int Tcl_RenameCmd(ClientData dummy, Tcl_Interp *interp, int argc, con
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_ReturnCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_ReturnCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc > 2) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " ?value?\"", (char *)NULL);
 		return TCL_ERROR;
@@ -473,8 +468,7 @@ __device__ int Tcl_ReturnCmd(ClientData dummy, Tcl_Interp *interp, int argc, con
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_ScanCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_ScanCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 #define MAX_FIELDS 20
 	typedef struct {
 		char fmt;			// Format for field.
@@ -657,8 +651,7 @@ __device__ int Tcl_ScanCmd(ClientData dummy, Tcl_Interp *interp, int argc, const
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_SplitCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_SplitCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	char *splitChars;
 	if (argc == 2) {
 		splitChars = (char *)" \n\t\r";
@@ -715,8 +708,7 @@ __device__ int Tcl_SplitCmd(ClientData dummy, Tcl_Interp *interp, int argc, cons
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_StringCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_StringCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc < 2) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " option arg ?arg ...?\"", (char *)NULL);
 		return TCL_ERROR;
@@ -975,8 +967,7 @@ __device__ int Tcl_StringCmd(ClientData dummy, Tcl_Interp *interp, int argc, con
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_TraceCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_TraceCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc < 2) {
 		Tcl_AppendResult(interp, "too few args: should be \"", args[0], " option [arg arg ...]\"", (char *)NULL);
 		return TCL_ERROR;
@@ -1110,8 +1101,7 @@ badOps:
 *----------------------------------------------------------------------
 */
 #undef STATIC_SIZE
-static __device__ char *TraceVarProc(ClientData clientData, Tcl_Interp *interp, char *name1, char *name2, int flags)
-{
+static __device__ char *TraceVarProc(ClientData clientData, Tcl_Interp *interp, char *name1, char *name2, int flags) {
 	TraceVarInfo *tvarPtr = (TraceVarInfo *)clientData;
 #define STATIC_SIZE 199
 	char *result = NULL;
@@ -1195,8 +1185,7 @@ static __device__ char *TraceVarProc(ClientData clientData, Tcl_Interp *interp, 
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_WhileCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_WhileCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 3) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " test command\"", (char *)NULL);
 		return TCL_ERROR;

@@ -34,8 +34,7 @@ typedef struct {
 *
 *----------------------------------------------------------------------
 */
-__device__ Tcl_CmdBuf Tcl_CreateCmdBuf()
-{
+__device__ Tcl_CmdBuf Tcl_CreateCmdBuf() {
 	register CmdBuf *cbPtr;
 	cbPtr = (CmdBuf *)_allocFast(sizeof(CmdBuf));
 	cbPtr->buffer = (char *)_allocFast(CMD_BUF_SIZE);
@@ -59,8 +58,7 @@ __device__ Tcl_CmdBuf Tcl_CreateCmdBuf()
 *
 *----------------------------------------------------------------------
 */
-__device__ void Tcl_DeleteCmdBuf(Tcl_CmdBuf buffer)
-{
+__device__ void Tcl_DeleteCmdBuf(Tcl_CmdBuf buffer) {
 	register CmdBuf *cbPtr = (CmdBuf *)buffer;
 	_freeFast(cbPtr->buffer);
 	_freeFast((char *)cbPtr);
@@ -84,8 +82,7 @@ __device__ void Tcl_DeleteCmdBuf(Tcl_CmdBuf buffer)
 *
 *----------------------------------------------------------------------
 */
-__device__ char *Tcl_AssembleCmd(Tcl_CmdBuf buffer, char *string)
-{
+__device__ char *Tcl_AssembleCmd(Tcl_CmdBuf buffer, char *string) {
 	register CmdBuf *cbPtr = (CmdBuf *)buffer;
 
 	// If an empty string is passed in, just pretend the current command is complete, whether it really is or not.
@@ -140,8 +137,7 @@ __device__ char *Tcl_AssembleCmd(Tcl_CmdBuf buffer, char *string)
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_CommandComplete(char *cmd)
-{
+__device__ int Tcl_CommandComplete(char *cmd) {
 	register char *p = cmd;
 	while (true) {
 		while (isspace(*p)) {

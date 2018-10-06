@@ -82,7 +82,7 @@ static void MainInit(int argc, char *const argv[]) {
 
 	int result;
 	if (argc > 1 && strcmp(argv[1], "-")) {
-		char *filename = (char *)argv[1]+1;
+		char *filename = (char *)argv[1];
 
 		// Before we eval the file, create an args global containing the remaining arguments
 		char *args = Tcl_Merge(argc - 2, (const char **)argv + 2);
@@ -90,8 +90,7 @@ static void MainInit(int argc, char *const argv[]) {
 		_freeFast(args);
 
 		result = Tcl_EvalFile(interp, filename);
-		if (result != TCL_OK)
-		{
+		if (result != TCL_OK) {
 			// And make sure we print an informative error if something goes wrong
 			Tcl_AddErrorInfo(interp, (char *)"");
 			printf("%s\n", Tcl_GetVar(interp, (char *)"errorInfo", TCL_LEAVE_ERR_MSG));
@@ -101,7 +100,7 @@ static void MainInit(int argc, char *const argv[]) {
 	}
 	else {
 		// Are we in interactive mode or script from stdin mode?
-		_dataP.noninteractive = (argc > 1);
+		_dataP.noninteractive = argc > 1;
 #ifndef TCL_GENERIC_ONLY
 		if (!_dataP.noninteractive) {
 			result = Tcl_Eval(interp, _initCmd, 0, (char **)NULL);

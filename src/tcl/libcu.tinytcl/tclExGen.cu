@@ -31,8 +31,7 @@ __device__ char *tclAppVersion = NULL;		// Version number of the application
 *
 *-----------------------------------------------------------------------------
 */
-__device__ int Tcl_InfoxCmd(ClientData clientData, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_InfoxCmd(ClientData clientData, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 2) {
 		Tcl_AppendResult(interp, "bad # args: ", args[0], " option", (char *)NULL);
 		return TCL_ERROR;
@@ -73,8 +72,7 @@ __device__ int Tcl_InfoxCmd(ClientData clientData, Tcl_Interp *interp, int argc,
 *
 *-----------------------------------------------------------------------------
 */
-__device__ int Tcl_SleepCmd(ClientData clientData, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_SleepCmd(ClientData clientData, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 2) {
 		Tcl_AppendResult(interp, "bad # args: ", args[0], " seconds", (char *)NULL);
 		return TCL_ERROR;
@@ -95,8 +93,7 @@ __device__ int Tcl_SleepCmd(ClientData clientData, Tcl_Interp *interp, int argc,
 *
 *-----------------------------------------------------------------------------
 */
-__device__ int Tcl_LoopCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_LoopCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc < 5 || argc > 6) {
 		Tcl_AppendResult(interp, "bad # args: ", args[0], " var first limit [incr] command", (char *)NULL);
 		return TCL_ERROR;
@@ -156,14 +153,12 @@ __device__ int Tcl_LoopCmd(ClientData dummy, Tcl_Interp *interp, int argc, const
 static __device__ int *sigloc;
 static __device__ unsigned long sigsblocked;
 
-static __device__ void signal_handler(int sig)
-{
+static __device__ void signal_handler(int sig) {
 	// We just remember which signal occurred. Tcl_Eval() will notice this as soon as it can and throw an error
 	*sigloc = sig;
 }
 
-static __device__ void signal_ignorer(int sig)
-{
+static __device__ void signal_ignorer(int sig) {
 	// We just remember which signals occurred
 	sigsblocked |= (1 << sig);
 }
@@ -171,8 +166,7 @@ static __device__ void signal_ignorer(int sig)
 /**
 * Given the name of a signal, returns the signal value if found, or returns -1 if not found. We accept -SIGINT, SIGINT, INT or any lowercase version
 */
-static __device__ int find_signal_by_name(const char *name)
-{
+static __device__ int find_signal_by_name(const char *name) {
 	int i;
 	// Remove optional - and SIG from the front of the name
 	if (*name == '-') {
@@ -213,8 +207,7 @@ static __device__ int find_signal_by_name(const char *name)
 *
 *-----------------------------------------------------------------------------
 */
-__device__ int Tcl_SignalCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_SignalCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 #if NOTSUP
 #define ACTION_HANDLE 1
 #define ACTION_IGNORE -1
@@ -318,8 +311,7 @@ __device__ int Tcl_SignalCmd(ClientData dummy, Tcl_Interp *interp, int argc, con
 *
 *-----------------------------------------------------------------------------
 */
-__device__ int Tcl_KillCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_KillCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 #if NOTSUP
 	if (argc != 3) {
 		Tcl_AppendResult(interp, "bad # args: ", args[0], " SIG pid", (char *)NULL);
@@ -338,8 +330,7 @@ __device__ int Tcl_KillCmd(ClientData dummy, Tcl_Interp *interp, int argc, const
 	return TCL_ERROR;
 }
 
-__device__ void TclEx_InitGeneral(Tcl_Interp *interp)
-{
+__device__ void TclEx_InitGeneral(Tcl_Interp *interp) {
 	Tcl_CreateCommand(interp, "infox", Tcl_InfoxCmd, (ClientData)NULL, NULL);
 	Tcl_CreateCommand(interp, "loop", Tcl_LoopCmd, (ClientData)NULL, NULL);
 	Tcl_CreateCommand(interp, "signal", Tcl_SignalCmd, (ClientData)NULL, NULL);

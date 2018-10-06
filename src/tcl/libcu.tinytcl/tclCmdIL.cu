@@ -28,8 +28,7 @@ static __device__ int SortCompareProc(const char *first, const char *second);
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_IfCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_IfCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	int i = 1;
 	while (true) {
 		// At this point in the loop, args and argc refer to an expression to test, either for the main expression or an expression
@@ -92,8 +91,7 @@ __device__ int Tcl_IfCmd(ClientData dummy, Tcl_Interp *interp, int argc, const c
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_IncrCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_IncrCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 2 && argc != 3) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " varName ?increment?\"", (char *)NULL);
 		return TCL_ERROR;
@@ -142,8 +140,7 @@ __device__ int Tcl_IncrCmd(ClientData dummy, Tcl_Interp *interp, int argc, const
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_InfoCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_InfoCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	register Interp *iPtr = (Interp *)interp;
 	int length;
 	char c;
@@ -482,8 +479,7 @@ __device__ int Tcl_InfoCmd(ClientData dummy, Tcl_Interp *interp, int argc, const
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_JoinCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_JoinCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	const char *joinString;
 	if (argc == 2) {
 		joinString = " ";
@@ -526,8 +522,7 @@ __device__ int Tcl_JoinCmd(ClientData dummy, Tcl_Interp *interp, int argc, const
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_LindexCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_LindexCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	char *p, *element;
 	int index, result;
 	if (argc != 3) {
@@ -598,8 +593,7 @@ __device__ int Tcl_LindexCmd(ClientData dummy, Tcl_Interp *interp, int argc, con
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_LinsertCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_LinsertCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc < 4) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " list index element ?element ...?\"", (char *)NULL);
 		return TCL_ERROR;
@@ -662,8 +656,7 @@ __device__ int Tcl_LinsertCmd(ClientData dummy, Tcl_Interp *interp, int argc, co
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_ListCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_ListCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc >= 2) {
 		interp->result = Tcl_Merge(argc - 1, args + 1);
 		interp->freeProc = (Tcl_FreeProc *)free;
@@ -685,8 +678,7 @@ __device__ int Tcl_ListCmd(ClientData dummy, Tcl_Interp *interp, int argc, const
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_LlengthCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_LlengthCmd(ClientData dummy, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 2) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " list\"", (char *)NULL);
 		return TCL_ERROR;
@@ -721,8 +713,7 @@ __device__ int Tcl_LlengthCmd(ClientData dummy, Tcl_Interp *interp, int argc, co
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_LrangeCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_LrangeCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[]) {
 	int first, last, result;
 	char *begin, *end, c, *dummy;
 	if (argc != 4) {
@@ -792,8 +783,7 @@ __device__ int Tcl_LrangeCmd(ClientData notUsed, Tcl_Interp *interp, int argc, c
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_LreplaceCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_LreplaceCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[]) {
 	char *p1, *p2, *dummy;
 	int i, first, last, count, result;
 	if (argc < 4) {
@@ -882,8 +872,7 @@ __device__ int Tcl_LreplaceCmd(ClientData notUsed, Tcl_Interp *interp, int argc,
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_LsearchCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_LsearchCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[]) {
 	if (argc != 3) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"", args[0], " list pattern\"", (char *)NULL);
 		return TCL_ERROR;
@@ -921,13 +910,11 @@ __device__ int Tcl_LsearchCmd(ClientData notUsed, Tcl_Interp *interp, int argc, 
 */
 
 // The procedure below is called back by qsort to determine the proper ordering between two elements.
-static __device__ int SortCompareProc(const char *first, const char *second)
-{
+static __device__ int SortCompareProc(const char *first, const char *second) {
 	return strcmp(*((char **)first), *((char **)second));
 }
 
-static __device__ int IntegerSortCompareProc(const char *first, const char *second)
-{
+static __device__ int IntegerSortCompareProc(const char *first, const char *second) {
 	int firstint = atoi(*((char **)first));
 	int secondint = atoi(*((char **)second));
 	return (firstint < secondint ? -1 : (firstint == secondint ? 0 : 1));
@@ -938,8 +925,7 @@ static __device__ char *_sort_command = 0;
 static __device__ int _sort_result = TCL_OK;
 static __device__ Tcl_Interp *_sort_interp = 0;
 
-static __device__ int CommandSortCompareProc(const char *first, const char *second)
-{
+static __device__ int CommandSortCompareProc(const char *first, const char *second) {
 	// We have already had an error and we need to return something, so fallback to strcmp
 	if (_sort_result != TCL_OK) {
 		return strcmp(*((char **)first), *((char **)second));
@@ -959,8 +945,7 @@ static __device__ int CommandSortCompareProc(const char *first, const char *seco
 	return atoi(_sort_interp->result);
 }
 
-__device__ int Tcl_LsortCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[])
-{
+__device__ int Tcl_LsortCmd(ClientData notUsed, Tcl_Interp *interp, int argc, const char *args[]) {
 	typedef int (compare_function_type)(const void *, const void *);
 	compare_function_type *compare = (compare_function_type *)SortCompareProc;
 	_sort_result = TCL_OK;

@@ -51,8 +51,7 @@ __device__ bool _validate_memory = false;
 *
 *----------------------------------------------------------------------
 */
-static __device__ void dump_memory_info(FILE *out_)
-{
+static __device__ void dump_memory_info(FILE *out_) {
 	fprintf_(out_, "total mallocs             %10d\n", _total_mallocs);
 	fprintf_(out_, "total frees               %10d\n", _total_frees);
 	fprintf_(out_, "current packets allocated %10d\n", _current_malloc_packets);
@@ -69,8 +68,7 @@ static __device__ void dump_memory_info(FILE *out_)
 *
 *----------------------------------------------------------------------
 */
-static __device__ void ValidateMemory(struct mem_header *memHeaderP, const char *file, int line, bool nukeGuards)
-{
+static __device__ void ValidateMemory(struct mem_header *memHeaderP, const char *file, int line, bool nukeGuards) {
 	int idx;
 	bool guard_failed = false;
 	int byte;
@@ -121,8 +119,7 @@ static __device__ void ValidateMemory(struct mem_header *memHeaderP, const char 
 *
 *----------------------------------------------------------------------
 */
-__device__ void Tcl_ValidateAllMemory(const char *file, int line)
-{
+__device__ void Tcl_ValidateAllMemory(const char *file, int line) {
 	struct mem_header *memScanP;
 	for (memScanP = _allocHead; memScanP != NULL; memScanP = memScanP->flink)
 		ValidateMemory(memScanP, file, line, false);
@@ -139,8 +136,7 @@ __device__ void Tcl_ValidateAllMemory(const char *file, int line)
 *     will have the file error number left in it.
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_DumpActiveMemory(char *fileName)
-{
+__device__ int Tcl_DumpActiveMemory(char *fileName) {
 	FILE *fileP = fopen(fileName, "w");
 	if (fileP == NULL)
 		return TCL_ERROR;
@@ -170,8 +166,7 @@ __device__ int Tcl_DumpActiveMemory(char *fileName)
 *
 *----------------------------------------------------------------------
 */
-__device__ char *Tcl_MemAlloc(unsigned int size, const char *file, int line)
-{
+__device__ char *Tcl_MemAlloc(unsigned int size, const char *file, int line) {
 	if (_validate_memory)
 		Tcl_ValidateAllMemory(file, line);
 
@@ -235,8 +230,7 @@ __device__ char *Tcl_MemAlloc(unsigned int size, const char *file, int line)
 *
 *----------------------------------------------------------------------
 */
-__device__ int Tcl_MemFree(char *ptr, const char *file, int line)
-{
+__device__ int Tcl_MemFree(char *ptr, const char *file, int line) {
 	struct mem_header *memp = 0; // Must be zero for size calc
 	memp = (struct mem_header *)(((char *)ptr) - memp->body); // Since header ptr is zero, body offset will be size
 	if (_alloc_tracing)
@@ -268,8 +262,7 @@ __device__ int Tcl_MemFree(char *ptr, const char *file, int line)
 *
 *--------------------------------------------------------------------
 */
-__device__ char *Tcl_MemRealloc(char *ptr, unsigned int size, const char *file, int line)
-{
+__device__ char *Tcl_MemRealloc(char *ptr, unsigned int size, const char *file, int line) {
 	char *new_ = Tcl_MemAlloc(size, file, line);
 	memcpy(new_, ptr, (int)size);
 	Tcl_MemFree(ptr, file, line);
@@ -293,8 +286,7 @@ __device__ char *Tcl_MemRealloc(char *ptr, unsigned int size, const char *file, 
 *
 *----------------------------------------------------------------------
 */
-static __device__ int MemoryCmd(ClientData clientData, Tcl_Interp *interp, int argc, const char *args[])
-{
+static __device__ int MemoryCmd(ClientData clientData, Tcl_Interp *interp, int argc, const char *args[]) {
 	char *fileName;
 	if (argc < 2) {
 		Tcl_AppendResult(interp, "wrong # args:  should be \"", args[0], " option [args..]\"", (char *)NULL);
@@ -371,8 +363,7 @@ bad_suboption:
 *
 *----------------------------------------------------------------------
 */
-__device__ void Tcl_InitMemory(Tcl_Interp *interp)
-{
+__device__ void Tcl_InitMemory(Tcl_Interp *interp) {
 	Tcl_CreateCommand(interp, "memory", MemoryCmd, (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
 }
 
@@ -386,8 +377,7 @@ __device__ void Tcl_InitMemory(Tcl_Interp *interp)
 //*
 //*----------------------------------------------------------------------
 //*/
-//__device__ char *Tcl_MemAlloc(unsigned int size)
-//{
+//__device__ char *Tcl_MemAlloc(unsigned int size) {
 //	char *result = malloc(size);
 //	if (result == NULL) 
 //		panic("unable to alloc %d bytes", size);
@@ -403,8 +393,7 @@ __device__ void Tcl_InitMemory(Tcl_Interp *interp)
 //*
 //*----------------------------------------------------------------------
 //*/
-//__device__ void Tcl_MemFree(charVOID *ptr)
-//{
+//__device__ void Tcl_MemFree(charVOID *ptr) {
 //	free(ptr);
 //}
 
@@ -416,8 +405,7 @@ __device__ void Tcl_InitMemory(Tcl_Interp *interp)
 *
 *----------------------------------------------------------------------
 */
-__device__ void Tcl_InitMemory(Tcl_Interp *interp)
-{
+__device__ void Tcl_InitMemory(Tcl_Interp *interp) {
 }
 
 #endif

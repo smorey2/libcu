@@ -125,8 +125,7 @@ static __device__ int ExprTopLevel(Tcl_Interp *interp, char *string, Value *valu
 *
 *--------------------------------------------------------------
 */
-static __device__ int ExprParseString(Tcl_Interp *interp, char *string, Value *valuePtr)
-{
+static __device__ int ExprParseString(Tcl_Interp *interp, char *string, Value *valuePtr) {
 	// Try to convert the string to a number.
 	register char c = *string;
 	if ((c >= '0' && c <= '9') || c == '-' || c == '.') {
@@ -188,8 +187,7 @@ static __device__ int ExprParseString(Tcl_Interp *interp, char *string, Value *v
 *
 *----------------------------------------------------------------------
 */
-static __device__ int ExprLex(Tcl_Interp *interp, register ExprInfo *infoPtr, register Value *valuePtr)
-{
+static __device__ int ExprLex(Tcl_Interp *interp, register ExprInfo *infoPtr, register Value *valuePtr) {
 	int result;
 	register char *p = infoPtr->expr;
 	register char c = *p;
@@ -416,8 +414,7 @@ static __device__ int ExprLex(Tcl_Interp *interp, register ExprInfo *infoPtr, re
 *
 *----------------------------------------------------------------------
 */
-static __device__ int ExprGetValue(Tcl_Interp *interp, register ExprInfo *infoPtr, int prec, Value *valuePtr)
-{
+static __device__ int ExprGetValue(Tcl_Interp *interp, register ExprInfo *infoPtr, int prec, Value *valuePtr) {
 	Interp *iPtr = (Interp *)interp;
 	int operator_; // Current operator (either unary or binary).
 	int badType; // Type of offending argument;  used for error messages.
@@ -866,8 +863,7 @@ illegalType:
 *
 *--------------------------------------------------------------
 */
-static __device__ void ExprMakeString(register Value *valuePtr)
-{
+static __device__ void ExprMakeString(register Value *valuePtr) {
 	int shortfall = 150 - (int)(valuePtr->pv.end - valuePtr->pv.buffer);
 	if (shortfall > 0) {
 		(*valuePtr->pv.expandProc)(&valuePtr->pv, shortfall);
@@ -898,8 +894,7 @@ static __device__ void ExprMakeString(register Value *valuePtr)
 *
 *--------------------------------------------------------------
 */
-static __device__ int ExprTopLevel(Tcl_Interp *interp, char *string, Value *valuePtr)
-{
+static __device__ int ExprTopLevel(Tcl_Interp *interp, char *string, Value *valuePtr) {
 	ExprInfo info;
 	info.originalExpr = string;
 	info.expr = string;
@@ -935,8 +930,7 @@ static __device__ int ExprTopLevel(Tcl_Interp *interp, char *string, Value *valu
 *
 *--------------------------------------------------------------
 */
-__device__ int Tcl_ExprLong(Tcl_Interp *interp, char *string, long *ptr)
-{
+__device__ int Tcl_ExprLong(Tcl_Interp *interp, char *string, long *ptr) {
 	Value value;
 	int result = ExprTopLevel(interp, string, &value);
 	if (result == TCL_OK) {
@@ -957,8 +951,7 @@ __device__ int Tcl_ExprLong(Tcl_Interp *interp, char *string, long *ptr)
 	return result;
 }
 
-__device__ int Tcl_ExprDouble(Tcl_Interp *interp, char *string, double *ptr)
-{
+__device__ int Tcl_ExprDouble(Tcl_Interp *interp, char *string, double *ptr) {
 	Value value;
 	int result = ExprTopLevel(interp, string, &value);
 	if (result == TCL_OK) {
@@ -979,8 +972,7 @@ __device__ int Tcl_ExprDouble(Tcl_Interp *interp, char *string, double *ptr)
 	return result;
 }
 
-__device__ int Tcl_ExprBoolean(Tcl_Interp *interp, char *string, int *ptr)
-{
+__device__ int Tcl_ExprBoolean(Tcl_Interp *interp, char *string, int *ptr) {
 	Value value;
 	int result = ExprTopLevel(interp, string, &value);
 	if (result == TCL_OK) {
@@ -1016,8 +1008,7 @@ __device__ int Tcl_ExprBoolean(Tcl_Interp *interp, char *string, int *ptr)
 *
 *--------------------------------------------------------------
 */
-__device__ int Tcl_ExprString(Tcl_Interp *interp, char *string)
-{
+__device__ int Tcl_ExprString(Tcl_Interp *interp, char *string) {
 	Value value;
 	int result = ExprTopLevel(interp, string, &value);
 	if (result == TCL_OK) {

@@ -30,8 +30,7 @@ static __device__ char *EnvTraceProc(ClientData clientData, Tcl_Interp *interp, 
 *
 *----------------------------------------------------------------------
 */
-__device__ void TclSetupEnv(Tcl_Interp *interp)
-{
+__device__ void TclSetupEnv(Tcl_Interp *interp) {
 	// Next, add the interpreter to the list of those that we manage.
 	EnvInterp *eiPtr = (EnvInterp *)_allocFast(sizeof(EnvInterp));
 	eiPtr->interp = interp;
@@ -71,8 +70,7 @@ __device__ void TclSetupEnv(Tcl_Interp *interp)
 *
 *----------------------------------------------------------------------
 */
-static __device__ char *EnvTraceProc(ClientData clientData, Tcl_Interp *interp, char *name1, char *name2, int flags)
-{
+static __device__ char *EnvTraceProc(ClientData clientData, Tcl_Interp *interp, char *name1, char *name2, int flags) {
 	// First see if the whole "env" variable is being deleted.  If so, just forget about this interpreter.
 	if (name2 == NULL) {
 		if ((flags & (TCL_TRACE_UNSETS | TCL_TRACE_DESTROYED)) != (TCL_TRACE_UNSETS | TCL_TRACE_DESTROYED)) {

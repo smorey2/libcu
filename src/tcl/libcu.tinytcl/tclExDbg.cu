@@ -42,8 +42,7 @@ static __device__ void CleanUpDebug(ClientData clientData);
 *
 *-----------------------------------------------------------------------------
 */
-static __device__ void PrintStr(FILE *filePtr, char *string, int numChars)
-{
+static __device__ void PrintStr(FILE *filePtr, char *string, int numChars) {
 	for (int idx = 0; idx < numChars; idx++) {
 		if (string[idx] == '\n') {
 			fputc('\\', filePtr);
@@ -64,8 +63,7 @@ static __device__ void PrintStr(FILE *filePtr, char *string, int numChars)
 *
 *-----------------------------------------------------------------------------
 */
-static __device__ void PrintArg(FILE *filePtr, char *argStr, int noTruncate)
-{
+static __device__ void PrintArg(FILE *filePtr, char *argStr, int noTruncate) {
 	int argLen = strlen(argStr);
 	int printLen = argLen;
 	if (!noTruncate && printLen > ARG_TRUNCATE_SIZE)
@@ -91,8 +89,7 @@ static __device__ void PrintArg(FILE *filePtr, char *argStr, int noTruncate)
 *
 *-----------------------------------------------------------------------------
 */
-static __device__ void TraceCode(traceInfo_pt traceInfoPtr, int level, char *command, int argc, const char *args[])
-{
+static __device__ void TraceCode(traceInfo_pt traceInfoPtr, int level, char *command, int argc, const char *args[]) {
 #if NOTSUP
 	static struct timeval last_time;
 	struct timeval this_time;
@@ -134,8 +131,7 @@ static __device__ void TraceCode(traceInfo_pt traceInfoPtr, int level, char *com
 *
 *-----------------------------------------------------------------------------
 */
-__device__  static void CmdTraceRoutine(ClientData clientData, Tcl_Interp *interp, int level, char *command, Tcl_CmdProc *cmdProc, ClientData cmdClientData, int argc, const char *args[])
-{
+__device__  static void CmdTraceRoutine(ClientData clientData, Tcl_Interp *interp, int level, char *command, Tcl_CmdProc *cmdProc, ClientData cmdClientData, int argc, const char *args[]) {
 	Interp *iPtr = (Interp *)interp;
 	traceInfo_pt traceInfoPtr = (traceInfo_pt)clientData;
 	if (!traceInfoPtr->procCalls) {
@@ -163,8 +159,7 @@ __device__  static void CmdTraceRoutine(ClientData clientData, Tcl_Interp *inter
 *
 *-----------------------------------------------------------------------------
 */
-static __device__ int Tcl_CmdtraceCmd(ClientData clientData, Tcl_Interp *interp, int argc, const char *args[])
-{
+static __device__ int Tcl_CmdtraceCmd(ClientData clientData, Tcl_Interp *interp, int argc, const char *args[]) {
 	//Interp *iPtr = (Interp *)interp;
 	traceInfo_pt infoPtr = (traceInfo_pt)clientData;
 	int idx;
@@ -274,8 +269,7 @@ invalidOption:
 *
 *-----------------------------------------------------------------------------
 */
-static __device__ void CleanUpDebug(ClientData clientData)
-{
+static __device__ void CleanUpDebug(ClientData clientData) {
 	traceInfo_pt infoPtr = (traceInfo_pt)clientData;
 	if (infoPtr->traceHolder != NULL)
 		Tcl_DeleteTrace(infoPtr->interp, infoPtr->traceHolder);
@@ -291,8 +285,7 @@ static __device__ void CleanUpDebug(ClientData clientData)
 *
 *-----------------------------------------------------------------------------
 */
-__device__ void TclEx_InitDebug(Tcl_Interp *interp)
-{
+__device__ void TclEx_InitDebug(Tcl_Interp *interp) {
 	traceInfo_pt infoPtr;
 	infoPtr = (traceInfo_pt)_allocFast(sizeof(traceInfo_t));
 	infoPtr->interp = interp;
