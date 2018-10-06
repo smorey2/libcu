@@ -8478,8 +8478,6 @@ __device__ int Jim_EvalFile(Jim_Interp *interp, const char *filename) {
 		fclose(fp);
 		return JIM_OK;
 	}
-	printf("size: %d\n", sb.st_size);
-
 	char *buf = (char *)Jim_Alloc(sb.st_size + 1);
 	int readlen = (int)fread(buf, 1, sb.st_size, fp);
 	if (ferror(fp)) {

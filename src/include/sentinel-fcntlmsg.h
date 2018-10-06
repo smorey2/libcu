@@ -83,7 +83,7 @@ struct fcntl_stat {
 		return end;
 	}
 	static __forceinline__ __device__ bool Postfix(fcntl_stat *t, intptr_t offset) {
-		char *ptr = (char *)t->Buf - offset;
+		char *ptr = (char *)t->Ptr - offset;
 		if (!t->Bit64) memcpy(t->Buf, ptr, sizeof(struct stat));
 		else memcpy(t->Buf64, ptr, sizeof(struct _stat64));
 		return true;
@@ -104,7 +104,7 @@ struct fcntl_fstat {
 		return end;
 	}
 	static __forceinline__ __device__ bool Postfix(fcntl_fstat *t, intptr_t offset) {
-		char *ptr = (char *)t->Buf - offset;
+		char *ptr = (char *)t->Ptr - offset;
 		if (!t->Bit64) memcpy(t->Buf, ptr, sizeof(struct stat));
 		else memcpy(t->Buf64, ptr, sizeof(struct _stat64));
 		return true;
