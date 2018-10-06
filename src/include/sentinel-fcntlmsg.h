@@ -79,14 +79,20 @@ struct fcntl_stat {
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
 		if (t->Str) t->Str = str + offset;
-		if (!t->Bit64) t->Ptr = (struct stat *)(str + offset);
-		else t->Ptr64 = (struct _stat64 *)(str + offset);
+		t->Ptr = str + offset;
 		return end;
 	}
+	static __forceinline__ __device__ bool Postfix(fcntl_stat *t, intptr_t offset) {
+		char *ptr = (char *)t->Buf - offset;
+		if (!t->Bit64) memcpy(t->Buf, ptr, sizeof(struct stat));
+		else memcpy(t->Buf64, ptr, sizeof(struct _stat64));
+		return true;
+	}
 	sentinelMessage Base;
-	const char *Str; struct stat *Ptr; struct _stat64 *Ptr64; bool Bit64; bool LStat;
-	__device__ fcntl_stat(const char *str, struct stat *ptr, struct _stat64 *ptr64, bool bit64, bool lstat_) : Base(true, FCNTL_STAT, 1024, SENTINELPREPARE(Prepare)), Str(str), Ptr(ptr), Ptr64(ptr64), Bit64(bit64), LStat(lstat_) { sentinelDeviceSend(&Base, sizeof(fcntl_stat)); }
+	const char *Str; struct stat *Buf; struct _stat64 *Buf64; bool Bit64; bool LStat;
+	__device__ fcntl_stat(const char *str, struct stat *buf, struct _stat64 *buf64, bool bit64, bool lstat_) : Base(true, FCNTL_STAT, 1024, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Str(str), Buf(buf), Buf64(buf64), Bit64(bit64), LStat(lstat_) { sentinelDeviceSend(&Base, sizeof(fcntl_stat)); }
 	int RC;
+	void *Ptr;
 };
 
 struct fcntl_fstat {
@@ -94,14 +100,20 @@ struct fcntl_fstat {
 		char *ptr = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += 1024);
 		if (end > dataEnd) return nullptr;
-		if (!t->Bit64) t->Ptr = (struct stat *)ptr;
-		else t->Ptr64 = (struct _stat64 *)ptr;
+		t->Ptr = ptr + offset;
 		return end;
 	}
+	static __forceinline__ __device__ bool Postfix(fcntl_fstat *t, intptr_t offset) {
+		char *ptr = (char *)t->Buf - offset;
+		if (!t->Bit64) memcpy(t->Buf, ptr, sizeof(struct stat));
+		else memcpy(t->Buf64, ptr, sizeof(struct _stat64));
+		return true;
+	}
 	sentinelMessage Base;
-	int Handle; struct stat *Ptr; struct _stat64 *Ptr64; bool Bit64;
-	__device__ fcntl_fstat(int fd, struct stat *ptr, struct _stat64 *ptr64, bool bit64) : Base(true, FCNTL_FSTAT), Handle(fd), Ptr(ptr), Ptr64(ptr64), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(fcntl_fstat)); }
+	int Handle; struct stat *Buf; struct _stat64 *Buf64; bool Bit64;
+	__device__ fcntl_fstat(int fd, struct stat *buf, struct _stat64 *buf64, bool bit64) : Base(true, FCNTL_FSTAT, 1024, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Handle(fd), Buf(buf), Buf64(buf64), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(fcntl_fstat)); }
 	int RC;
+	void *Ptr;
 };
 
 struct fcntl_chmod {

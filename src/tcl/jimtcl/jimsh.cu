@@ -181,8 +181,7 @@ static int MainShutdown(int retcode) {
 
 #pragma endregion
 
-int main(int argc, char *const argv[])
-{
+int main(int argc, char *const argv[]) {
 	if (argc > 1 && !strcmp(argv[1], "--version")) {
 		printf("%d.%d\n", JIM_VERSION / 100, JIM_VERSION % 100);
 		return 0;

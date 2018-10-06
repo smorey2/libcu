@@ -155,15 +155,15 @@ bool sentinelDefaultDeviceExecutor(void *tag, sentinelMessage *data, int length,
 #endif
 		return true; }
 	case FCNTL_STAT: { fcntl_stat *msg = (fcntl_stat *)data;
-		if (!msg->Bit64) msg->RC = !msg->LStat ? stat(msg->Str, msg->Ptr) : lstat(msg->Str, msg->Ptr);
+		if (!msg->Bit64) msg->RC = !msg->LStat ? stat(msg->Str, (struct stat *)msg->Ptr) : lstat(msg->Str, (struct stat *)msg->Ptr);
 #ifdef __USE_LARGEFILE64
-		else msg->RC = !msg->LStat ? stat64(msg->Str, msg->Ptr64) : lstat64(msg->Str, msg->Ptr64);
+		else msg->RC = !msg->LStat ? stat64(msg->Str, (struct _stat64 *)msg->Ptr) : lstat64(msg->Str, (struct _stat64 *)msg->Ptr);
 #endif
 		return true; }
 	case FCNTL_FSTAT: { fcntl_fstat *msg = (fcntl_fstat *)data;
-		if (!msg->Bit64) msg->RC = fstat(msg->Handle, msg->Ptr);
+		if (!msg->Bit64) msg->RC = fstat(msg->Handle, (struct stat *)msg->Ptr);
 #ifdef __USE_LARGEFILE64
-		else msg->RC = fstat64(msg->Handle, msg->Ptr64);
+		else msg->RC = fstat64(msg->Handle, (struct _stat64 *)msg->Ptr);
 #endif
 		return true; }
 	case FCNTL_CHMOD: { fcntl_chmod *msg = (fcntl_chmod *)data; msg->RC = chmod(msg->Str, msg->Mode); return true; }

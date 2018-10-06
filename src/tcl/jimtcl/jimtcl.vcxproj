@@ -59,7 +59,7 @@
     <None Include="tests\glob.test" />
     <None Include="tests\glob2.test" />
     <None Include="tests\infoframe.test" />
-    <None Include="tests\jim.test" />
+    <None Include="tests\test.tcl" />
     <None Include="tests\linsert.test" />
     <None Include="tests\list.test" />
     <None Include="tests\loop.test" />

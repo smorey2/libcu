@@ -55,7 +55,7 @@ static __device__ void fileFree(int fd) {
 
 #pragma endregion
 
-__device__ char __cwd[MAX_PATH] = ":\\";
+__device__ char __cwd[MAX_PATH] = ""; // ":\\";
 __device__ dirEnt_t __iob_root = {
 #ifdef __APPLE__
 { 0, 0, 0, 0, 1, ":\\" }, { 0, 0, 0x4000 }, nullptr, nullptr
