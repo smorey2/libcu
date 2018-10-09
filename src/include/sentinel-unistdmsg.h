@@ -57,7 +57,7 @@ struct unistd_access {
 	}
 	sentinelMessage Base;
 	const char *Str; int Type;
-	__device__ unistd_access(const char *str, int type) : Base(true, UNISTD_ACCESS, 1024, SENTINELPREPARE(Prepare)), Str(str), Type(type) { sentinelDeviceSend(&Base, sizeof(unistd_access)); }
+	__device__ unistd_access(const char *str, int type) : Base(true, UNISTD_ACCESS, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), Type(type) { sentinelDeviceSend(&Base, sizeof(unistd_access)); }
 	int RC;
 };
 
@@ -78,7 +78,7 @@ struct unistd_close {
 struct unistd_read {
 	static __forceinline__ __device__ char *Prepare(unistd_read *t, char *data, char *dataEnd, intptr_t offset) {
 		char *ptr = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += 1024);
+		char *end = (char *)(data += SENTINEL_CHUNK);
 		if (end > dataEnd) return nullptr;
 		t->Ptr = ptr + offset;
 		return end;
@@ -90,7 +90,7 @@ struct unistd_read {
 	}
 	sentinelMessage Base;
 	int Handle; void *Buf; size_t Size;
-	__device__ unistd_read(bool wait, int fd, void *buf, size_t nbytes) : Base(wait, UNISTD_READ, 1024, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Handle(fd), Buf(buf), Size(nbytes) { sentinelDeviceSend(&Base, sizeof(unistd_read)); }
+	__device__ unistd_read(bool wait, int fd, void *buf, size_t nbytes) : Base(wait, UNISTD_READ, SENTINEL_CHUNK, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Handle(fd), Buf(buf), Size(nbytes) { sentinelDeviceSend(&Base, sizeof(unistd_read)); }
 	size_t RC;
 	void *Ptr;
 };
@@ -107,7 +107,7 @@ struct unistd_write {
 	}
 	sentinelMessage Base;
 	int Handle; const void *Ptr; size_t Size;
-	__device__ unistd_write(bool wait, int fd, const void *ptr, size_t n) : Base(wait, UNISTD_WRITE, 1024, SENTINELPREPARE(Prepare)), Handle(fd), Ptr(ptr), Size(n) { sentinelDeviceSend(&Base, sizeof(unistd_write)); }
+	__device__ unistd_write(bool wait, int fd, const void *ptr, size_t n) : Base(wait, UNISTD_WRITE, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Handle(fd), Ptr(ptr), Size(n) { sentinelDeviceSend(&Base, sizeof(unistd_write)); }
 	size_t RC;
 };
 
@@ -123,7 +123,7 @@ struct unistd_chown {
 	}
 	sentinelMessage Base;
 	const char *Str; int Owner; int Group;
-	__device__ unistd_chown(const char *str, int owner, int group) : Base(true, UNISTD_CHOWN, 1024, SENTINELPREPARE(Prepare)), Str(str), Owner(owner), Group(group) { sentinelDeviceSend(&Base, sizeof(unistd_chown)); }
+	__device__ unistd_chown(const char *str, int owner, int group) : Base(true, UNISTD_CHOWN, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), Owner(owner), Group(group) { sentinelDeviceSend(&Base, sizeof(unistd_chown)); }
 	int RC;
 };
 
@@ -139,20 +139,20 @@ struct unistd_chdir {
 	}
 	sentinelMessage Base;
 	const char *Str;
-	__device__ unistd_chdir(const char *str) : Base(true, UNISTD_CHDIR, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(unistd_chdir)); }
+	__device__ unistd_chdir(const char *str) : Base(true, UNISTD_CHDIR, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(unistd_chdir)); }
 	int RC;
 };
 
 struct unistd_getcwd {
 	static __forceinline__ __device__ char *Prepare(unistd_getcwd *t, char *data, char *dataEnd, intptr_t offset) {
 		t->Ptr = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += 1024);
+		char *end = (char *)(data += SENTINEL_CHUNK);
 		if (end > dataEnd) return nullptr;
 		return end;
 	}
 	sentinelMessage Base;
 	char *Ptr; size_t Size;
-	__device__ unistd_getcwd(char *buf, size_t size) : Base(true, UNISTD_GETCWD, 1024, SENTINELPREPARE(Prepare)), Ptr(buf), Size(size) { sentinelDeviceSend(&Base, sizeof(unistd_getcwd)); }
+	__device__ unistd_getcwd(char *buf, size_t size) : Base(true, UNISTD_GETCWD, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Ptr(buf), Size(size) { sentinelDeviceSend(&Base, sizeof(unistd_getcwd)); }
 	char *RC;
 };
 
@@ -175,7 +175,7 @@ struct unistd_unlink {
 	}
 	sentinelMessage Base;
 	const char *Str;
-	__device__ unistd_unlink(const char *str) : Base(true, UNISTD_UNLINK, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(unistd_unlink)); }
+	__device__ unistd_unlink(const char *str) : Base(true, UNISTD_UNLINK, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(unistd_unlink)); }
 	int RC;
 };
 
@@ -191,7 +191,7 @@ struct unistd_rmdir {
 	}
 	sentinelMessage Base;
 	const char *Str;
-	__device__ unistd_rmdir(const char *str) : Base(true, UNISTD_RMDIR, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(unistd_rmdir)); }
+	__device__ unistd_rmdir(const char *str) : Base(true, UNISTD_RMDIR, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(unistd_rmdir)); }
 	int RC;
 };
 

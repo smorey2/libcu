@@ -52,7 +52,7 @@ struct dirent_opendir {
 	}
 	sentinelMessage Base;
 	const char *Str;
-	__device__ dirent_opendir(const char *str) : Base(true, DIRENT_OPENDIR, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(dirent_opendir)); }
+	__device__ dirent_opendir(const char *str) : Base(true, DIRENT_OPENDIR, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(dirent_opendir)); }
 	DIR *RC;
 };
 
@@ -88,7 +88,7 @@ struct dirent_readdir {
 #endif
 	sentinelMessage Base;
 	DIR *Ptr; bool Bit64;
-	__device__ dirent_readdir(DIR *ptr, bool bit64) : Base(true, DIRENT_READDIR, 1024, nullptr), Ptr(ptr), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(dirent_readdir)); }
+	__device__ dirent_readdir(DIR *ptr, bool bit64) : Base(true, DIRENT_READDIR, SENTINEL_CHUNK, nullptr), Ptr(ptr), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(dirent_readdir)); }
 	struct dirent *RC;
 #ifdef __USE_LARGEFILE64
 	struct dirent64 *RC64;

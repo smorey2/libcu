@@ -55,7 +55,7 @@ struct time_strftime {
 		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
 		char *str = (char *)(data += ROUND8_(sizeof(*t)));
 		char *ptr = (char *)(data += strLength);
-		char *end = (char *)(data += 1024 - strLength);
+		char *end = (char *)(data += SENTINEL_CHUNK - strLength);
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->Str, strLength);
 		if (t->Str) t->Str = str + offset;
@@ -69,7 +69,7 @@ struct time_strftime {
 	}
 	sentinelMessage Base;
 	const char *Buf; size_t Maxsize; const char *Str; const struct tm Tp;
-	__device__ time_strftime(const char *buf, size_t maxsize, const char *str, const struct tm *tp) : Base(true, TIME_STRFTIME, 1024, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Buf(buf), Maxsize(maxsize), Str(str), Tp(*tp) { sentinelDeviceSend(&Base, sizeof(time_strftime)); }
+	__device__ time_strftime(const char *buf, size_t maxsize, const char *str, const struct tm *tp) : Base(true, TIME_STRFTIME, SENTINEL_CHUNK, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Buf(buf), Maxsize(maxsize), Str(str), Tp(*tp) { sentinelDeviceSend(&Base, sizeof(time_strftime)); }
 	size_t RC;
 	void *Ptr;
 };

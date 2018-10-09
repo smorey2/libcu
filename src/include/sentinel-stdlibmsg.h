@@ -58,7 +58,7 @@ struct stdlib_system {
 	}
 	sentinelMessage Base;
 	const char *Str;
-	__device__ stdlib_system(const char *str) : Base(true, STDLIB_SYSTEM, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_system)); }
+	__device__ stdlib_system(const char *str) : Base(true, STDLIB_SYSTEM, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_system)); }
 	int RC;
 };
 
@@ -75,7 +75,7 @@ struct stdlib_getenv {
 	static __forceinline__ __host__ char *HostPrepare(stdlib_getenv *t, char *data, char *dataEnd, intptr_t offset) {
 		if (!t->RC) return data;
 		int ptrLength = t->RC ? (int)strlen(t->RC) + 1 : 0;
-		if (ptrLength > 1024) { ptrLength = 1024; t->RC[ptrLength] = 0; }
+		if (ptrLength > SENTINEL_CHUNK) { ptrLength = SENTINEL_CHUNK; t->RC[ptrLength] = 0; }
 		char *ptr = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += ptrLength);
 		if (end > dataEnd) return nullptr;
@@ -85,7 +85,7 @@ struct stdlib_getenv {
 	}
 	sentinelMessage Base;
 	const char *Str;
-	__device__ stdlib_getenv(const char *str) : Base(true, STDLIB_GETENV, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_getenv)); }
+	__device__ stdlib_getenv(const char *str) : Base(true, STDLIB_GETENV, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_getenv)); }
 	char *RC;
 };
 
@@ -105,7 +105,7 @@ struct stdlib_setenv {
 	}
 	sentinelMessage Base;
 	const char *Str; const char *Str2; int Replace;
-	__device__ stdlib_setenv(const char *str, const char *str2, int replace) : Base(true, STDLIB_SETENV, 1024, SENTINELPREPARE(Prepare)), Str(str), Str2(str2), Replace(replace) { sentinelDeviceSend(&Base, sizeof(stdlib_setenv)); }
+	__device__ stdlib_setenv(const char *str, const char *str2, int replace) : Base(true, STDLIB_SETENV, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), Str2(str2), Replace(replace) { sentinelDeviceSend(&Base, sizeof(stdlib_setenv)); }
 	int RC;
 };
 
@@ -121,7 +121,7 @@ struct stdlib_unsetenv {
 	}
 	sentinelMessage Base;
 	const char *Str;
-	__device__ stdlib_unsetenv(const char *str) : Base(true, STDLIB_UNSETENV, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_unsetenv)); }
+	__device__ stdlib_unsetenv(const char *str) : Base(true, STDLIB_UNSETENV, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_unsetenv)); }
 	int RC;
 };
 
@@ -137,7 +137,7 @@ struct stdlib_mktemp {
 	}
 	sentinelMessage Base;
 	char *Str;
-	__device__ stdlib_mktemp(char *str) : Base(true, STDLIB_MKTEMP, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_mktemp)); }
+	__device__ stdlib_mktemp(char *str) : Base(true, STDLIB_MKTEMP, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_mktemp)); }
 	char *RC;
 };
 
@@ -158,7 +158,7 @@ struct stdlib_mkstemp {
 	}
 	sentinelMessage Base;
 	char *Str;
-	__device__ stdlib_mkstemp(char *str) : Base(true, STDLIB_MKSTEMP, 1024, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_mkstemp)); }
+	__device__ stdlib_mkstemp(char *str) : Base(true, STDLIB_MKSTEMP, SENTINEL_CHUNK, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_mkstemp)); }
 	int RC;
 	void *Ptr;
 };

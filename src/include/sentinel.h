@@ -50,6 +50,7 @@ extern "C" {
 #define SENTINEL_DEVICEMAPS 1
 #define SENTINEL_MSGSIZE 4096
 #define SENTINEL_MSGCOUNT 1
+#define SENTINEL_CHUNK 3000
 
 	struct sentinelMessage {
 		bool Wait;

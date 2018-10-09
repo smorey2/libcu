@@ -119,7 +119,7 @@ static int MainInit(int argc, char *const argv[]) {
 	memset(&h_dataP, 0, sizeof(h_dataP));
 	//cudaErrorCheck(cudaSetDeviceFlags(cudaDeviceMapHost | cudaDeviceLmemResizeToMax));
 	cudaErrorCheck(cudaSetDevice(gpuGetMaxGflopsDevice()));
-	cudaErrorCheck(cudaDeviceSetLimit(cudaLimitStackSize, 1024*5));
+	cudaErrorCheck(cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 5));
 	sentinelServerInitialize();
 	//
 	char **d_argv = cudaDeviceTransferStringArray(argc, argv);

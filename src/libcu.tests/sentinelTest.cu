@@ -27,7 +27,7 @@ struct module_string {
 	}
 	sentinelMessage Base;
 	const char *Str;
-	__device__ module_string(bool wait, const char *str) : Base(wait, MODULE_STRING, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(module_string)); }
+	__device__ module_string(bool wait, const char *str) : Base(wait, MODULE_STRING, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(module_string)); }
 	int RC;
 };
 
