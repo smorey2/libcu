@@ -37,7 +37,7 @@ static __global__ void g_dirent_test1() {
 	DIR *a1a = opendir(HostDir"test"); testReading(a1a); int a1b = closedir(a1a); assert(a1a && !a1b);
 
 	//* Device Absolute */
-	DIR *b0a = opendir(DeviceDir":\\missing"); int b0b = closedir(b0a); assert(!b0a && b0b == -1);
+	DIR *b0a = opendir(DeviceDir"missing"); int b0b = closedir(b0a); assert(!b0a && b0b == -1);
 	mkdir(DeviceDir"test", 0); mkdir(DeviceDir"test\\dir0", 0);
 	DIR *b1a = opendir(DeviceDir"test"); testReading(b1a); int b1b = closedir(b1a); assert(b1a && !b1b);
 

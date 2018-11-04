@@ -88,7 +88,7 @@ struct dirent_readdir {
 #endif
 	sentinelMessage Base;
 	DIR *Ptr; bool Bit64;
-	__device__ dirent_readdir(DIR *ptr, bool bit64) : Base(true, DIRENT_READDIR, SENTINEL_CHUNK, nullptr), Ptr(ptr), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(dirent_readdir)); }
+	__device__ dirent_readdir(DIR *ptr, bool bit64) : Base(true, DIRENT_READDIR, SENTINEL_CHUNK), Ptr(ptr), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(dirent_readdir)); }
 	struct dirent *RC;
 #ifdef __USE_LARGEFILE64
 	struct dirent64 *RC64;
