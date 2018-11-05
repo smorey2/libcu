@@ -199,7 +199,7 @@ struct stdio_ungetc {
 struct stdio_fread {
 	static __forceinline__ __host__ char *HostPrepare(stdio_fread *t, char *data, char *dataEnd, intptr_t offset) {
 		cudaMemcpy(t->Ptr, t->Buf, t->Size * t->Num, cudaMemcpyHostToDevice);
-		free(t->Ptr);
+		free(t->Ptr); t->Ptr = nullptr;
 		return (char *)1;
 	}
 #if 0
