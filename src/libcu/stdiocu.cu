@@ -321,8 +321,8 @@ __device__ int ungetc_(int c, FILE *stream, bool wait) {
 
 /* Read chunks of generic data from STREAM.  */
 __device__ size_t fread_(void *__restrict ptr, size_t size, size_t n, FILE *__restrict stream, bool wait) {
-	//if (ISHOSTFILE(stream)) { stdio_fread msg(wait, ptr, size, n, stream); return msg.RC; }
-	if (ISHOSTFILE(stream)) { size_t rc = 1, remain = size * n; const char *v = (const char *)ptr; while (remain > 0 && rc > 0) { stdio_fread msg(true, (void *)v, 1, remain > SENTINEL_CHUNK ? SENTINEL_CHUNK : remain, stream); rc = msg.RC; remain -= rc; v += rc; } return v - ptr; }
+	if (ISHOSTFILE(stream)) { stdio_fread msg(wait, ptr, size, n, stream); return msg.RC; }
+	//if (ISHOSTFILE(stream)) { size_t rc = 1, remain = size * n; const char *v = (const char *)ptr; while (remain > 0 && rc > 0) { stdio_fread msg(true, (void *)v, 1, remain > SENTINEL_CHUNK ? SENTINEL_CHUNK : remain, stream); rc = msg.RC; remain -= rc; v += rc; } return v - ptr; }
 	register cuFILE *s = (cuFILE *)stream;
 	dirEnt_t *f;
 	if (!s || !(f = (dirEnt_t *)s->_base))

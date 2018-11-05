@@ -89,7 +89,9 @@ bool sentinelDefaultDeviceExecutor(void *tag, sentinelMessage *data, int length,
 	case STDIO_FPUTC: { stdio_fputc *msg = (stdio_fputc *)data; msg->RC = fputc(msg->Ch, msg->File); return true; }
 	case STDIO_FPUTS: { stdio_fputs *msg = (stdio_fputs *)data; msg->RC = fputs(msg->Str, msg->File); return true; }
 	case STDIO_UNGETC: { stdio_ungetc *msg = (stdio_ungetc *)data; msg->RC = ungetc(msg->Ch, msg->File); return true; }
-	case STDIO_FREAD: { stdio_fread *msg = (stdio_fread *)data; msg->RC = fread(msg->Ptr, msg->Size, msg->Num, msg->File); return true; }
+	case STDIO_FREAD: { stdio_fread *msg = (stdio_fread *)data;
+		msg->Ptr = malloc(msg->Size * msg->Num);
+		msg->RC = fread(msg->Ptr, msg->Size, msg->Num, msg->File); *hostPrepare = SENTINELPREPARE(stdio_fread::HostPrepare); return true; }
 	case STDIO_FWRITE: { stdio_fwrite *msg = (stdio_fwrite *)data; msg->RC = fwrite(msg->Ptr, msg->Size, msg->Num, msg->File); return true; }
 	case STDIO_FSEEK: { stdio_fseek *msg = (stdio_fseek *)data; msg->RC = fseek(msg->File, msg->Offset, msg->Origin); return true; }
 	case STDIO_FTELL: { stdio_ftell *msg = (stdio_ftell *)data; msg->RC = ftell(msg->File); return true; }

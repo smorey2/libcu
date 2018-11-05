@@ -33,7 +33,7 @@ cudaError_t unistd_test1();
 #endif
 
 int main(int argc, char **argv) {
-	int testId = argv[1] ? atoi(argv[1]) : 1;
+	int testId = argv[1] ? atoi(argv[1]) : 3;
 
 	// Choose which GPU to run on, change this on a multi-GPU system.
 	cudaError_t cudaStatus = cudaSetDevice(gpuGetMaxGflopsDevice());
@@ -50,9 +50,9 @@ int main(int argc, char **argv) {
 	case 0: mainPause("Press any key to continue."); break;
 	case 1: cudaStatus = crtdefs_test1(); break;
 	case 2: cudaStatus = ctype_test1(); break;
-	case 3: cudaStatus = dirent_test1(); break;
+	case 3: cudaStatus = dirent_test1(); break; //err
 	case 4: cudaStatus = errno_test1(); break;
-	case 5: cudaStatus = fcntl_test1(); break;
+	case 5: cudaStatus = fcntl_test1(); break; //err
 	case 6: cudaStatus = grp_test1(); break;
 	case 7: cudaStatus = pwd_test1(); break;
 	case 8: cudaStatus = regex_test1(); break;

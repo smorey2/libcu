@@ -197,6 +197,12 @@ struct stdio_ungetc {
 };
 
 struct stdio_fread {
+	static __forceinline__ __host__ char *HostPrepare(stdio_fread *t, char *data, char *dataEnd, intptr_t offset) {
+		cudaMemcpy(t->Ptr, t->Buf, t->Size * t->Num, cudaMemcpyHostToDevice);
+		free(t->Ptr);
+		return (char *)1;
+	}
+#if 0
 	static __forceinline__ __device__ char *Prepare(stdio_fread *t, char *data, char *dataEnd, intptr_t offset) {
 		char *ptr = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += SENTINEL_CHUNK);
@@ -209,9 +215,14 @@ struct stdio_fread {
 		if (t->RC > 0) memcpy(t->Buf, ptr, t->Size * t->RC);
 		return true;
 	}
+#endif
 	sentinelMessage Base;
 	void *Buf; size_t Size; size_t Num; FILE *File;
+#if 0
 	__device__ stdio_fread(bool wait, void *buf, size_t size, size_t num, FILE *file) : Base(wait, STDIO_FREAD, SENTINEL_CHUNK, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Buf(buf), Size(size), Num(num), File(file) { sentinelDeviceSend(&Base, sizeof(stdio_fread)); }
+#else
+	__device__ stdio_fread(bool wait, void *buf, size_t size, size_t num, FILE *file) : Base(wait, STDIO_FREAD, SENTINEL_CHUNK), Buf(buf), Size(size), Num(num), File(file) { sentinelDeviceSend(&Base, sizeof(stdio_fread)); }
+#endif
 	size_t RC;
 	void *Ptr;
 };
