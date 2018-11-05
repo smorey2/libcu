@@ -45,20 +45,20 @@
  * express or implied warranty.
  */
 
-#include <stdlib.h>
-#include <string.h>
+#include <stdlibcu.h>
+#include <stringcu.h>
 
 #include "jimautoconf.h"
 #if defined(JIM_REGEXP)
     #include "jimregexp.h"
 #else
-    #include <regex.h>
+    #include <regexcu.h>
 #endif
 #include "jim.h"
 
 static __device__ void FreeRegexpInternalRep(Jim_Interp *interp, Jim_Obj *objPtr)
 {
-    regfree(objPtr->internalRep.ptrIntValue.ptr);
+    regfree((regex_t *)objPtr->internalRep.ptrIntValue.ptr);
     Jim_Free(objPtr->internalRep.ptrIntValue.ptr);
 }
 
@@ -84,14 +84,14 @@ static __device__ regex_t *SetRegexpFromAny(Jim_Interp *interp, Jim_Obj *objPtr,
     if (objPtr->typePtr == &regexpObjType &&
         objPtr->internalRep.ptrIntValue.ptr && objPtr->internalRep.ptrIntValue.int1 == flags) {
         /* nothing to do */
-        return objPtr->internalRep.ptrIntValue.ptr;
+        return (regex_t *)objPtr->internalRep.ptrIntValue.ptr;
     }
 
     /* Not a regexp or the flags do not match */
 
     /* Get the string representation */
     pattern = Jim_String(objPtr);
-    compre = Jim_Alloc(sizeof(regex_t));
+    compre = (regex_t *)Jim_Alloc(sizeof(regex_t));
 
     if ((ret = regcomp(compre, pattern, REG_EXTENDED | flags)) != 0) {
         char buf[100];
@@ -213,7 +213,7 @@ __device__ int Jim_RegexpCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
         num_vars = regex->re_nsub + 1;
     }
 
-    pmatch = Jim_Alloc((num_vars + 1) * sizeof(*pmatch));
+    pmatch = (regmatch_t *)Jim_Alloc((num_vars + 1) * sizeof(*pmatch));
 
     /* If an offset has been specified, adjust for that now.
      * If it points past the end of the string, point to the terminating null

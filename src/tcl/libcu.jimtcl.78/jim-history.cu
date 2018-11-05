@@ -41,7 +41,7 @@ static __device__ int history_cmd_setcompletion(Jim_Interp *interp, int argc, Ji
     return JIM_OK;
 }
 
-static int history_cmd_load(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __device__ int history_cmd_load(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     Jim_HistoryLoad(Jim_String(argv[0]));
     return JIM_OK;
@@ -127,7 +127,7 @@ __device__ int Jim_historyInit(Jim_Interp *interp)
     if (Jim_PackageProvide(interp, "history", "1.0", JIM_ERRMSG))
         return JIM_ERR;
 
-    history = Jim_Alloc(sizeof(*history));
+    history = (void **)Jim_Alloc(sizeof(*history));
     *history = NULL;
 
     Jim_CreateCommand(interp, "history", JimHistorySubCmdProc, history, JimHistoryDelProc);

@@ -44,22 +44,22 @@
  */
 
 #include <limits.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <errno.h>
-#include <sys/stat.h>
+#include <stdlibcu.h>
+#include <stringcu.h>
+#include <stdiocu.h>
+#include <errnocu.h>
+#include <sys/statcu.h>
 
 #include <jimautoconf.h>
 #include <jim-subcmd.h>
 
 #ifdef HAVE_UTIMES
-#include <sys/time.h>
+#include <sys/timecu.h>
 #endif
 #ifdef HAVE_UNISTD_H
-#include <unistd.h>
+#include <unistdcu.h>
 #elif defined(_MSC_VER)
-#include <direct.h>
+#include <directcu.h>
 #define F_OK 0
 #define W_OK 2
 #define R_OK 4
@@ -205,7 +205,7 @@ static __device__ int StoreStatData(Jim_Interp *interp, Jim_Obj *varName, const 
     return JIM_OK;
 }
 
-static int file_cmd_dirname(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __device__ int file_cmd_dirname(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     const char *path = Jim_String(argv[0]);
     const char *p = strrchr(path, '/');
@@ -243,7 +243,7 @@ static __device__ int file_cmd_rootname(Jim_Interp *interp, int argc, Jim_Obj *c
     return JIM_OK;
 }
 
-static int file_cmd_extension(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __device__ int file_cmd_extension(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     const char *path = Jim_String(argv[0]);
     const char *lastSlash = strrchr(path, '/');
@@ -256,7 +256,7 @@ static int file_cmd_extension(Jim_Interp *interp, int argc, Jim_Obj *const *argv
     return JIM_OK;
 }
 
-static int file_cmd_tail(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __device__ int file_cmd_tail(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     const char *path = Jim_String(argv[0]);
     const char *lastSlash = strrchr(path, '/');
@@ -294,7 +294,7 @@ static __device__ int file_cmd_normalize(Jim_Interp *interp, int argc, Jim_Obj *
 static __device__ int file_cmd_join(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     int i;
-    char *newname = Jim_Alloc(MAXPATHLEN + 1);
+    char *newname = (char *)Jim_Alloc(MAXPATHLEN + 1);
     char *last = newname;
 
     *newname = 0;
@@ -356,19 +356,19 @@ static __device__ int file_cmd_join(Jim_Interp *interp, int argc, Jim_Obj *const
     return JIM_OK;
 }
 
-static int file_access(Jim_Interp *interp, Jim_Obj *filename, int mode)
+static __device__ int file_access(Jim_Interp *interp, Jim_Obj *filename, int mode)
 {
     Jim_SetResultBool(interp, access(Jim_String(filename), mode) != -1);
 
     return JIM_OK;
 }
 
-static int file_cmd_readable(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __device__ int file_cmd_readable(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     return file_access(interp, argv[0], R_OK);
 }
 
-static int file_cmd_writable(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __device__ int file_cmd_writable(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     return file_access(interp, argv[0], W_OK);
 }
@@ -389,7 +389,7 @@ static __device__ int file_cmd_exists(Jim_Interp *interp, int argc, Jim_Obj *con
     return file_access(interp, argv[0], F_OK);
 }
 
-static int file_cmd_delete(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __device__ int file_cmd_delete(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     int force = Jim_CompareStringImmediate(interp, argv[0], "-force");
 
@@ -490,7 +490,7 @@ static __device__ int file_cmd_mkdir(Jim_Interp *interp, int argc, Jim_Obj *cons
     return JIM_OK;
 }
 
-static int file_cmd_tempfile(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __device__ int file_cmd_tempfile(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     int fd = Jim_MakeTempFile(interp, (argc >= 1) ? Jim_String(argv[0]) : NULL, 0);
 
@@ -647,7 +647,7 @@ static __device__ int file_cmd_copy(Jim_Interp *interp, int argc, Jim_Obj *const
     return Jim_EvalPrefix(interp, "file copy", argc, argv);
 }
 
-static int file_cmd_size(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __device__ int file_cmd_size(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     struct stat sb;
 
@@ -965,7 +965,7 @@ static __device__ int Jim_CdCmd(Jim_Interp *interp, int argc, Jim_Obj *const *ar
 
 static __device__ int Jim_PwdCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
-    char *cwd = Jim_Alloc(MAXPATHLEN);
+    char *cwd = (char *)Jim_Alloc(MAXPATHLEN);
 
     if (getcwd(cwd, MAXPATHLEN) == NULL) {
         Jim_SetResultString(interp, "Failed to get pwd", -1);

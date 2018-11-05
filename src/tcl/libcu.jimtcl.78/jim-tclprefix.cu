@@ -97,7 +97,7 @@ static __device__ int Jim_TclPrefixCoreCommand(Jim_Interp *interp, int argc, Jim
             }
             /* Do the match */
             tablesize = Jim_ListLength(interp, tableObj);
-            table = Jim_Alloc((tablesize + 1) * sizeof(*table));
+            table = (const char **)Jim_Alloc((tablesize + 1) * sizeof(*table));
             for (i = 0; i < tablesize; i++) {
                 Jim_ListIndex(interp, tableObj, i, &objPtr, JIM_NONE);
                 table[i] = Jim_String(objPtr);

@@ -1,4 +1,4 @@
-#include <string.h>
+#include <stringcu.h>
 #include <jim.h>
 
 /* Provides the [pack] and [unpack] commands to pack and unpack

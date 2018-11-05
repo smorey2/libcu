@@ -1,4 +1,4 @@
-#include <string.h>
+#include <stringcu.h>
 
 #include "jimautoconf.h"
 #include <jim.h>
@@ -27,7 +27,7 @@ static void JimFreeLoadHandles(Jim_Interp *interp, void *data);
  *
  * If it is necessary to search JIM_LIBPATH, use Jim_PackageRequire() instead.
  */
-int Jim_LoadLibrary(Jim_Interp *interp, const char *pathName)
+__int Jim_LoadLibrary(Jim_Interp *interp, const char *pathName)
 {
     void *handle = dlopen(pathName, RTLD_NOW | RTLD_LOCAL);
     if (handle == NULL) {
@@ -104,7 +104,7 @@ static void JimFreeLoadHandles(Jim_Interp *interp, void *data)
 }
 
 #else /* JIM_DYNLIB */
-int Jim_LoadLibrary(Jim_Interp *interp, const char *pathName)
+__device__ int Jim_LoadLibrary(Jim_Interp *interp, const char *pathName)
 {
     JIM_NOTUSED(interp);
     JIM_NOTUSED(pathName);
@@ -113,13 +113,13 @@ int Jim_LoadLibrary(Jim_Interp *interp, const char *pathName)
     return JIM_ERR;
 }
 
-void Jim_FreeLoadHandles(Jim_Interp *interp)
+__device__ void Jim_FreeLoadHandles(Jim_Interp *interp)
 {
 }
 #endif /* JIM_DYNLIB */
 
 /* [load] */
-static int Jim_LoadCoreCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __device__ int Jim_LoadCoreCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     if (argc < 2) {
         Jim_WrongNumArgs(interp, 1, argv, "libraryFile");
@@ -128,7 +128,7 @@ static int Jim_LoadCoreCommand(Jim_Interp *interp, int argc, Jim_Obj *const *arg
     return Jim_LoadLibrary(interp, Jim_String(argv[1]));
 }
 
-int Jim_loadInit(Jim_Interp *interp)
+__device__ int Jim_loadInit(Jim_Interp *interp)
 {
     Jim_CreateCommand(interp, "load", Jim_LoadCoreCommand, NULL, NULL);
     return JIM_OK;

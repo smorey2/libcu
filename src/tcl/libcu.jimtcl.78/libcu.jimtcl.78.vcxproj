@@ -28,43 +28,81 @@
     <ClInclude Include="jimautoconf.h" />
     <ClInclude Include="jim-config.h" />
     <ClInclude Include="jim-eventloop.h" />
-    <ClInclude Include="jim-signal.h" />
     <ClInclude Include="jim-subcmd.h" />
-    <ClInclude Include="jim-win32compat.h" />
-    <ClInclude Include="jimex.h" />
+    <ClInclude Include="jim-gpucompat.h" />
+    <ClInclude Include="jimiocompat.h" />
     <ClInclude Include="utf8.h" />
   </ItemGroup>
   <ItemGroup Condition="'$(CUARCH)'!='cpu'">
-    <CudaCompile Include="libcu.jimtcl.cu" />
-    <CudaCompile Include="jim.cu" />
-    <None Include="jim-aio.cu" />
-    <None Include="jim-array.cu" />
-    <None Include="jim-clock.cu" />
-    <None Include="jim-eventloop.cu" />
-    <None Include="jim-exec.cu" />
-    <None Include="jim-file.cu" />
-    <None Include="jim-format.cu" />
-    <None Include="jim-gpu.cu" />
-    <None Include="jim-history.cu" />
-    <None Include="jim-interactive.cu" />
-    <None Include="jim-load.cu" />
-    <None Include="jim-namespace.cu" />
-    <None Include="jim-pack.cu" />
-    <None Include="jim-package.cu" />
-    <None Include="jim-posix.cu" />
-    <None Include="jim-readdir.cu" />
-    <None Include="jim-readline.cu" />
-    <None Include="jim-regexp.cu" />
-    <None Include="jim-sdl.cu" />
-    <None Include="jim-signal.cu" />
-    <None Include="jim-sqlite3.cu" />
-    <None Include="jim-subcmd.cu" />
-    <None Include="jim-syslog.cu" />
-    <None Include="jim-tclprefix.cu" />
-    <None Include="jim-win32compat.cu" />
-    <None Include="jimex.cu" />
-    <None Include="init.cu" />
-    <None Include="utf8.cu" />
+    <CudaCompile Include="libcu.jimtcl.78.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
+    <CudaCompile Include="jim.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
+    <None Include="jim-aio.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="jim-array.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="jim-clock.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="jim-eventloop.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="jim-exec.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="jim-file.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="jim-format.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="jim-gpu.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="jim-history.cu">
+      <FileType>Document</FileType>
+    </None>
+    <CudaCompile Include="jim-interactive.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
+    <None Include="jim-load.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="jim-namespace.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="jim-pack.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="jim-package.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="jim-readdir.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="jim-regexp.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="jim-subcmd.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="jim-tclprefix.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="jim-gpucompat.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="init.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="utf8.cu">
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <ItemGroup Condition="'$(CUARCH)'=='cpu'">
     <None Include="libcu.jimtcl.cu" />
@@ -113,14 +151,20 @@
   <ItemGroup>
     <None Include="libcu.jimtcl.native.nuspec" />
     <None Include="libcu.jimtcl.native.targets" />
-    <None Include="_content\sample.libcu.jimtcl.cu" />
-    <None Include="_content\tclcontext.cu" />
-    <None Include="_content\tclcontext.cu.h" />
+    <None Include="_content\sample.libcu.jimtcl.78.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="jim-interp.cu">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="jimiocompat.cu">
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{602F49D0-3A63-459E-AD6D-81CF59C44A3A}</ProjectGuid>
+    <ProjectGuid>{35A3CE06-F4C1-46F8-8EDF-03BDFB3D6CEE}</ProjectGuid>
     <RootNamespace>libcu</RootNamespace>
-    <ProjectName>libcu.jimtcl</ProjectName>
+    <ProjectName>libcu.jimtcl.78</ProjectName>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -185,7 +229,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;jim_ext_aio;jim_ext_namespace;jim_ext_package;JIM_MAINTAINER;JIM_REFERENCES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)include;$(CudaToolkitIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -195,7 +239,7 @@
       <AdditionalLibraryDirectories>$(OutDir);$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command Condition="'$(CUARCH)'!='cpu'">"$(CudaToolkitBinDir)\nvcc.exe" -m=32 -arch=sm_$(CUARCH) -lib "$(IntDir)jim.cu.obj" "$(IntDir)libcu.jimtcl.cu.obj" -o "$(OutDir)libcu.jimtcl.$(CUARCH).lib"</Command>
+      <Command Condition="'$(CUARCH)'!='cpu'">"$(CudaToolkitBinDir)\nvcc.exe" -m=32 -arch=sm_$(CUARCH) -lib "$(IntDir)jim.cu.obj" "$(IntDir)libcu.jimtcl.78.cu.obj" -o "$(OutDir)libcu.jimtcl.78.$(CUARCH).lib"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <Include>$(SolutionDir)include;%(Include)</Include>
@@ -208,8 +252,8 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;WIN64;_DEBUG;_LIB;jim_ext_aio;jim_ext_namespace;jim_ext_package;JIM_MAINTAINER;JIM_REFERENCES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;$(CudaToolkitIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;WIN64;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(ProjectDir);$(CudaToolkitIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -218,10 +262,10 @@
       <AdditionalLibraryDirectories>$(OutDir);$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command Condition="'$(CUARCH)'!='cpu'">"$(CudaToolkitBinDir)\nvcc.exe" -m=64 -arch=sm_$(CUARCH) -lib "$(IntDir)jim.cu.obj" "$(IntDir)libcu.jimtcl.cu.obj" -o "$(OutDir)libcu.jimtcl.$(CUARCH).lib"</Command>
+      <Command Condition="'$(CUARCH)'!='cpu'">"$(CudaToolkitBinDir)\nvcc.exe" -m=64 -arch=sm_$(CUARCH) -lib "$(IntDir)jim.cu.obj" "$(IntDir)libcu.jimtcl.78.cu.obj" -o "$(OutDir)libcu.jimtcl.78.$(CUARCH).lib"</Command>
     </PostBuildEvent>
     <CudaCompile>
-      <Include>$(SolutionDir)include;%(Include)</Include>
+      <Include>$(SolutionDir)include;$(ProjectDir);%(Include)</Include>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CodeGeneration>compute_$(CUARCH),sm_$(CUARCH)</CodeGeneration>
@@ -234,7 +278,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;jim_ext_aio;jim_ext_namespace;jim_ext_package;JIM_MAINTAINER;JIM_REFERENCES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -246,7 +290,7 @@
       <AdditionalLibraryDirectories>$(OutDir);$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command Condition="'$(CUARCH)'!='cpu'">"$(CudaToolkitBinDir)\nvcc.exe" -m=32 -arch=sm_$(CUARCH) -lib "$(IntDir)jim.cu.obj" "$(IntDir)libcu.jimtcl.cu.obj" -o "$(OutDir)libcu.jimtcl.$(CUARCH).lib"</Command>
+      <Command Condition="'$(CUARCH)'!='cpu'">"$(CudaToolkitBinDir)\nvcc.exe" -m=32 -arch=sm_$(CUARCH) -lib "$(IntDir)jim.cu.obj" "$(IntDir)libcu.jimtcl.78.cu.obj" -o "$(OutDir)libcu.jimtcl.78.$(CUARCH).lib"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <Include>$(SolutionDir)include;%(Include)</Include>
@@ -261,7 +305,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_LIB;jim_ext_aio;jim_ext_namespace;jim_ext_package;JIM_MAINTAINER;JIM_REFERENCES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -273,7 +317,7 @@
       <AdditionalLibraryDirectories>$(OutDir);$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command Condition="'$(CUARCH)'!='cpu'">"$(CudaToolkitBinDir)\nvcc.exe" -m=64 -arch=sm_$(CUARCH) -lib "$(IntDir)jim.cu.obj" "$(IntDir)libcu.jimtcl.cu.obj" -o "$(OutDir)libcu.jimtcl.$(CUARCH).lib"</Command>
+      <Command Condition="'$(CUARCH)'!='cpu'">"$(CudaToolkitBinDir)\nvcc.exe" -m=64 -arch=sm_$(CUARCH) -lib "$(IntDir)jim.cu.obj" "$(IntDir)libcu.jimtcl.78.cu.obj" -o "$(OutDir)libcu.jimtcl.78.$(CUARCH).lib"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <Include>$(SolutionDir)include;%(Include)</Include>

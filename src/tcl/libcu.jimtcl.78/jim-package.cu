@@ -1,10 +1,10 @@
-#include <string.h>
+#include <stringcu.h>
 
 #include "jimautoconf.h"
 #include <jim-subcmd.h>
 
 #ifdef HAVE_UNISTD_H
-#include <unistd.h>
+#include <unistdcu.h>
 #else
 #define R_OK 4
 #endif
@@ -41,7 +41,7 @@ __device__ int Jim_PackageProvide(Jim_Interp *interp, const char *name, const ch
 static __device__ char *JimFindPackage(Jim_Interp *interp, Jim_Obj *prefixListObj, const char *pkgName)
 {
     int i;
-    char *buf = Jim_Alloc(JIM_PATH_LEN);
+    char *buf = (char *)Jim_Alloc(JIM_PATH_LEN);
     int prefixc = Jim_ListLength(interp, prefixListObj);
 
     for (i = 0; i < prefixc; i++) {
@@ -143,7 +143,7 @@ __device__ int Jim_PackageRequire(Jim_Interp *interp, const char *name, int flag
         he = Jim_FindHashEntry(&interp->packages, name);
     }
 
-    Jim_SetResultString(interp, he->u.val, -1);
+    Jim_SetResultString(interp, (const char *)he->u.val, -1);
     return JIM_OK;
 }
 
@@ -207,7 +207,7 @@ static __device__ int package_cmd_list(Jim_Interp *interp, int argc, Jim_Obj *co
 
     htiter = Jim_GetHashTableIterator(&interp->packages);
     while ((he = Jim_NextHashEntry(htiter)) != NULL) {
-        Jim_ListAppendElement(interp, listObjPtr, Jim_NewStringObj(interp, he->key, -1));
+        Jim_ListAppendElement(interp, listObjPtr, Jim_NewStringObj(interp, (const char *)he->key, -1));
     }
     Jim_FreeHashTableIterator(htiter);
 

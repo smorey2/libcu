@@ -44,9 +44,9 @@
  */
 
 #include <limits.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+#include <stdlibcu.h>
+#include <stringcu.h>
+#include <stdiocu.h>
 #include <assert.h>
 
 #include "jim.h"

@@ -5,15 +5,15 @@
  * (c) 2008 Steve Bennett <steveb@workware.net.au>
  *
  */
-#include <stdio.h>
-#include <string.h>
+#include <stdiocu.h>
+#include <stringcu.h>
 
 #include <jim-subcmd.h>
 
 /**
  * Implements the common 'commands' subcommand
  */
-static int subcmd_null(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __device__ int subcmd_null(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     /* Nothing to do, since the result has already been created */
     return JIM_OK;
@@ -196,7 +196,7 @@ found:
     return ct;
 }
 
-int Jim_CallSubCmd(Jim_Interp *interp, const jim_subcmd_type * ct, int argc, Jim_Obj *const *argv)
+__device__ int Jim_CallSubCmd(Jim_Interp *interp, const jim_subcmd_type * ct, int argc, Jim_Obj *const *argv)
 {
     int ret = JIM_ERR;
 

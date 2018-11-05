@@ -44,15 +44,15 @@
  *-----------------------------------------------------------------------------
  */
 
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
+#include <errnocu.h>
+#include <stdiocu.h>
+#include <stringcu.h>
 
 #include <jim.h>
 #include <jimautoconf.h>
 
 #ifdef HAVE_DIRENT_H
-#include <dirent.h>
+#include <direntcu.h>
 #endif
 
 /*
