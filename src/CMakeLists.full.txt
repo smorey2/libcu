@@ -11,6 +11,7 @@ include_directories(include ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
 # CORE
 add_library(libcu.${arch} STATIC
+  libcu/jumbo.cpp
   libcu/sentinel-msg.cpp
   libcu/sentinel.cpp
   libcu/cuda_runtime.cpp

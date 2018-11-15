@@ -48,9 +48,9 @@ extern "C" {
 #define SENTINEL_NAME "Sentinel" //"Global\\Sentinel"
 #define SENTINEL_MAGIC (unsigned short)0xC811
 #define SENTINEL_DEVICEMAPS 1
-#define SENTINEL_MSGSIZE 4096
-#define SENTINEL_MSGCOUNT 1
-#define SENTINEL_CHUNK 3000
+#define SENTINEL_MSGSIZE 5120
+#define SENTINEL_MSGCOUNT 5
+#define SENTINEL_CHUNK 4096
 
 	struct sentinelMessage {
 		bool Wait;

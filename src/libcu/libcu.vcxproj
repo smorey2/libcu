@@ -33,6 +33,7 @@
     <ClInclude Include="..\include\ext\pipeline.h" />
     <ClInclude Include="..\include\fcntlcu.h" />
     <ClInclude Include="..\include\grpcu.h" />
+    <ClInclude Include="..\include\jumbo.h" />
     <ClInclude Include="..\include\pwdcu.h" />
     <ClInclude Include="..\include\sentinel-direntmsg.h" />
     <ClInclude Include="..\include\sentinel-fcntlmsg.h" />
@@ -64,6 +65,7 @@
   <ItemGroup>
     <None Include="..\include\sentinel-client.cpp" />
     <None Include="..\include\ext\pipeline.cpp" />
+    <ClCompile Include="jumbo.cpp" />
     <ClCompile Include="sentinel-msg.cpp" />
     <ClCompile Include="sentinel.cpp" />
     <ClCompile Include="cuda_runtime.cpp" />
@@ -80,6 +82,7 @@
     <None Include="locale\none.cu" />
     <None Include="locale\utf8.cu" />
     <None Include="locale\xlocale.cu" />
+    <CudaCompile Include="jumbo-gpu.cu" />
     <CudaCompile Include="program.cu" />
     <CudaCompile Include="libcu.cu" />
     <CudaCompile Include="libcu.stdlib.cu" />
@@ -178,7 +181,7 @@
       <AdditionalDependencies>cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>"$(CudaToolkitBinDir)\nvcc.exe" -m=32 -arch=sm_$(CUARCH) -lib "$(IntDir)stringcu.cu.obj" "$(IntDir)libcu.cu.obj" "$(IntDir)libcu.stdlib.cu.obj" "$(IntDir)cuda_runtime.obj" "$(IntDir)sentinel.obj" "$(IntDir)sentinel-msg.obj" -o "$(OutDir)libcu.$(CUARCH).lib"</Command>
+      <Command>"$(CudaToolkitBinDir)\nvcc.exe" -m=32 -arch=sm_$(CUARCH) -lib "$(IntDir)stringcu.cu.obj" "$(IntDir)libcu.cu.obj" "$(IntDir)libcu.stdlib.cu.obj" "$(IntDir)cuda_runtime.obj" "$(IntDir)jumbo.obj" "$(IntDir)sentinel.obj" "$(IntDir)sentinel-msg.obj" -o "$(OutDir)libcu.$(CUARCH).lib"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <Include>$(SolutionDir)include;%(Include)</Include>
@@ -201,7 +204,7 @@
       <AdditionalDependencies>cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>"$(CudaToolkitBinDir)\nvcc.exe" -m=64 -arch=sm_$(CUARCH) -lib "$(IntDir)stringcu.cu.obj" "$(IntDir)libcu.cu.obj" "$(IntDir)libcu.stdlib.cu.obj" "$(IntDir)cuda_runtime.obj" "$(IntDir)sentinel.obj" "$(IntDir)sentinel-msg.obj" -o "$(OutDir)libcu.$(CUARCH).lib"</Command>
+      <Command>"$(CudaToolkitBinDir)\nvcc.exe" -m=64 -arch=sm_$(CUARCH) -lib "$(IntDir)stringcu.cu.obj" "$(IntDir)libcu.cu.obj" "$(IntDir)libcu.stdlib.cu.obj" "$(IntDir)cuda_runtime.obj" "$(IntDir)jumbo.obj" "$(IntDir)sentinel.obj" "$(IntDir)sentinel-msg.obj" -o "$(OutDir)libcu.$(CUARCH).lib"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <Include>$(SolutionDir)include;%(Include)</Include>
@@ -229,7 +232,7 @@
       <AdditionalDependencies>cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>"$(CudaToolkitBinDir)\nvcc.exe" -m=32 -arch=sm_$(CUARCH) -lib "$(IntDir)stringcu.cu.obj" "$(IntDir)libcu.cu.obj" "$(IntDir)libcu.stdlib.cu.obj" "$(IntDir)cuda_runtime.obj" "$(IntDir)sentinel.obj" "$(IntDir)sentinel-msg.obj" -o "$(OutDir)libcu.$(CUARCH).lib"</Command>
+      <Command>"$(CudaToolkitBinDir)\nvcc.exe" -m=32 -arch=sm_$(CUARCH) -lib "$(IntDir)stringcu.cu.obj" "$(IntDir)libcu.cu.obj" "$(IntDir)libcu.stdlib.cu.obj" "$(IntDir)cuda_runtime.obj" "$(IntDir)jumbo.obj" "$(IntDir)sentinel.obj" "$(IntDir)sentinel-msg.obj" -o "$(OutDir)libcu.$(CUARCH).lib"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <Include>$(SolutionDir)include;%(Include)</Include>
@@ -256,7 +259,7 @@
       <AdditionalDependencies>cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>"$(CudaToolkitBinDir)\nvcc.exe" -m=64 -arch=sm_$(CUARCH) -lib "$(IntDir)stringcu.cu.obj" "$(IntDir)libcu.cu.obj" "$(IntDir)libcu.stdlib.cu.obj" "$(IntDir)cuda_runtime.obj" "$(IntDir)sentinel.obj" "$(IntDir)sentinel-msg.obj" -o "$(OutDir)libcu.$(CUARCH).lib"</Command>
+      <Command>"$(CudaToolkitBinDir)\nvcc.exe" -m=64 -arch=sm_$(CUARCH) -lib "$(IntDir)stringcu.cu.obj" "$(IntDir)libcu.cu.obj" "$(IntDir)libcu.stdlib.cu.obj" "$(IntDir)cuda_runtime.obj" "$(IntDir)jumbo.obj" "$(IntDir)sentinel.obj" "$(IntDir)sentinel-msg.obj" -o "$(OutDir)libcu.$(CUARCH).lib"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <Include>$(SolutionDir)include;%(Include)</Include>

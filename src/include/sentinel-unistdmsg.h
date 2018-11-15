@@ -89,8 +89,8 @@ struct unistd_read {
 		return true;
 	}
 	sentinelMessage Base;
-	int Handle; void *Buf; size_t Size;
-	__device__ unistd_read(bool wait, int fd, void *buf, size_t nbytes) : Base(wait, UNISTD_READ, SENTINEL_CHUNK, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Handle(fd), Buf(buf), Size(nbytes) { sentinelDeviceSend(&Base, sizeof(unistd_read)); }
+	int Handle; void *Buf; size_t Size; bool Jumbo;
+	__device__ unistd_read(bool wait, int fd, void *buf, size_t size) : Base(wait, UNISTD_READ, SENTINEL_CHUNK, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Handle(fd), Buf(buf), Size(size), Jumbo(size > SENTINEL_CHUNK) { sentinelDeviceSend(&Base, sizeof(unistd_read)); }
 	size_t RC;
 	void *Ptr;
 };
@@ -106,8 +106,8 @@ struct unistd_write {
 		return end;
 	}
 	sentinelMessage Base;
-	int Handle; const void *Ptr; size_t Size;
-	__device__ unistd_write(bool wait, int fd, const void *ptr, size_t n) : Base(wait, UNISTD_WRITE, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Handle(fd), Ptr(ptr), Size(n) { sentinelDeviceSend(&Base, sizeof(unistd_write)); }
+	int Handle; const void *Ptr; size_t Size; bool Jumbo;
+	__device__ unistd_write(bool wait, int fd, const void *ptr, size_t size) : Base(wait, UNISTD_WRITE, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Handle(fd), Ptr(ptr), Size(size), Jumbo(size > SENTINEL_CHUNK) { sentinelDeviceSend(&Base, sizeof(unistd_write)); }
 	size_t RC;
 };
 

@@ -265,13 +265,9 @@ __device__ int vfprintf_(FILE *__restrict s, const char *__restrict format, va_l
 	strbldInit(&b, nullptr, base, sizeof(base), LIBCU_MAXLENGTH);
 	strbldAppendFormatv(&b, format, va);
 	const char *v = strbldToString(&b);
-	int size = b.index + 1;
-	// chunk results
-	int rc = 1, offset = 0;
-	if (!ISHOSTFILE(s)) { rc = fwrite_(v, 1, size, s); offset = size; } //while (size > 0 && rc > 0) { rc = fwrite_(v + offset, 1, size > 4096 ? 4096 : size, s); size -= 4096; offset += rc; }
-	else while (size > 0 && rc > 0) { stdio_fwrite msg(true, v + offset, 1, size > SENTINEL_CHUNK ? SENTINEL_CHUNK : size, s); rc = msg.RC; size -= SENTINEL_CHUNK; offset += rc; }
+	int rc = fwrite_(v, 1, b.index + 1, s);
 	free((void *)v);
-	return offset - 1; // remove null termination, returns number of characters written
+	return rc - 1; // remove null termination, returns number of characters written
 }
 #endif
 
@@ -292,23 +288,37 @@ __device__ int fgetc_(FILE *stream) {
 /* Write a character to STREAM.  */
 __device__ int fputc_(int c, FILE *stream, bool wait) {
 	if (ISHOSTFILE(stream)) { stdio_fputc msg(wait, c, stream); return msg.RC; }
-	if (stream == stdout || stream == stderr)
+	if (stream == stdout || stream == stderr) {
 		printf("%c", c);
+		return 0;
+	}
+	panic("Not Implemented");
 	return 0;
 }
 
 /* Get a newline-terminated string of finite length from STREAM.  */
 __device__ char *fgets_(char *__restrict s, int n, FILE *__restrict stream) {
-	if (ISHOSTFILE(stream)) { stdio_fgets msg(s, n, stream); return msg.RC; }
+	if (ISHOSTFILE(stream)) {
+#ifndef _NOJUMBO
+		stdio_fgets msg(s, n, stream); return msg.RC;
+#endif
+	}
 	panic("Not Implemented");
 	return nullptr;
 }
 
 /* Write a string to STREAM.  */
 __device__ int fputs_(const char *__restrict s, FILE *__restrict stream, bool wait) {
-	if (ISHOSTFILE(stream)) { stdio_fputs msg(wait, s, stream); return msg.RC; }
-	if (stream == stdout || stream == stderr)
+	if (ISHOSTFILE(stream)) {
+#ifndef _NOJUMBO
+		stdio_fputs msg(wait, s, stream); return msg.RC;
+#endif
+	}
+	if (stream == stdout || stream == stderr) {
 		printf(s);
+		return 0;
+	}
+	panic("Not Implemented");
 	return 0;
 }
 
@@ -321,14 +331,23 @@ __device__ int ungetc_(int c, FILE *stream, bool wait) {
 
 /* Read chunks of generic data from STREAM.  */
 __device__ size_t fread_(void *__restrict ptr, size_t size, size_t n, FILE *__restrict stream, bool wait) {
-	if (ISHOSTFILE(stream)) { stdio_fread msg(wait, ptr, size, n, stream); return msg.RC; }
-	//if (ISHOSTFILE(stream)) { size_t rc = 1, remain = size * n; const char *v = (const char *)ptr; while (remain > 0 && rc > 0) { stdio_fread msg(true, (void *)v, 1, remain > SENTINEL_CHUNK ? SENTINEL_CHUNK : remain, stream); rc = msg.RC; remain -= rc; v += rc; } return v - ptr; }
+	if (ISHOSTFILE(stream)) {
+#ifndef _NOJUMBO
+		stdio_fread msg(wait, ptr, size, n, stream); return msg.RC;
+#else
+		size_t rc = 1; size *= n; const char *v = (const char *)ptr;
+		while (size > 0 && rc > 0) {
+			stdio_fread msg(true, (void *)v, 1, size > SENTINEL_CHUNK ? SENTINEL_CHUNK : size, stream); rc = msg.RC; size -= rc; v += rc;
+		}
+		return v - ptr;
+#endif
+	}
 	register cuFILE *s = (cuFILE *)stream;
 	dirEnt_t *f;
 	if (!s || !(f = (dirEnt_t *)s->_base))
-		panic("fwrite: !stream");
-	if (f->dir.d_type != 2)
-		panic("fwrite: stream !file");
+		panic("fread: !stream");
+	if (f->dir.d_type != DIRTYPE_FILE)
+		panic("fread: stream !file");
 	size *= n;
 	memfileRead(f->u.file, ptr, size, 0);
 	return n;
@@ -336,12 +355,22 @@ __device__ size_t fread_(void *__restrict ptr, size_t size, size_t n, FILE *__re
 
 /* Write chunks of generic data to STREAM.  */
 __device__ size_t fwrite_(const void *__restrict ptr, size_t size, size_t n, FILE *__restrict stream, bool wait) {
-	if (ISHOSTFILE(stream)) { stdio_fwrite msg(wait, ptr, size, n, stream); return msg.RC; }
+	if (ISHOSTFILE(stream)) {
+#ifndef _NOJUMBO
+		stdio_fwrite msg(wait, ptr, size, n, stream); return msg.RC;
+#else
+		size_t rc = 1; size *= n; const char *v = (const char *)ptr;
+		while (size > 0 && rc > 0) {
+			stdio_fwrite msg(true, (void *)v, 1, size > SENTINEL_CHUNK ? SENTINEL_CHUNK : size, stream); rc = msg.RC; size -= rc; v += rc;
+		}
+		return v - ptr;
+#endif
+	}
 	register cuFILE *s = (cuFILE *)stream;
 	dirEnt_t *f;
 	if (!s || !(f = (dirEnt_t *)s->_base))
 		panic("fwrite: !stream");
-	if (f->dir.d_type != 2)
+	if (f->dir.d_type != DIRTYPE_FILE)
 		panic("fwrite: stream !file");
 	size *= n;
 	memfileWrite(f->u.file, ptr, size, 0);

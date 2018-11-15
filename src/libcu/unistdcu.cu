@@ -33,16 +33,46 @@ __device__ off64_t lseek64_(int fd, off64_t offset, int whence) {
 
 /* Read NBYTES into BUF from FD.  Return the number read, -1 for errors or 0 for EOF.  */
 __device__ size_t read_(int fd, void *buf, size_t nbytes, bool wait) {
-	if (ISHOSTHANDLE(fd)) { unistd_read msg(wait, fd, buf, nbytes); return msg.RC; }
-	panic("Not Implemented");
-	return 0;
+	if (ISHOSTHANDLE(fd)) {
+#ifndef _NOJUMBO
+		unistd_read msg(wait, fd, buf, nbytes); return msg.RC;
+#else
+		size_t rc = 1; const char *v = (const char *)buf;
+		while (nbytes > 0 && rc > 0) {
+			unistd_read msg(true, fd, (void *)v, nbytes > SENTINEL_CHUNK ? SENTINEL_CHUNK : nbytes, stream); rc = msg.RC; nbytes -= rc; v += rc;
+		}
+		return v - buf;
+#endif
+	}
+	register file_t *s = GETFILE(fd);
+	dirEnt_t *f;
+	if (!s || !(f = (dirEnt_t *)s->base))
+		panic("read: !stream");
+	if (f->dir.d_type != DIRTYPE_FILE)
+		panic("read: stream !file");
+	return memfileRead(f->u.file, buf, nbytes, 0);
 }
 
 /* Write N bytes of BUF to FD.  Return the number written, or -1.  */
 __device__ size_t write_(int fd, const void *buf, size_t nbytes, bool wait) {
-	if (ISHOSTHANDLE(fd)) { unistd_write msg(wait, fd, buf, nbytes); return msg.RC; }
-	panic("Not Implemented");
-	return 0;
+	if (ISHOSTHANDLE(fd)) {
+#ifndef _NOJUMBO
+		unistd_write msg(wait, fd, buf, nbytes); return msg.RC;
+#else
+		size_t rc = 1; const char *v = (const char *)ptr;
+		while (nbytes > 0 && rc > 0) {
+			unistd_write msg(true, fd, (void *)v, nbytes > SENTINEL_CHUNK ? SENTINEL_CHUNK : nbytes, stream); rc = msg.RC; nbytes -= rc; v += rc;
+		}
+		return v - buf;
+#endif
+	}
+	register file_t *s = GETFILE(fd);
+	dirEnt_t *f;
+	if (!s || !(f = (dirEnt_t *)s->base))
+		panic("write: !stream");
+	if (f->dir.d_type != DIRTYPE_FILE)
+		panic("write: stream !file");
+	return memfileWrite(f->u.file, buf, nbytes, 0);
 }
 
 /* Make the process sleep for SECONDS seconds, or until a signal arrives and is not ignored.  The function returns the number of seconds less
