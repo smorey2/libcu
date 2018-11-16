@@ -17,6 +17,7 @@
 #define THREADCALL void *
 #endif
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <cuda_runtimecu.h>
 
@@ -40,28 +41,44 @@ static sentinelExecutor _baseDeviceExecutor = { nullptr, "base", sentinelDefault
 #if HAS_HOSTSENTINEL
 static THREADHANDLE _threadHostHandle = 0;
 static THREADCALL sentinelHostThread(void *data) {
+	unsigned int s_;
 	sentinelContext *ctx = &_ctx;
 	sentinelMap *map = ctx->HostMap;
 	while (map) {
 		long id = map->GetId;
 		sentinelCommand *cmd = (sentinelCommand *)&map->Data[id % sizeof(map->Data)];
-		volatile long *control = (volatile long *)&cmd->Control;
-#if __OS_WIN
-		unsigned int s_;
-		while (_threadHostHandle && (s_ = InterlockedCompareExchange((long *)control, 3, 2)) != 2) { /*printf("(%d)", s_);*/ Sleep(50); } //
-#endif
-		if (!_threadHostHandle) return 0;
 		if (cmd->Magic != SENTINEL_MAGIC) {
 			printf("Bad Sentinel Magic");
 			exit(1);
 		}
+		volatile long *control = (volatile long *)&cmd->Control;
+#if __OS_WIN
+		/* spin-lock */ while (_threadHostHandle && (s_ = InterlockedCompareExchange((long *)control, 3, 2)) != 2) { /*printf("(%d)", s_);*/ Sleep(50); } //
+#elif __OS_UNIX
+		/* spin-lock */ while (_threadHostHandle && (s_ = __sync_val_compare_and_swap((long *)control, 3, 2)) != 2) { /*printf("(%d)", s_);*/ Sleep(50); } //
+#endif
+		if (!_threadHostHandle) return 0;
+		sentinelMessage *msg = (sentinelMessage *)cmd->Data;
 		//map->Dump();
 		//cmd->Dump();
-		sentinelMessage *msg = (sentinelMessage *)cmd->Data;
+
+		// FLOW-OUT
+		if (msg->Flow & FLOW_JUMBOOUT) {
+			*control = 10;
+		}
+
+		// EXECUTE
 		char *(*hostPrepare)(void*, char*, char*, intptr_t) = nullptr;
 		for (sentinelExecutor *exec = _ctx.HostList; exec && exec->Executor && !exec->Executor(exec->Tag, msg, cmd->Length, &hostPrepare); exec = exec->Next) {}
 		//printf(".");
-		*control = msg->Wait ? 4 : 0;
+
+		// FLOW-IN
+		if (msg->Flow & FLOW_JUMBOIN) {
+			*control = 10;
+		}
+
+		// FLOW-WAIT
+		*control = msg->Flow & FLOW_WAIT ? 4 : 0;
 		map->GetId += SENTINEL_MSGSIZE;
 	}
 	return 0;
@@ -72,33 +89,50 @@ static THREADCALL sentinelHostThread(void *data) {
 #if HAS_DEVICESENTINEL
 static THREADHANDLE _threadDeviceHandle[SENTINEL_DEVICEMAPS];
 static THREADCALL sentinelDeviceThread(void *data) {
+	unsigned int s_;
 	int threadId = (int)(intptr_t)data;
 	sentinelContext *ctx = &_ctx;
 	sentinelMap *map = ctx->DeviceMap[threadId];
 	while (map) {
 		long id = map->GetId;
 		sentinelCommand *cmd = (sentinelCommand *)&map->Data[id % sizeof(map->Data)];
-		volatile long *control = (volatile long *)&cmd->Control;
-#if __OS_WIN
-		unsigned int s_;
-		while (_threadDeviceHandle[threadId] && (s_ = InterlockedCompareExchange((long *)control, 3, 2)) != 2) { /*printf("(%d)", s_);*/ Sleep(50); }
-#endif
-		if (!_threadDeviceHandle[threadId]) return 0;
 		if (cmd->Magic != SENTINEL_MAGIC) {
 			printf("Bad Sentinel Magic");
 			exit(1);
 		}
+		volatile long *control = (volatile long *)&cmd->Control;
+#if __OS_WIN
+		/* spin-lock */ while (_threadDeviceHandle[threadId] && (s_ = InterlockedCompareExchange((long *)control, 3, 2)) != 2) { /*printf("(%d)", s_);*/ Sleep(50); }
+#elif __OS_UNIX
+		/* spin-lock */ while (_threadDeviceHandle[threadId] && (s_ = __sync_val_compare_and_swap((long *)control, 3, 2)) != 2) { /*printf("(%d)", s_);*/ Sleep(50); }
+#endif
+		if (!_threadDeviceHandle[threadId]) return 0;
+		sentinelMessage *msg = (sentinelMessage *)&cmd->Data; //(cmd->Data + map->Offset);
+		sentinelJumboMessage *jumboMsg = (sentinelJumboMessage *)msg;
 		//map->Dump();
 		//cmd->Dump();
+
+		// FLOW-IN
+		if (msg->Flow & FLOW_JUMBOIN && jumboMsg->Size > jumboMsg->SafeSize) {
+			jumboMsg->Ptr = (char *)malloc(jumboMsg->Size);
+		}
+
+		// EXECUTE
 		char *(*hostPrepare)(void*, char*, char*, intptr_t) = nullptr;
-		sentinelMessage *msg = (sentinelMessage *)&cmd->Data; //(cmd->Data + map->Offset);
 		for (sentinelExecutor *exec = _ctx.DeviceList; exec && exec->Executor && !exec->Executor(exec->Tag, msg, cmd->Length, &hostPrepare); exec = exec->Next) {}
 		//printf(".");
 		if (hostPrepare && !hostPrepare(msg, cmd->Data, cmd->Data + cmd->Length + msg->Size, map->Offset)) {
 			printf("msg too long");
 			exit(0);
 		}
-		*control = msg->Wait ? 4 : 0;
+
+		// FLOW-IN
+		if (msg->Flow & FLOW_JUMBOIN) {
+			*control = 10;
+		}
+
+		// FLOW-WAIT
+		*control = msg->Flow & FLOW_WAIT ? 4 : 0;
 		map->GetId += SENTINEL_MSGSIZE;
 	}
 	return 0;
@@ -155,6 +189,14 @@ void sentinelServerInitialize(sentinelExecutor *deviceExecutor, char *mapHostNam
 		_sentinelHostMap = _ctx.HostMap = (sentinelMap *)ROUNDN_(_hostMap, MEMORY_ALIGNMENT);
 		_sentinelHostMap->Offset = 0;
 #endif
+
+		// clear commands
+		for (int j = 0; j < SENTINEL_MSGCOUNT*SENTINEL_MSGSIZE; j += SENTINEL_MSGSIZE) {
+			sentinelCommand *cmd = (sentinelCommand *)&_ctx.HostMap->Data[j];
+			cmd->Magic = SENTINEL_MAGIC;
+			cmd->Control = 0;
+		}
+
 		// register executor
 		sentinelRegisterExecutor(&_baseHostExecutor, true, false);
 
@@ -185,6 +227,12 @@ void sentinelServerInitialize(sentinelExecutor *deviceExecutor, char *mapHostNam
 #else
 			_ctx.DeviceMap[i]->Offset = 0;
 #endif
+			// clear commands
+			for (int j = 0; j < SENTINEL_MSGCOUNT*SENTINEL_MSGSIZE; j += SENTINEL_MSGSIZE) {
+				sentinelCommand *cmd = (sentinelCommand *)&_ctx.DeviceMap[i]->Data[j];
+				cmd->Magic = SENTINEL_MAGIC;
+				cmd->Control = 0;
+			}
 		}
 		cudaErrorCheckF(cudaMemcpyToSymbol(_sentinelDeviceMap, &d_deviceMap, sizeof(d_deviceMap)), goto initialize_error);
 
@@ -240,10 +288,10 @@ void sentinelServerShutdown() {
 			if (_threadDeviceHandle[i]) { pthread_cancel(_threadDeviceHandle[i]); _threadDeviceHandle[i] = 0; }
 #endif
 			if (_deviceMap[i]) { cudaErrorCheckA(cudaFreeHost(_deviceMap[i])); _deviceMap[i] = nullptr; }
-}
 		}
-#endif
 	}
+#endif
+}
 
 sentinelExecutor *sentinelFindExecutor(const char *name, bool forDevice) {
 	sentinelExecutor *list = forDevice ? _ctx.DeviceList : _ctx.HostList;

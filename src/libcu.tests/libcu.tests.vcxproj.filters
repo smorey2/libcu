@@ -19,6 +19,7 @@
       <Filter>ext</Filter>
     </CudaCompile>
     <CudaCompile Include="program.cu" />
+    <CudaCompile Include="hostTest.cu" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Properties">

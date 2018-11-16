@@ -107,16 +107,12 @@
     <ClInclude Include="..\include\sentinel-hostmsg.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\jumbo.h">
-      <Filter>include</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="libcu.cu" />
     <CudaCompile Include="program.cu" />
     <CudaCompile Include="libcu.stdlib.cu" />
     <CudaCompile Include="stringcu.cu" />
-    <CudaCompile Include="jumbo-gpu.cu" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="_content">
@@ -149,7 +145,6 @@
     <ClCompile Include="cuda_runtime.cpp" />
     <ClCompile Include="sentinel.cpp" />
     <ClCompile Include="sentinel-msg.cpp" />
-    <ClCompile Include="jumbo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Libcu.Native.nuspec" />

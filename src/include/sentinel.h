@@ -27,6 +27,7 @@ THE SOFTWARE.
 #ifndef _SENTINEL_H
 #define _SENTINEL_H
 #include <crtdefscu.h>
+#include <driver_types.h>
 //#include <host_defines.h>
 #include <stdio.h>
 #include <ext/pipeline.h>
@@ -52,24 +53,39 @@ extern "C" {
 #define SENTINEL_MSGCOUNT 5
 #define SENTINEL_CHUNK 4096
 
+#define FLOW_NONE 0
+#define FLOW_WAIT 1
+#define FLOW_JUMBOIN 2
+#define FLOW_JUMBOOUT 4
+
 	struct sentinelMessage {
-		bool Wait;
 		unsigned short OP;
+		unsigned char Flow;
+		unsigned char Unknown;
 		int Size;
 		char *(*Prepare)(void*, char*, char*, intptr_t);
 		bool(*Postfix)(void*, intptr_t);
-		__device__ sentinelMessage(bool wait, unsigned short op, int size = 0, char *(*prepare)(void*, char*, char*, intptr_t) = nullptr, bool(*postfix)(void*, intptr_t) = nullptr)
-			: Wait(wait), OP(op), Size(size), Prepare(prepare), Postfix(postfix) { }
+		__device__ sentinelMessage(unsigned short op, unsigned char flow = FLOW_WAIT, int size = 0, char *(*prepare)(void*, char*, char*, intptr_t) = nullptr, bool(*postfix)(void*, intptr_t) = nullptr)
+			: OP(op), Flow(flow), Size(size), Prepare(prepare), Postfix(postfix) { }
 	public:
 	};
 #define SENTINELPREPARE(P) ((char *(*)(void*,char*,char*,intptr_t))&P)
 #define SENTINELPOSTFIX(P) ((bool (*)(void*,intptr_t))&P)
 
+	struct sentinelJumboMessage {
+		sentinelMessage Base;
+		__device__ sentinelJumboMessage(unsigned short op, unsigned char flow, int size = 0, char *(*prepare)(void*, char*, char*, intptr_t) = nullptr, bool(*postfix)(void*, intptr_t) = nullptr)
+			: Base(op, flow, size, prepare, postfix) { }
+		char *Ptr;
+		size_t SafeSize;
+		size_t Size;
+	};
+
 	struct sentinelClientMessage {
 		sentinelMessage Base;
 		pipelineRedir Redir;
-		sentinelClientMessage(pipelineRedir redir, bool wait, unsigned short op, int size = 0, char *(*prepare)(void*, char*, char*, intptr_t) = nullptr, bool(*postfix)(void*, intptr_t) = nullptr)
-			: Base(wait, op, size, prepare, postfix), Redir(redir) { }
+		sentinelClientMessage(pipelineRedir redir, unsigned short op, unsigned char flow = FLOW_WAIT, int size = 0, char *(*prepare)(void*, char*, char*, intptr_t) = nullptr, bool(*postfix)(void*, intptr_t) = nullptr)
+			: Base(op, flow, size, prepare, postfix), Redir(redir) { }
 	};
 
 	typedef struct __align__(8) {

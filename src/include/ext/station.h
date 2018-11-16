@@ -1,5 +1,5 @@
 /*
-jumbo.h - memory transfer framework for device to host functions
+station.h - memory transfer framework for device to host functions
 The MIT License
 
 Copyright (c) 2016 Sky Morey
@@ -24,8 +24,8 @@ THE SOFTWARE.
 */
 
 #pragma once
-#ifndef _JUMBO_H
-#define _JUMBO_H
+#ifndef _STATION_H
+#define _STATION_H
 #include <crtdefscu.h>
 #include <stdio.h>
 #if _MSC_VER
@@ -36,14 +36,14 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
-#ifndef HAS_DEVICEJUMBO
-#define HAS_DEVICEJUMBO 1
+#ifndef HAS_DEVICESTATION
+#define HAS_DEVICESTATION 1
 #endif
 
-#define JUMBO_MAGIC (unsigned short)0xC812
-#define JUMBO_DEVICEMAPS 1
-#define JUMBO_MSGSIZE 4096
-#define JUMBO_MSGCOUNT 1
+#define STATION_MAGIC (unsigned short)0xC812
+#define STATION_DEVICEMAPS 1
+#define STATION_MSGSIZE 4096
+#define STATION_MSGCOUNT 1
 
 	typedef struct __align__(8) {
 		unsigned short Magic;
@@ -54,33 +54,33 @@ extern "C" {
 #endif
 		char Data[1];
 		void Dump();
-	} jumboCommand;
+	} stationCommand;
 
 	typedef struct __align__(8) {
 		long GetId;
 		volatile long SetId;
 		intptr_t Offset;
-		char Data[JUMBO_MSGSIZE*JUMBO_MSGCOUNT];
+		char Data[STATION_MSGSIZE*STATION_MSGCOUNT];
 		void Dump();
-	} jumboMap;
+	} stationMap;
 
-	typedef struct jumboContext {
-		jumboMap *DeviceMap[JUMBO_DEVICEMAPS];
-		jumboMap *HostMap;
-	} jumboContext;
+	typedef struct stationContext {
+		stationMap *DeviceMap[STATION_DEVICEMAPS];
+		stationMap *HostMap;
+	} stationContext;
 
-#if HAS_DEVICEJUMBO
-	extern __constant__ const jumboMap *_jumboDeviceMap[JUMBO_DEVICEMAPS];
+#if HAS_DEVICESTATION
+	extern __constant__ const stationMap *_stationDeviceMap[STATION_DEVICEMAPS];
 #endif
 
-	extern void jumboHostInitialize();
-	extern void jumboHostShutdown();
-#if HAS_DEVICEJUMBO
-	extern __device__ void jumboDeviceSend(void *msg, int msgLength);
+	extern void stationHostInitialize();
+	extern void stationHostShutdown();
+#if HAS_DEVICESTATION
+	extern __device__ void stationDeviceSend(void *msg, int msgLength);
 #endif
 
 #ifdef  __cplusplus
 }
 #endif
 
-#endif  /* JUMBO_H */
+#endif  /* STATION_H */

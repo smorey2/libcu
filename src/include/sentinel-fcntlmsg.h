@@ -67,7 +67,7 @@ struct fcntl_open {
 	}
 	sentinelMessage Base;
 	const char *Str; int OFlag; int P0; bool Bit64;
-	__device__ fcntl_open(const char *str, int oflag, int p0, bool bit64) : Base(true, FCNTL_OPEN, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), OFlag(oflag), P0(p0), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(fcntl_open)); }
+	__device__ fcntl_open(const char *str, int oflag, int p0, bool bit64) : Base(FCNTL_OPEN, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), OFlag(oflag), P0(p0), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(fcntl_open)); }
 	int RC;
 };
 
@@ -90,7 +90,7 @@ struct fcntl_stat {
 	}
 	sentinelMessage Base;
 	const char *Str; struct stat *Buf; struct _stat64 *Buf64; bool Bit64; bool LStat;
-	__device__ fcntl_stat(const char *str, struct stat *buf, struct _stat64 *buf64, bool bit64, bool lstat_) : Base(true, FCNTL_STAT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Str(str), Buf(buf), Buf64(buf64), Bit64(bit64), LStat(lstat_) { sentinelDeviceSend(&Base, sizeof(fcntl_stat)); }
+	__device__ fcntl_stat(const char *str, struct stat *buf, struct _stat64 *buf64, bool bit64, bool lstat_) : Base(FCNTL_STAT, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Str(str), Buf(buf), Buf64(buf64), Bit64(bit64), LStat(lstat_) { sentinelDeviceSend(&Base, sizeof(fcntl_stat)); }
 	int RC;
 	void *Ptr;
 };
@@ -111,7 +111,7 @@ struct fcntl_fstat {
 	}
 	sentinelMessage Base;
 	int Handle; struct stat *Buf; struct _stat64 *Buf64; bool Bit64;
-	__device__ fcntl_fstat(int fd, struct stat *buf, struct _stat64 *buf64, bool bit64) : Base(true, FCNTL_FSTAT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Handle(fd), Buf(buf), Buf64(buf64), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(fcntl_fstat)); }
+	__device__ fcntl_fstat(int fd, struct stat *buf, struct _stat64 *buf64, bool bit64) : Base(FCNTL_FSTAT, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Handle(fd), Buf(buf), Buf64(buf64), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(fcntl_fstat)); }
 	int RC;
 	void *Ptr;
 };
@@ -128,7 +128,7 @@ struct fcntl_chmod {
 	}
 	sentinelMessage Base;
 	const char *Str; mode_t Mode;
-	__device__ fcntl_chmod(const char *str, mode_t mode) : Base(true, FCNTL_CHMOD, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), Mode(mode) { sentinelDeviceSend(&Base, sizeof(fcntl_chmod)); }
+	__device__ fcntl_chmod(const char *str, mode_t mode) : Base(FCNTL_CHMOD, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), Mode(mode) { sentinelDeviceSend(&Base, sizeof(fcntl_chmod)); }
 	int RC;
 };
 
@@ -144,7 +144,7 @@ struct fcntl_mkdir {
 	}
 	sentinelMessage Base;
 	const char *Str; mode_t Mode;
-	__device__ fcntl_mkdir(const char *str, mode_t mode) : Base(true, FCNTL_MKDIR, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), Mode(mode) { sentinelDeviceSend(&Base, sizeof(fcntl_mkdir)); }
+	__device__ fcntl_mkdir(const char *str, mode_t mode) : Base(FCNTL_MKDIR, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), Mode(mode) { sentinelDeviceSend(&Base, sizeof(fcntl_mkdir)); }
 	int RC;
 };
 
@@ -160,7 +160,7 @@ struct fcntl_mkfifo {
 	}
 	sentinelMessage Base;
 	const char *Str; mode_t Mode;
-	__device__ fcntl_mkfifo(const char *str, mode_t mode) : Base(true, FCNTL_MKFIFO, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), Mode(mode) { sentinelDeviceSend(&Base, sizeof(fcntl_mkfifo)); }
+	__device__ fcntl_mkfifo(const char *str, mode_t mode) : Base(FCNTL_MKFIFO, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), Mode(mode) { sentinelDeviceSend(&Base, sizeof(fcntl_mkfifo)); }
 	int RC;
 };
 
