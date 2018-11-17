@@ -32,12 +32,13 @@ __device__ int fstat64_(int fd, struct stat64 *buf) {
 /* Set file access permissions for FILE to MODE. If FILE is a symbolic link, this affects its target instead.  */
 __device__ int chmod_(const char *file, mode_t mode) {
 	if (ISHOSTPATH(file)) { fcntl_chmod msg(file, mode); return msg.RC; }
-	int r; fsystemChmod(file, mode); return r;
+	return fsystemChmod(file, mode);
 }
 
 /* Set the file creation mask of the current process to MASK, and return the old creation mask.  */
 __device__ mode_t umask_(mode_t mask) {
-	int r; fsystemUmask(mask); return r;
+	// unable to host umask
+	return fsystemUmask(mask);
 }
 
 /* Create a new directory named PATH, with permission bits MODE.  */

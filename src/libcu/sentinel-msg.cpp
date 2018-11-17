@@ -83,7 +83,7 @@ bool sentinelDefaultDeviceExecutor(void *tag, sentinelMessage *data, int length,
 	case STDIO_FCLOSE: { stdio_fclose *msg = (stdio_fclose *)data; msg->RC = fclose(msg->File); return true; }
 	case STDIO_FFLUSH: { stdio_fflush *msg = (stdio_fflush *)data; msg->RC = fflush(msg->File); return true; }
 	case STDIO_FREOPEN: { stdio_freopen *msg = (stdio_freopen *)data; FILE *f = (!msg->Stream ? fopen(msg->Str, msg->Str2) : freopen(msg->Str, msg->Str2, msg->Stream)); msg->RC = f; return true; }
-	case STDIO_SETVBUF: { stdio_setvbuf *msg = (stdio_setvbuf *)data; if (msg->Mode != -1) msg->RC = setvbuf(msg->File, msg->Buffer, msg->Mode, msg->Size); else setbuf(msg->File, msg->Buffer); return true; }
+	case STDIO_SETVBUF: { stdio_setvbuf *msg = (stdio_setvbuf *)data; if (msg->Mode != -1) msg->RC = setvbuf(msg->File, msg->Buf, msg->Mode, msg->Size); else setbuf(msg->File, msg->Buf); return true; }
 	case STDIO_FGETC: { stdio_fgetc *msg = (stdio_fgetc *)data; msg->RC = fgetc(msg->File); return true; }
 	case STDIO_FGETS: { stdio_fgets *msg = (stdio_fgets *)data; msg->RC = fgets(msg->Str, msg->Num, msg->File); return true; }
 	case STDIO_FPUTC: { stdio_fputc *msg = (stdio_fputc *)data; msg->RC = fputc(msg->Ch, msg->File); return true; }
@@ -133,7 +133,7 @@ bool sentinelDefaultDeviceExecutor(void *tag, sentinelMessage *data, int length,
 #endif
 		return true; }
 	case UNISTD_CLOSE: { unistd_close *msg = (unistd_close *)data; msg->RC = close(msg->Handle); return true; }
-	case UNISTD_READ: { unistd_read *msg = (unistd_read *)data; msg->RC = read(msg->Handle, msg->Base.JumboPtr, (int)msg->Size); return true; }
+	case UNISTD_READ: { unistd_read *msg = (unistd_read *)data; msg->RC = read(msg->Handle, msg->Base.Ptr, (int)msg->Size); return true; }
 	case UNISTD_WRITE: { unistd_write *msg = (unistd_write *)data; msg->RC = write(msg->Handle, msg->Ptr, (int)msg->Size); return true; }
 	case UNISTD_CHOWN: { unistd_chown *msg = (unistd_chown *)data; msg->RC = chown(msg->Str, msg->Owner, msg->Group); return true; }
 	case UNISTD_CHDIR: { unistd_chdir *msg = (unistd_chdir *)data; msg->RC = chdir(msg->Str); return true; }

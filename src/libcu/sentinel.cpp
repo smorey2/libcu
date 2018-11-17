@@ -63,9 +63,9 @@ static THREADCALL sentinelHostThread(void *data) {
 		//cmd->Dump();
 
 		// FLOW-OUT
-		if (msg->Flow & FLOW_JUMBOOUT) {
-			*control = 10;
-		}
+		//if (msg->Flow & FLOW_JUMBOOUT) {
+		//	*control = 10;
+		//}
 
 		// EXECUTE
 		char *(*hostPrepare)(void*, char*, char*, intptr_t) = nullptr;
@@ -73,9 +73,9 @@ static THREADCALL sentinelHostThread(void *data) {
 		//printf(".");
 
 		// FLOW-IN
-		if (msg->Flow & FLOW_JUMBOIN) {
-			*control = 10;
-		}
+		//if (msg->Flow & FLOW_JUMBOIN) {
+		//	*control = 10;
+		//}
 
 		// FLOW-WAIT
 		*control = msg->Flow & FLOW_WAIT ? 4 : 0;
@@ -108,28 +108,29 @@ static THREADCALL sentinelDeviceThread(void *data) {
 #endif
 		if (!_threadDeviceHandle[threadId]) return 0;
 		sentinelMessage *msg = (sentinelMessage *)&cmd->Data; //(cmd->Data + map->Offset);
-		sentinelJumboMessage *jumboMsg = (sentinelJumboMessage *)msg;
+		//sentinelJumboMessage *jumboMsg = (sentinelJumboMessage *)msg;
 		//map->Dump();
 		//cmd->Dump();
 
 		// FLOW-IN
-		if (msg->Flow & FLOW_JUMBOIN && jumboMsg->Size > jumboMsg->SafeSize) {
-			jumboMsg->Ptr = (char *)malloc(jumboMsg->Size);
-		}
+		//if (msg->Flow & FLOW_JUMBOIN && jumboMsg->Size > jumboMsg->SafeSize) {
+		//	jumboMsg->Ptr = (char *)malloc(jumboMsg->Size);
+		//}
 
 		// EXECUTE
 		char *(*hostPrepare)(void*, char*, char*, intptr_t) = nullptr;
 		for (sentinelExecutor *exec = _ctx.DeviceList; exec && exec->Executor && !exec->Executor(exec->Tag, msg, cmd->Length, &hostPrepare); exec = exec->Next) {}
 		//printf(".");
-		if (hostPrepare && !hostPrepare(msg, cmd->Data, cmd->Data + cmd->Length + msg->Size, map->Offset)) {
+		char *data = cmd->Data + cmd->Length, *dataEnd = data + msg->Size;
+		if (hostPrepare && !hostPrepare(msg, data, dataEnd, map->Offset)) {
 			printf("msg too long");
 			exit(0);
 		}
 
 		// FLOW-IN
-		if (msg->Flow & FLOW_JUMBOIN) {
-			*control = 10;
-		}
+		//if (msg->Flow & FLOW_JUMBOIN) {
+		//	*control = 10;
+		//}
 
 		// FLOW-WAIT
 		*control = msg->Flow & FLOW_WAIT ? 4 : 0;

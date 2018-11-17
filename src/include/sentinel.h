@@ -55,10 +55,20 @@ extern "C" {
 
 #define FLOW_NONE 0
 #define FLOW_WAIT 1
-#define FLOW_JUMBOIN 2
-#define FLOW_JUMBOOUT 4
 
-	struct sentinelMessage {
+	typedef struct sentinelInPtr {
+		void *field;
+		int size;
+	} sentinelInPtr;
+
+	typedef struct sentinelOutPtr {
+		void *field;
+		void *buf;
+		int size;
+		void *sizeField = nullptr;
+	} sentinelOutPtr;
+
+	typedef struct sentinelMessage {
 		unsigned short OP;
 		unsigned char Flow;
 		unsigned char Unknown;
@@ -67,26 +77,17 @@ extern "C" {
 		bool(*Postfix)(void*, intptr_t);
 		__device__ sentinelMessage(unsigned short op, unsigned char flow = FLOW_WAIT, int size = 0, char *(*prepare)(void*, char*, char*, intptr_t) = nullptr, bool(*postfix)(void*, intptr_t) = nullptr)
 			: OP(op), Flow(flow), Size(size), Prepare(prepare), Postfix(postfix) { }
-	public:
-	};
+		void *Ptr = nullptr;
+	} sentinelMessage;
 #define SENTINELPREPARE(P) ((char *(*)(void*,char*,char*,intptr_t))&P)
 #define SENTINELPOSTFIX(P) ((bool (*)(void*,intptr_t))&P)
 
-	struct sentinelJumboMessage {
-		sentinelMessage Base;
-		__device__ sentinelJumboMessage(unsigned short op, unsigned char flow, int size = 0, char *(*prepare)(void*, char*, char*, intptr_t) = nullptr, bool(*postfix)(void*, intptr_t) = nullptr)
-			: Base(op, flow, size, prepare, postfix) { }
-		char *Ptr;
-		size_t SafeSize;
-		size_t Size;
-	};
-
-	struct sentinelClientMessage {
+	typedef struct sentinelClientMessage {
 		sentinelMessage Base;
 		pipelineRedir Redir;
 		sentinelClientMessage(pipelineRedir redir, unsigned short op, unsigned char flow = FLOW_WAIT, int size = 0, char *(*prepare)(void*, char*, char*, intptr_t) = nullptr, bool(*postfix)(void*, intptr_t) = nullptr)
 			: Base(op, flow, size, prepare, postfix), Redir(redir) { }
-	};
+	} sentinelClientMessage;
 
 	typedef struct __align__(8) {
 		unsigned short Magic;
@@ -134,13 +135,13 @@ extern "C" {
 	extern void sentinelServerInitialize(sentinelExecutor *deviceExecutor = nullptr, char *mapHostName = (char *)SENTINEL_NAME, bool hostSentinel = true, bool deviceSentinel = true);
 	extern void sentinelServerShutdown();
 #if HAS_DEVICESENTINEL
-	extern __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength);
+	extern __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrsIn = nullptr, sentinelOutPtr *ptrsOut = nullptr);
 #endif
 #if HAS_HOSTSENTINEL
 	extern void sentinelClientInitialize(char *mapHostName = (char *)SENTINEL_NAME);
 	extern void sentinelClientShutdown();
 	extern void sentinelClientRedir(pipelineRedir *redir);
-	extern void sentinelClientSend(sentinelMessage *msg, int msgLength);
+	extern void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrsIn = nullptr, sentinelOutPtr *ptrsOut = nullptr);
 #endif
 	extern sentinelExecutor *sentinelFindExecutor(const char *name, bool forDevice = true);
 	extern void sentinelRegisterExecutor(sentinelExecutor *exec, bool makeDefault = false, bool forDevice = true);

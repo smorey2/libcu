@@ -48,120 +48,80 @@ enum {
 struct fcntl_fcntl {
 	sentinelMessage Base;
 	int Handle; int Cmd; int P0; bool Bit64;
-	__device__ fcntl_fcntl(int fd, int cmd, int p0, bool bit64)
-		: Base(true, FCNTL_FCNTL), Handle(fd), Cmd(cmd), P0(p0), Bit64(bit64) {
-		sentinelDeviceSend(&Base, sizeof(fcntl_fcntl));
-	}
+	__device__ fcntl_fcntl(int fd, int cmd, int p0, bool bit64) : Base(FCNTL_FCNTL, FLOW_WAIT), Handle(fd), Cmd(cmd), P0(p0), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(fcntl_fcntl)); }
 	int RC;
 };
 
 struct fcntl_open {
-	static __forceinline__ __device__ char *Prepare(fcntl_open *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
-		char *str = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += strLength);
-		if (end > dataEnd) return nullptr;
-		memcpy(str, t->Str, strLength);
-		if (t->Str) t->Str = str + offset;
-		return end;
-	}
 	sentinelMessage Base;
 	const char *Str; int OFlag; int P0; bool Bit64;
-	__device__ fcntl_open(const char *str, int oflag, int p0, bool bit64) : Base(FCNTL_OPEN, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), OFlag(oflag), P0(p0), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(fcntl_open)); }
+	__device__ fcntl_open(const char *str, int oflag, int p0, bool bit64) : Base(FCNTL_OPEN, FLOW_WAIT, SENTINEL_CHUNK), Str(str), OFlag(oflag), P0(p0), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(fcntl_open), PtrsIn); }
 	int RC;
+	sentinelInPtr PtrsIn[2] = {
+		{ &Str, -1 },
+		nullptr
+	};
 };
 
 struct fcntl_stat {
-	static __forceinline__ __device__ char *Prepare(fcntl_stat *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
-		char *str = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += strLength);
-		if (end > dataEnd) return nullptr;
-		memcpy(str, t->Str, strLength);
-		if (t->Str) t->Str = str + offset;
-		t->Ptr = str + offset;
-		return end;
-	}
-	static __forceinline__ __device__ bool Postfix(fcntl_stat *t, intptr_t offset) {
-		char *ptr = (char *)t->Ptr - offset;
-		if (!t->Bit64) memcpy(t->Buf, ptr, sizeof(struct stat));
-		else memcpy(t->Buf64, ptr, sizeof(struct _stat64));
-		return true;
-	}
 	sentinelMessage Base;
 	const char *Str; struct stat *Buf; struct _stat64 *Buf64; bool Bit64; bool LStat;
-	__device__ fcntl_stat(const char *str, struct stat *buf, struct _stat64 *buf64, bool bit64, bool lstat_) : Base(FCNTL_STAT, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Str(str), Buf(buf), Buf64(buf64), Bit64(bit64), LStat(lstat_) { sentinelDeviceSend(&Base, sizeof(fcntl_stat)); }
+	__device__ fcntl_stat(const char *str, struct stat *buf, struct _stat64 *buf64, bool bit64, bool lstat_) : Base(FCNTL_STAT, FLOW_WAIT, SENTINEL_CHUNK), Str(str), Buf(buf), Buf64(buf64), Bit64(bit64), LStat(lstat_) { if (bit64) { PtrsOut[0].buf = &Buf64; PtrsOut[0].size = sizeof(struct _stat64); } sentinelDeviceSend(&Base, sizeof(fcntl_stat), PtrsIn, PtrsOut); }
 	int RC;
 	void *Ptr;
+	sentinelInPtr PtrsIn[2] = {
+		{ &Str, -1 },
+		nullptr
+	};
+	sentinelOutPtr PtrsOut[2] = {
+		{ &Ptr, &Buf, sizeof(struct stat) },
+		nullptr
+	};
 };
 
 struct fcntl_fstat {
-	static __forceinline__ __device__ char *Prepare(fcntl_fstat *t, char *data, char *dataEnd, intptr_t offset) {
-		char *ptr = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += SENTINEL_CHUNK);
-		if (end > dataEnd) return nullptr;
-		t->Ptr = ptr + offset;
-		return end;
-	}
-	static __forceinline__ __device__ bool Postfix(fcntl_fstat *t, intptr_t offset) {
-		char *ptr = (char *)t->Ptr - offset;
-		if (!t->Bit64) memcpy(t->Buf, ptr, sizeof(struct stat));
-		else memcpy(t->Buf64, ptr, sizeof(struct _stat64));
-		return true;
-	}
 	sentinelMessage Base;
 	int Handle; struct stat *Buf; struct _stat64 *Buf64; bool Bit64;
-	__device__ fcntl_fstat(int fd, struct stat *buf, struct _stat64 *buf64, bool bit64) : Base(FCNTL_FSTAT, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Handle(fd), Buf(buf), Buf64(buf64), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(fcntl_fstat)); }
+	__device__ fcntl_fstat(int fd, struct stat *buf, struct _stat64 *buf64, bool bit64) : Base(FCNTL_FSTAT, FLOW_WAIT, SENTINEL_CHUNK), Handle(fd), Buf(buf), Buf64(buf64), Bit64(bit64) { if (bit64) { PtrsOut[0].buf = &Buf64; PtrsOut[0].size = sizeof(struct _stat64); } sentinelDeviceSend(&Base, sizeof(fcntl_fstat), nullptr, PtrsOut); }
 	int RC;
 	void *Ptr;
+	sentinelOutPtr PtrsOut[2] = {
+		{ &Ptr, &Buf, sizeof(struct stat) },
+		nullptr
+	};
 };
 
 struct fcntl_chmod {
-	static __forceinline__ __device__ char *Prepare(fcntl_chmod *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
-		char *str = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += strLength);
-		if (end > dataEnd) return nullptr;
-		memcpy(str, t->Str, strLength);
-		if (t->Str) t->Str = str + offset;
-		return end;
-	}
 	sentinelMessage Base;
 	const char *Str; mode_t Mode;
-	__device__ fcntl_chmod(const char *str, mode_t mode) : Base(FCNTL_CHMOD, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), Mode(mode) { sentinelDeviceSend(&Base, sizeof(fcntl_chmod)); }
+	__device__ fcntl_chmod(const char *str, mode_t mode) : Base(FCNTL_CHMOD, FLOW_WAIT, SENTINEL_CHUNK), Str(str), Mode(mode) { sentinelDeviceSend(&Base, sizeof(fcntl_chmod), PtrsIn); }
 	int RC;
+	sentinelInPtr PtrsIn[2] = {
+		{ &Str, -1 },
+		nullptr
+	};
 };
 
 struct fcntl_mkdir {
-	static __forceinline__ __device__ char *Prepare(fcntl_mkdir *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
-		char *str = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += strLength);
-		if (end > dataEnd) return nullptr;
-		memcpy(str, t->Str, strLength);
-		if (t->Str) t->Str = str + offset;
-		return end;
-	}
 	sentinelMessage Base;
 	const char *Str; mode_t Mode;
-	__device__ fcntl_mkdir(const char *str, mode_t mode) : Base(FCNTL_MKDIR, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), Mode(mode) { sentinelDeviceSend(&Base, sizeof(fcntl_mkdir)); }
+	__device__ fcntl_mkdir(const char *str, mode_t mode) : Base(FCNTL_MKDIR, FLOW_WAIT, SENTINEL_CHUNK), Str(str), Mode(mode) { sentinelDeviceSend(&Base, sizeof(fcntl_mkdir), PtrsIn); }
 	int RC;
+	sentinelInPtr PtrsIn[2] = {
+		{ &Str, -1 },
+		nullptr
+	};
 };
 
 struct fcntl_mkfifo {
-	static __forceinline__ __device__ char *Prepare(fcntl_mkfifo *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
-		char *str = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += strLength);
-		if (end > dataEnd) return nullptr;
-		memcpy(str, t->Str, strLength);
-		if (t->Str) t->Str = str + offset;
-		return end;
-	}
 	sentinelMessage Base;
 	const char *Str; mode_t Mode;
-	__device__ fcntl_mkfifo(const char *str, mode_t mode) : Base(FCNTL_MKFIFO, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), Mode(mode) { sentinelDeviceSend(&Base, sizeof(fcntl_mkfifo)); }
+	__device__ fcntl_mkfifo(const char *str, mode_t mode) : Base(FCNTL_MKFIFO, FLOW_WAIT, SENTINEL_CHUNK), Str(str), Mode(mode) { sentinelDeviceSend(&Base, sizeof(fcntl_mkfifo), PtrsIn); }
 	int RC;
+	sentinelInPtr PtrsIn[2] = {
+		{ &Str, -1 },
+		nullptr
+	};
 };
 
 #endif  /* _SENTINEL_STATMSG_H */

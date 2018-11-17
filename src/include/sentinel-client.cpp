@@ -14,17 +14,42 @@
 
 #if HAS_HOSTSENTINEL
 
+static char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, char *data, char *dataEnd, intptr_t offset) {
+	char *nextData;
+	for (sentinelInPtr *p = ptrsIn; p->field; p++) {
+		char **ptr = (char **)p->field;
+		int ptrSize = p->size != -1 ? p->size : (p->size = *ptr ? (int)strlen(*ptr) + 1 : 0);
+		nextData = data + ptrSize;
+		if (ptrSize && nextData <= dataEnd) {
+			memcpy(data, *ptr, ptrSize);
+			*ptr = data + offset;
+			data = nextData;
+		}
+		else return nullptr;
+	}
+	for (sentinelOutPtr *p = ptrsOut; p->field; p++) {
+		char **ptr = (char **)p->field;
+		int ptrSize = p->size != -1 ? p->size : (p->size = *ptr ? (int)strlen(*ptr) + 1 : 0);
+		nextData = data + ptrSize;
+		if (ptrSize && nextData <= dataEnd) {
+			memcpy(data, *ptr, ptrSize);
+			*ptr = data + offset;
+			data = nextData;
+		}
+		else return nullptr;
+	}
+	return data;
+}
+
 static sentinelMap *_sentinelClientMap = nullptr;
 static intptr_t _sentinelClientMapOffset = 0;
-void sentinelClientSend(sentinelMessage *msg, int msgLength) {
+void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrsIn = nullptr, sentinelOutPtr *ptrsOut = nullptr) {
 #ifndef _WIN64
-	printf("Sentinel currently only works in x64.\n");
-	abort();
+	printf("Sentinel currently only works in x64.\n"); abort();
 #else
 	sentinelMap *map = _sentinelClientMap;
 	if (!map) {
-		printf("sentinel: client map not defined. did you start sentinel?\n");
-		exit(0);
+		printf("sentinel: client map not defined. did you start sentinel?\n"); exit(0);
 	}
 
 	// ATTACH
@@ -35,8 +60,7 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength) {
 #endif
 	sentinelCommand *cmd = (sentinelCommand *)&map->Data[id % sizeof(map->Data)]; //cmd->Data = (char *)cmd + ROUND8_(sizeof(sentinelCommand));
 	if (cmd->Magic != SENTINEL_MAGIC) {
-		printf("Bad Sentinel Magic");
-		exit(1);
+		printf("Bad Sentinel Magic"); exit(1);
 	}
 	volatile long *control = (volatile long *)&cmd->Control;
 #if __OS_WIN
@@ -45,40 +69,42 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength) {
 	/* spin-lock */ while (__sync_val_compare_and_swap((long *)control, 1, 0) != 0) {} // device in-progress
 #endif
 
-
 	// PREPARE
 	cmd->Length = msgLength;
-	if (msg->Prepare && !msg->Prepare(msg, cmd->Data, cmd->Data + ROUND8_(msgLength) + msg->Size, _sentinelClientMapOffset)) {
-		printf("msg too long");
-		exit(0);
+	char *data = cmd->Data + ROUND8_(msgLength), *dataEnd = data + msg->Size;
+	if ((ptrsIn || ptrsOut) && !(data = preparePtrs(ptrsIn, ptrsOut, data, dataEnd, _sentinelClientMapOffset))) {
+		printf("msg too long"); exit(0);
+	}
+	if (msg->Prepare && !msg->Prepare(msg, data, dataEnd, _sentinelClientMapOffset)) {
+		printf("msg too long"); exit(0);
 	}
 
 	// FLOW-OUT
-	if (msg->Flow & FLOW_JUMBOOUT) {
-		while (true) {
-#if __OS_WIN
-			/* spin-lock */ while (InterlockedCompareExchange((long *)control, 9, 10) != 10) {}
-#elif __OS_UNIX
-			/* spin-lock */ while (__sync_val_compare_and_swap((long *)control, 9, 10) != 10) {}
-#endif
-		}
-	}
+	//	if (msg->Flow & FLOW_JUMBOOUT) {
+	//		while (true) {
+	//#if __OS_WIN
+	//			/* spin-lock */ while (InterlockedCompareExchange((long *)control, 9, 10) != 10) {}
+	//#elif __OS_UNIX
+	//			/* spin-lock */ while (__sync_val_compare_and_swap((long *)control, 9, 10) != 10) {}
+	//#endif
+	//		}
+	//	}
 	memcpy(cmd->Data, msg, msgLength);
 	//printf("Msg: %d[%d]'", msg->OP, msgLength); for (int i = 0; i < msgLength; i++) printf("%02x", ((char *)msg)[i] & 0xff); printf("'\n");
 	*control = 2; // client signal that data is ready to process
 
 	// FLOW-IN
-	if (msg->Flow & FLOW_JUMBOIN) {
-		while (true) {
-#if __OS_WIN
-			/* spin-lock */ while (InterlockedCompareExchange((long *)control, 9, 10) != 10) {}
-#elif __OS_UNIX
-			/* spin-lock */ while (__sync_val_compare_and_swap((long *)control, 9, 10) != 10) {}
-#endif
-		}
-	}
+	//	if (msg->Flow & FLOW_JUMBOIN) {
+	//		while (true) {
+	//#if __OS_WIN
+	//			/* spin-lock */ while (InterlockedCompareExchange((long *)control, 9, 10) != 10) {}
+	//#elif __OS_UNIX
+	//			/* spin-lock */ while (__sync_val_compare_and_swap((long *)control, 9, 10) != 10) {}
+	//#endif
+	//		}
+	//	}
 
-	// FLOW-WAIT
+		// FLOW-WAIT
 	if (msg->Flow & FLOW_WAIT) {
 #if __OS_WIN
 		/* spin-lock */ while (InterlockedCompareExchange((long *)control, 9, 4) != 4) {}
@@ -102,14 +128,12 @@ void sentinelClientInitialize(char *mapHostName) {
 #if __OS_WIN
 	_clientMapHandle = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, mapHostName);
 	if (!_clientMapHandle) {
-		printf("(%d) Could not connect to Sentinel host. Please ensure host application is running.\n", GetLastError());
-		exit(1);
+		printf("(%d) Could not connect to Sentinel host. Please ensure host application is running.\n", GetLastError()); exit(1);
 	}
 	_clientMap = (int *)MapViewOfFile(_clientMapHandle, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(sentinelMap) + MEMORY_ALIGNMENT);
 	if (!_clientMap) {
 		printf("(%d) Could not map view of file.\n", GetLastError());
-		CloseHandle(_clientMapHandle);
-		exit(1);
+		CloseHandle(_clientMapHandle); exit(1);
 	}
 	_sentinelClientMap = (sentinelMap *)ROUNDN_(_clientMap, MEMORY_ALIGNMENT);
 	_sentinelClientMapOffset = (intptr_t)((char *)_sentinelClientMap->Offset - (char *)_sentinelClientMap);
@@ -121,8 +145,7 @@ void sentinelClientInitialize(char *mapHostName) {
 	if (!S_ISREG(sb.st_mode)) { fprintf(stderr, "%s is not a file\n", mapHostName); exit(1); }
 	_clientMap = mmap(NULL, sizeof(sentinelMap) + MEMORY_ALIGNMENT, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, fd, 0);
 	if (!_clientMap) {
-		printf("Could not connect to Sentinel host. Please ensure host application is running.\n");
-		exit(1);
+		printf("Could not connect to Sentinel host. Please ensure host application is running.\n"); exit(1);
 	}
 	if (close(fd) == -1) { perror("close"); exit(1); }
 	_sentinelClientMap = (sentinelMap *)ROUNDN_(_clientMap, MEMORY_ALIGNMENT);

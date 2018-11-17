@@ -46,19 +46,14 @@ enum {
 };
 
 struct unistd_access {
-	static __forceinline__ __device__ char *Prepare(unistd_access *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
-		char *str = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += strLength);
-		if (end > dataEnd) return nullptr;
-		memcpy(str, t->Str, strLength);
-		if (t->Str) t->Str = str + offset;
-		return end;
-	}
 	sentinelMessage Base;
 	const char *Str; int Type;
-	__device__ unistd_access(const char *str, int type) : Base(UNISTD_ACCESS, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), Type(type) { sentinelDeviceSend(&Base, sizeof(unistd_access)); }
+	__device__ unistd_access(const char *str, int type) : Base(UNISTD_ACCESS, FLOW_WAIT, SENTINEL_CHUNK), Str(str), Type(type) { sentinelDeviceSend(&Base, sizeof(unistd_access), PtrsIn); }
 	int RC;
+	sentinelInPtr PtrsIn[2] = {
+		{ &Str, -1 },
+		nullptr
+	};
 };
 
 struct unistd_lseek {
@@ -76,84 +71,59 @@ struct unistd_close {
 };
 
 struct unistd_read {
-	static __forceinline__ __device__ char *Prepare(unistd_read *t, char *data, char *dataEnd, intptr_t offset) {
-		char *ptr = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += SENTINEL_CHUNK);
-		if (end > dataEnd) return nullptr;
-		t->Ptr = ptr + offset;
-		return end;
-	}
-	static __forceinline__ __device__ bool Postfix(unistd_read *t, intptr_t offset) {
-		char *ptr = (char *)t->Ptr - offset;
-		if (t->RC > 0) memcpy(t->Buf, ptr, t->RC);
-		return true;
-	}
-	sentinelJumboMessage Base;
+	sentinelMessage Base;
 	int Handle; void *Buf; size_t Size;
-	__device__ unistd_read(bool wait, int fd, void *buf, size_t size) : Base(UNISTD_READ, (wait ? FLOW_WAIT : FLOW_NONE) | FLOW_JUMBOIN, SENTINEL_CHUNK, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Handle(fd), Buf(buf), Size(size) { sentinelDeviceSend(&Base.Base, sizeof(unistd_read)); }
+	__device__ unistd_read(bool wait, int fd, void *buf, size_t size) : Base(UNISTD_READ, wait ? FLOW_WAIT : FLOW_NONE, SENTINEL_CHUNK), Handle(fd), Buf(buf), Size(size) { PtrsOut[0].size = size; sentinelDeviceSend(&Base, sizeof(unistd_read), nullptr, PtrsOut); }
 	size_t RC;
 	void *Ptr;
+	sentinelOutPtr PtrsOut[2] = {
+		{ &Ptr, &Buf, 0 },
+		nullptr
+	};
 };
 
 struct unistd_write {
-	static __forceinline__ __device__ char *Prepare(unistd_write *t, char *data, char *dataEnd, intptr_t offset) {
-		size_t size = t->Size;
-		char *ptr = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += size);
-		if (end > dataEnd) return nullptr;
-		memcpy(ptr, t->Ptr, size);
-		t->Ptr = (char *)ptr + offset;
-		return end;
-	}
-	sentinelJumboMessage Base;
+	sentinelMessage Base;
 	int Handle; const void *Ptr; size_t Size;
-	__device__ unistd_write(bool wait, int fd, const void *ptr, size_t size) : Base(UNISTD_WRITE, (wait ? FLOW_WAIT : FLOW_NONE) | FLOW_JUMBOOUT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Handle(fd), Ptr(ptr), Size(size) { sentinelDeviceSend(&Base.Base, sizeof(unistd_write)); }
+	__device__ unistd_write(bool wait, int fd, const void *ptr, size_t size) : Base(UNISTD_WRITE, wait ? FLOW_WAIT : FLOW_NONE, SENTINEL_CHUNK), Handle(fd), Ptr(ptr), Size(size) { PtrsIn[0].size = size; sentinelDeviceSend(&Base, sizeof(unistd_write), PtrsIn); }
 	size_t RC;
+	sentinelInPtr PtrsIn[2] = {
+		{ &Ptr, 0 },
+		nullptr
+	};
 };
 
 struct unistd_chown {
-	static __forceinline__ __device__ char *Prepare(unistd_chown *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
-		char *str = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += strLength);
-		if (end > dataEnd) return nullptr;
-		memcpy(str, t->Str, strLength);
-		if (t->Str) t->Str = str + offset;
-		return end;
-	}
 	sentinelMessage Base;
 	const char *Str; int Owner; int Group;
-	__device__ unistd_chown(const char *str, int owner, int group) : Base(UNISTD_CHOWN, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), Owner(owner), Group(group) { sentinelDeviceSend(&Base, sizeof(unistd_chown)); }
+	__device__ unistd_chown(const char *str, int owner, int group) : Base(UNISTD_CHOWN, FLOW_WAIT, SENTINEL_CHUNK), Str(str), Owner(owner), Group(group) { sentinelDeviceSend(&Base, sizeof(unistd_chown), PtrsIn); }
 	int RC;
+	sentinelInPtr PtrsIn[2] = {
+		{ &Str, -1 },
+		nullptr
+	};
 };
 
 struct unistd_chdir {
-	static __forceinline__ __device__ char *Prepare(unistd_chdir *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
-		char *str = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += strLength);
-		if (end > dataEnd) return nullptr;
-		memcpy(str, t->Str, strLength);
-		if (t->Str) t->Str = str + offset;
-		return end;
-	}
 	sentinelMessage Base;
 	const char *Str;
-	__device__ unistd_chdir(const char *str) : Base(UNISTD_CHDIR, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(unistd_chdir)); }
+	__device__ unistd_chdir(const char *str) : Base(UNISTD_CHDIR, FLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(unistd_chdir), PtrsIn); }
 	int RC;
+	sentinelInPtr PtrsIn[2] = {
+		{ &Str, -1 },
+		nullptr
+	};
 };
 
 struct unistd_getcwd {
-	static __forceinline__ __device__ char *Prepare(unistd_getcwd *t, char *data, char *dataEnd, intptr_t offset) {
-		t->Ptr = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += SENTINEL_CHUNK);
-		if (end > dataEnd) return nullptr;
-		return end;
-	}
 	sentinelMessage Base;
 	char *Ptr; size_t Size;
-	__device__ unistd_getcwd(char *buf, size_t size) : Base(UNISTD_GETCWD, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Ptr(buf), Size(size) { sentinelDeviceSend(&Base, sizeof(unistd_getcwd)); }
+	__device__ unistd_getcwd(char *buf, size_t size) : Base(UNISTD_GETCWD, FLOW_WAIT, SENTINEL_CHUNK), Ptr(buf), Size(size) { sentinelDeviceSend(&Base, sizeof(unistd_getcwd), nullptr, PtrsOut); }
 	char *RC;
+	sentinelOutPtr PtrsOut[2] = {
+		{ &Ptr, nullptr, -1 },
+		nullptr
+	};
 };
 
 struct unistd_dup {
@@ -164,35 +134,25 @@ struct unistd_dup {
 };
 
 struct unistd_unlink {
-	static __forceinline__ __device__ char *Prepare(unistd_unlink *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
-		char *str = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += strLength);
-		if (end > dataEnd) return nullptr;
-		memcpy(str, t->Str, strLength);
-		if (t->Str) t->Str = str + offset;
-		return end;
-	}
 	sentinelMessage Base;
 	const char *Str;
-	__device__ unistd_unlink(const char *str) : Base(UNISTD_UNLINK, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(unistd_unlink)); }
+	__device__ unistd_unlink(const char *str) : Base(UNISTD_UNLINK, FLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(unistd_unlink), PtrsIn); }
 	int RC;
+	sentinelInPtr PtrsIn[2] = {
+		{ &Str, -1 },
+		nullptr
+	};
 };
 
 struct unistd_rmdir {
-	static __forceinline__ __device__ char *Prepare(unistd_rmdir *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
-		char *str = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += strLength);
-		if (end > dataEnd) return nullptr;
-		memcpy(str, t->Str, strLength);
-		if (t->Str) t->Str = str + offset;
-		return end;
-	}
 	sentinelMessage Base;
 	const char *Str;
-	__device__ unistd_rmdir(const char *str) : Base(UNISTD_RMDIR, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(unistd_rmdir)); }
+	__device__ unistd_rmdir(const char *str) : Base(UNISTD_RMDIR, FLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(unistd_rmdir), PtrsIn); }
 	int RC;
+	sentinelInPtr PtrsIn[2] = {
+		{ &Str, -1 },
+		nullptr
+	};
 };
 
 #endif  /* _SENTINEL_UNISTDMSG_H */

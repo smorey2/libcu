@@ -60,39 +60,26 @@ enum {
 };
 
 struct stdio_remove {
-	static __forceinline__ __device__ char *Prepare(stdio_remove *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
-		char *str = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += strLength);
-		if (end > dataEnd) return nullptr;
-		memcpy(str, t->Str, strLength);
-		if (t->Str) t->Str = str + offset;
-		return end;
-	}
 	sentinelMessage Base;
 	const char *Str;
-	__device__ stdio_remove(const char *str) : Base(STDIO_REMOVE, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdio_remove)); }
+	__device__ stdio_remove(const char *str) : Base(STDIO_REMOVE, FLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(stdio_remove), PtrsIn); }
 	int RC;
+	sentinelInPtr PtrsIn[2] = {
+		{ &Str, -1 },
+		nullptr
+	};
 };
 
 struct stdio_rename {
-	static __forceinline__ __device__ char *Prepare(stdio_rename *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
-		int str2Length = t->Str2 ? (int)strlen(t->Str2) + 1 : 0;
-		char *str = (char *)(data += ROUND8_(sizeof(*t)));
-		char *str2 = (char *)(data += strLength);
-		char *end = (char *)(data += str2Length);
-		if (end > dataEnd) return nullptr;
-		memcpy(str, t->Str, strLength);
-		memcpy(str2, t->Str2, str2Length);
-		if (t->Str) t->Str = str + offset;
-		if (t->Str2) t->Str2 = str2 + offset;
-		return end;
-	}
 	sentinelMessage Base;
 	const char *Str; const char *Str2;
-	__device__ stdio_rename(const char *str, const char *str2) : Base(STDIO_RENAME, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), Str2(str2) { sentinelDeviceSend(&Base, sizeof(stdio_rename)); }
+	__device__ stdio_rename(const char *str, const char *str2) : Base(STDIO_RENAME, FLOW_WAIT, SENTINEL_CHUNK), Str(str), Str2(str2) { sentinelDeviceSend(&Base, sizeof(stdio_rename), PtrsIn); }
 	int RC;
+	sentinelInPtr PtrsIn[3] = {
+		{ &Str, -1 },
+		{ &Str2, -1 },
+		nullptr
+	};
 };
 
 struct stdio_fclose {
@@ -110,39 +97,26 @@ struct stdio_fflush {
 };
 
 struct stdio_freopen {
-	static __forceinline__ __device__ char *Prepare(stdio_freopen *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
-		int str2Length = t->Str2 ? (int)strlen(t->Str2) + 1 : 0;
-		char *str = (char *)(data += ROUND8_(sizeof(*t)));
-		char *str2 = (char *)(data += strLength);
-		char *end = (char *)(data += str2Length);
-		if (end > dataEnd) return nullptr;
-		memcpy(str, t->Str, strLength);
-		memcpy(str2, t->Str2, str2Length);
-		if (t->Str) t->Str = str + offset;
-		if (t->Str2) t->Str2 = str2 + offset;
-		return end;
-	}
 	sentinelMessage Base;
 	const char *Str; const char *Str2; FILE *Stream;
-	__device__ stdio_freopen(const char *str, const char *str2, FILE *stream) : Base(STDIO_FREOPEN, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), Str2(str2), Stream(stream) { sentinelDeviceSend(&Base, sizeof(stdio_freopen)); }
+	__device__ stdio_freopen(const char *str, const char *str2, FILE *stream) : Base(STDIO_FREOPEN, FLOW_WAIT, SENTINEL_CHUNK), Str(str), Str2(str2), Stream(stream) { sentinelDeviceSend(&Base, sizeof(stdio_freopen), PtrsIn); }
 	FILE *RC;
+	sentinelInPtr PtrsIn[3] = {
+		{ &Str, -1 },
+		{ &Str2, -1 },
+		nullptr
+	};
 };
 
 struct stdio_setvbuf {
-	static __forceinline__ __device__ char *Prepare(stdio_setvbuf *t, char *data, char *dataEnd, intptr_t offset) {
-		int bufferLength = t->Buffer ? (int)strlen(t->Buffer) + 1 : 0;
-		char *buffer = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += bufferLength);
-		if (end > dataEnd) return nullptr;
-		memcpy(buffer, t->Buffer, bufferLength);
-		t->Buffer = buffer + offset;
-		return end;
-	}
 	sentinelMessage Base;
-	FILE *File; char *Buffer; int Mode; size_t Size;
-	__device__ stdio_setvbuf(FILE *file, char *buffer, int mode, size_t size) : Base(STDIO_SETVBUF, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), File(file), Buffer(buffer), Mode(mode), Size(size) { sentinelDeviceSend(&Base, sizeof(stdio_setvbuf)); }
+	FILE *File; char *Buf; int Mode; size_t Size;
+	__device__ stdio_setvbuf(FILE *file, char *buf, int mode, size_t size) : Base(STDIO_SETVBUF, FLOW_WAIT, SENTINEL_CHUNK), File(file), Buf(buf), Mode(mode), Size(size) { sentinelDeviceSend(&Base, sizeof(stdio_setvbuf), PtrsIn); }
 	int RC;
+	sentinelInPtr PtrsIn[2] = {
+		{ &Buf, -1 },
+		nullptr
+	};
 };
 
 struct stdio_fgetc {
@@ -160,33 +134,26 @@ struct stdio_fputc {
 };
 
 struct stdio_fgets {
-	static __forceinline__ __device__ char *Prepare(stdio_fgets *t, char *data, char *dataEnd, intptr_t offset) {
-		t->Str = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += SENTINEL_CHUNK);
-		if (end > dataEnd) return nullptr;
-		return end;
-	}
-	sentinelJumboMessage Base;
+	sentinelMessage Base;
 	int Num; FILE *File;
-	__device__ stdio_fgets(char *str, int num, FILE *file) : Base(STDIO_FGETS, FLOW_WAIT | FLOW_JUMBOIN, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), Num(num), File(file) { sentinelDeviceSend(&Base.Base, sizeof(stdio_fgets)); }
+	__device__ stdio_fgets(char *str, int num, FILE *file) : Base(STDIO_FGETS, FLOW_WAIT, SENTINEL_CHUNK), Str(str), Num(num), File(file) { PtrsOut[0].size = num; (&Base, sizeof(stdio_fgets), nullptr, PtrsOut); }
 	char *Str;
 	char *RC;
+	sentinelOutPtr PtrsOut[2] = {
+		{ &Str, &Str, 0 },
+		nullptr
+	};
 };
 
 struct stdio_fputs {
-	static __forceinline__ __device__ char *Prepare(stdio_fputs *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
-		char *str = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += strLength);
-		if (end > dataEnd) return nullptr;
-		memcpy(str, t->Str, strLength);
-		if (t->Str) t->Str = str + offset;
-		return end;
-	}
-	sentinelJumboMessage Base;
+	sentinelMessage Base;
 	const char *Str; FILE *File;
-	__device__ stdio_fputs(bool wait, const char *str, FILE *file) : Base(STDIO_FPUTS, (wait ? FLOW_WAIT : FLOW_NONE) | FLOW_JUMBOOUT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str), File(file) { sentinelDeviceSend(&Base.Base, sizeof(stdio_fputs)); }
+	__device__ stdio_fputs(bool wait, const char *str, FILE *file) : Base(STDIO_FPUTS, wait ? FLOW_WAIT : FLOW_NONE, SENTINEL_CHUNK), Str(str), File(file) { sentinelDeviceSend(&Base, sizeof(stdio_fputs), PtrsIn); }
 	int RC;
+	sentinelInPtr PtrsIn[2] = {
+		{ &Str, -1 },
+		nullptr
+	};
 };
 
 struct stdio_ungetc {
@@ -197,41 +164,26 @@ struct stdio_ungetc {
 };
 
 struct stdio_fread {
-	static __forceinline__ __device__ char *Prepare(stdio_fread *t, char *data, char *dataEnd, intptr_t offset) {
-		char *ptr = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += SENTINEL_CHUNK);
-		if (end > dataEnd) return nullptr;
-		t->Base.Ptr = ptr + offset;
-		t->Base.SafeSize = SENTINEL_CHUNK;
-		t->Base.Size = t->Size * t->Num;
-		return end;
-	}
-	static __forceinline__ __device__ bool Postfix(stdio_fread *t, intptr_t offset) {
-		t->Base.Size = t->Size * t->RC;
-		//char *ptr = (char *)t->Base.Ptr - offset;
-		//if (t->RC > 0) memcpy(t->Buf, ptr, t->Size * t->RC);
-		return true;
-	}
-	sentinelJumboMessage Base;
+	sentinelMessage Base;
 	void *Buf; size_t Size; size_t Num; FILE *File;
-	__device__ stdio_fread(bool wait, void *buf, size_t size, size_t num, FILE *file) : Base(STDIO_FREAD, (wait ? FLOW_WAIT : FLOW_NONE) | FLOW_JUMBOIN, SENTINEL_CHUNK, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Buf(buf), Size(size), Num(num), File(file) { sentinelDeviceSend(&Base.Base, sizeof(stdio_fread)); }
+	__device__ stdio_fread(bool wait, void *buf, size_t size, size_t num, FILE *file) : Base(STDIO_FREAD, wait ? FLOW_WAIT : FLOW_NONE, SENTINEL_CHUNK), Buf(buf), Size(size), Num(num), File(file) { PtrsOut[0].size = size * num; sentinelDeviceSend(&Base, sizeof(stdio_fread)); }
 	size_t RC;
+	void *Ptr;
+	sentinelOutPtr PtrsOut[2] = {
+		{ &Ptr, &Buf, 0 },
+		nullptr
+	};
 };
 
 struct stdio_fwrite {
-	static __forceinline__ __device__ char *Prepare(stdio_fwrite *t, char *data, char *dataEnd, intptr_t offset) {
-		size_t size = t->Size * t->Num;
-		char *ptr = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += size);
-		if (end > dataEnd) return nullptr;
-		memcpy(ptr, t->Ptr, size);
-		t->Ptr = ptr + offset;
-		return end;
-	}
-	sentinelJumboMessage Base;
+	sentinelMessage Base;
 	const void *Ptr; size_t Size; size_t Num; FILE *File;
-	__device__ stdio_fwrite(bool wait, const void *ptr, size_t size, size_t num, FILE *file) : Base(STDIO_FWRITE, (wait ? FLOW_WAIT : FLOW_NONE) | FLOW_JUMBOOUT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Ptr(ptr), Size(size), Num(num), File(file) { sentinelDeviceSend(&Base.Base, sizeof(stdio_fwrite)); }
+	__device__ stdio_fwrite(bool wait, const void *ptr, size_t size, size_t num, FILE *file) : Base(STDIO_FWRITE, wait ? FLOW_WAIT : FLOW_NONE, SENTINEL_CHUNK), Ptr(ptr), Size(size), Num(num), File(file) { PtrsIn[0].size = size * num; sentinelDeviceSend(&Base, sizeof(stdio_fwrite), PtrsIn); }
 	size_t RC;
+	sentinelInPtr PtrsIn[2] = {
+		{ &Ptr, 0 },
+		nullptr
+	};
 };
 
 struct stdio_fseek {

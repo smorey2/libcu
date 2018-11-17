@@ -40,20 +40,14 @@ enum {
 };
 
 struct dirent_opendir {
-	static __forceinline__ __device__ char *Prepare(dirent_opendir *t, char *data, char *dataEnd, intptr_t offset)
-	{
-		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
-		char *str = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += strLength);
-		if (end > dataEnd) return nullptr;
-		memcpy(str, t->Str, strLength);
-		if (t->Str) t->Str = str + offset;
-		return end;
-	}
 	sentinelMessage Base;
 	const char *Str;
-	__device__ dirent_opendir(const char *str) : Base(DIRENT_OPENDIR, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(dirent_opendir)); }
+	__device__ dirent_opendir(const char *str) : Base(DIRENT_OPENDIR, FLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(dirent_opendir), PtrsIn); }
 	DIR *RC;
+	sentinelInPtr PtrsIn[2] = {
+		{ &Str, -1 },
+		nullptr
+	};
 };
 
 struct dirent_closedir {
@@ -67,8 +61,8 @@ struct dirent_readdir {
 	static __forceinline__ __host__ char *HostPrepare(dirent_readdir *t, char *data, char *dataEnd, intptr_t offset) {
 		if (!t->RC) return data;
 		int ptrLength = sizeof(struct dirent);
-		char *ptr = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += ptrLength);
+		char *ptr = data;
+		char *end = data += ptrLength;
 		if (end > dataEnd) return nullptr;
 		memcpy(ptr, t->RC, ptrLength);
 		t->RC = (struct dirent *)(ptr - offset);
@@ -78,8 +72,8 @@ struct dirent_readdir {
 	static __forceinline__ __host__ char *HostPrepare64(dirent_readdir *t, char *data, char *dataEnd, intptr_t offset) {
 		if (!t->RC64) return data;
 		int ptrLength = sizeof(struct dirent64);
-		char *ptr = (char *)(data += ROUND8_(sizeof(*t)));
-		char *end = (char *)(data += ptrLength);
+		char *ptr = data;
+		char *end = data += ptrLength;
 		if (end > dataEnd) return nullptr;
 		memcpy(ptr, t->RC64, ptrLength);
 		t->RC64 = (struct dirent64 *)(ptr - offset);

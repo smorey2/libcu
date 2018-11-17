@@ -51,27 +51,20 @@ struct time_mktime {
 };
 
 struct time_strftime {
-	static __forceinline__ __device__ char *Prepare(time_strftime *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
-		char *str = (char *)(data += ROUND8_(sizeof(*t)));
-		char *ptr = (char *)(data += strLength);
-		char *end = (char *)(data += SENTINEL_CHUNK - strLength);
-		if (end > dataEnd) return nullptr;
-		memcpy(str, t->Str, strLength);
-		if (t->Str) t->Str = str + offset;
-		t->Ptr = ptr + offset;
-		return end;
-	}
-	static __forceinline__ __device__ bool Postfix(time_strftime *t, intptr_t offset) {
-		char *ptr = (char *)t->Ptr - offset;
-		if (t->RC > 0) memcpy((void *)t->Buf, ptr, t->RC);
-		return true;
-	}
 	sentinelMessage Base;
 	const char *Buf; size_t Maxsize; const char *Str; const struct tm Tp;
-	__device__ time_strftime(const char *buf, size_t maxsize, const char *str, const struct tm *tp) : Base(TIME_STRFTIME, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Buf(buf), Maxsize(maxsize), Str(str), Tp(*tp) { sentinelDeviceSend(&Base, sizeof(time_strftime)); }
+	__device__ time_strftime(const char *buf, size_t maxsize, const char *str, const struct tm *tp) : Base(TIME_STRFTIME, FLOW_WAIT, SENTINEL_CHUNK), Buf(buf), Maxsize(maxsize), Str(str), Tp(*tp) { sentinelDeviceSend(&Base, sizeof(time_strftime), PtrsIn, PtrsOut); }
 	size_t RC;
 	void *Ptr;
+	sentinelInPtr PtrsIn[2] = {
+		{ &Str, -1 },
+		nullptr
+	};
+	sentinelOutPtr PtrsOut[3] = {
+		{ (void *)-1 },
+		{ &Ptr, &Buf, -1, &RC },
+		nullptr
+	};
 };
 
 #endif  /* _SENTINEL_TIMEMSG_H */
