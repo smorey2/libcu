@@ -193,6 +193,7 @@
     <None Include="ext\ext_hashTest.cu" />
     <None Include="ext\ext_memfileTest.cu" />
     <CudaCompile Include="ext\ext_libcu.tests.cu" />
+    <CudaCompile Include="hostTest.cu" />
     <CudaCompile Include="program.cu" />
     <CudaCompile Include="sys\sys_libcu.tests.cu" />
     <None Include="sys\sys_statTest.cu" />

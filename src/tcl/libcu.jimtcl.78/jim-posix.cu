@@ -33,11 +33,11 @@
  */
 
 #include <sys/types.h>
-#include <sys/time.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
+#include <sys/timecu.h>
+//#include <sys/wait.h>
+#include <unistdcu.h>
+#include <stringcu.h>
+#include <errnocu.h>
 
 #include "jimautoconf.h"
 #include <jim.h>
@@ -46,13 +46,13 @@
 #include <sys/sysinfo.h>
 #endif
 
-static void Jim_PosixSetError(Jim_Interp *interp)
+static __device__ void Jim_PosixSetError(Jim_Interp *interp)
 {
     Jim_SetResultString(interp, strerror(errno), -1);
 }
 
 #if defined(HAVE_FORK)
-static int Jim_PosixForkCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __device__ int Jim_PosixForkCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     pid_t pid;
 
@@ -71,7 +71,7 @@ static int Jim_PosixForkCommand(Jim_Interp *interp, int argc, Jim_Obj *const *ar
 }
 #endif
 
-static int Jim_PosixGetidsCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __device__ int Jim_PosixGetidsCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     Jim_Obj *objv[8];
 
@@ -92,7 +92,7 @@ static int Jim_PosixGetidsCommand(Jim_Interp *interp, int argc, Jim_Obj *const *
 }
 
 #define JIM_HOST_NAME_MAX 1024
-static int Jim_PosixGethostnameCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __device__ int Jim_PosixGethostnameCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     char *buf;
     int rc = JIM_OK;
@@ -101,7 +101,7 @@ static int Jim_PosixGethostnameCommand(Jim_Interp *interp, int argc, Jim_Obj *co
         Jim_WrongNumArgs(interp, 1, argv, "");
         return JIM_ERR;
     }
-    buf = Jim_Alloc(JIM_HOST_NAME_MAX);
+    buf = (char *)Jim_Alloc(JIM_HOST_NAME_MAX);
     if (gethostname(buf, JIM_HOST_NAME_MAX) == -1) {
         Jim_PosixSetError(interp);
         Jim_Free(buf);
@@ -113,7 +113,7 @@ static int Jim_PosixGethostnameCommand(Jim_Interp *interp, int argc, Jim_Obj *co
     return rc;
 }
 
-static int Jim_PosixUptimeCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __device__ int Jim_PosixUptimeCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
 #ifdef HAVE_STRUCT_SYSINFO_UPTIME
     struct sysinfo info;
@@ -135,7 +135,7 @@ static int Jim_PosixUptimeCommand(Jim_Interp *interp, int argc, Jim_Obj *const *
     return JIM_OK;
 }
 
-int Jim_posixInit(Jim_Interp *interp)
+__device__ int Jim_posixInit(Jim_Interp *interp)
 {
     if (Jim_PackageProvide(interp, "posix", "1.0", JIM_ERRMSG))
         return JIM_ERR;

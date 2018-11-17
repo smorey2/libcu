@@ -6,29 +6,29 @@
  * Currently used by jim-aio.c and jim-exec.c
  */
 
-#include <stdio.h>
-#include <errno.h>
+#include <stdiocu.h>
+#include <errnocu.h>
 
 #include "jimautoconf.h"
 #include <jim.h>
-#include <jim-win32compat.h>
+#include <jim-gpucompat.h>
 
 /**
  * Set an error result based on errno and the given message.
  */
-void Jim_SetResultErrno(Jim_Interp *interp, const char *msg);
+__device__ void Jim_SetResultErrno(Jim_Interp *interp, const char *msg);
 
 /**
  * Opens the file for writing (and appending if append is true).
  * Returns the file descriptor, or -1 on failure.
  */
-int Jim_OpenForWrite(const char *filename, int append);
+__device__ int Jim_OpenForWrite(const char *filename, int append);
 
 /**
  * Opens the file for reading.
  * Returns the file descriptor, or -1 on failure.
  */
-int Jim_OpenForRead(const char *filename);
+__device__ int Jim_OpenForRead(const char *filename);
 
 #if defined(__MINGW32__)
     #ifndef STRICT
@@ -62,10 +62,10 @@ int Jim_OpenForRead(const char *filename);
     #define pipe(P) _pipe((P), 0, O_NOINHERIT)
 
 #elif defined(HAVE_UNISTD_H)
-    #include <unistd.h>
-    #include <fcntl.h>
-    #include <sys/wait.h>
-    #include <sys/stat.h>
+    #include <unistdcu.h>
+    #include <fcntlcu.h>
+    //#include <sys/wait.h>
+    #include <sys/statcu.h>
 
     typedef int pidtype;
     #define Jim_Errno() errno

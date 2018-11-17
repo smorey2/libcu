@@ -41,14 +41,14 @@
 #include <jim.h>
 #include <jim-eventloop.h>
 
-#include <time.h>
-#include <string.h>
-#include <errno.h>
+#include <timecu.h>
+#include <stringcu.h>
+#include <errnocu.h>
 #ifdef HAVE_UNISTD_H
-#include <unistd.h>
+#include <unistdcu.h>
 #endif
 #ifdef HAVE_SYS_TIME_H
-#include <sys/time.h>
+#include <sys/timecu.h>
 #endif
 
 #if defined(__MINGW32__)
@@ -111,7 +111,7 @@ static __device__ void JimAfterTimeEventFinalizer(Jim_Interp *interp, void *clie
 
 __device__ int Jim_EvalObjBackground(Jim_Interp *interp, Jim_Obj *scriptObjPtr)
 {
-    Jim_EventLoop *eventLoop = Jim_GetAssocData(interp, "eventloop");
+    Jim_EventLoop *eventLoop = (Jim_EventLoop *)Jim_GetAssocData(interp, "eventloop");
     Jim_CallFrame *savedFramePtr;
     int retval;
 
@@ -152,9 +152,9 @@ __device__ void Jim_CreateFileHandler(Jim_Interp *interp, int fd, int mask,
     Jim_FileProc * proc, void *clientData, Jim_EventFinalizerProc * finalizerProc)
 {
     Jim_FileEvent *fe;
-    Jim_EventLoop *eventLoop = Jim_GetAssocData(interp, "eventloop");
+    Jim_EventLoop *eventLoop = (Jim_EventLoop *)Jim_GetAssocData(interp, "eventloop");
 
-    fe = Jim_Alloc(sizeof(*fe));
+    fe = (Jim_FileEvent *)Jim_Alloc(sizeof(*fe));
     fe->fd = fd;
     fe->mask = mask;
     fe->fileProc = proc;
@@ -170,7 +170,7 @@ __device__ void Jim_CreateFileHandler(Jim_Interp *interp, int fd, int mask,
 __device__ void Jim_DeleteFileHandler(Jim_Interp *interp, int fd, int mask)
 {
     Jim_FileEvent *fe, *next, *prev = NULL;
-    Jim_EventLoop *eventLoop = Jim_GetAssocData(interp, "eventloop");
+    Jim_EventLoop *eventLoop = (Jim_EventLoop *)Jim_GetAssocData(interp, "eventloop");
 
     for (fe = eventLoop->fileEventHead; fe; fe = next) {
         next = fe->next;
@@ -217,11 +217,11 @@ static __device__ jim_wide JimGetTimeUsec(Jim_EventLoop *eventLoop)
 __device__ jim_wide Jim_CreateTimeHandler(Jim_Interp *interp, jim_wide us,
     Jim_TimeProc * proc, void *clientData, Jim_EventFinalizerProc * finalizerProc)
 {
-    Jim_EventLoop *eventLoop = Jim_GetAssocData(interp, "eventloop");
+    Jim_EventLoop *eventLoop = (Jim_EventLoop *)Jim_GetAssocData(interp, "eventloop");
     jim_wide id = ++eventLoop->timeEventNextId;
     Jim_TimeEvent *te, *e, *prev;
 
-    te = Jim_Alloc(sizeof(*te));
+    te = (Jim_TimeEvent *)Jim_Alloc(sizeof(*te));
     te->id = id;
     te->initialus = us;
     te->when = JimGetTimeUsec(eventLoop) + us;
@@ -268,7 +268,7 @@ static __device__ jim_wide JimFindAfterByScript(Jim_EventLoop *eventLoop, Jim_Ob
     for (te = eventLoop->timeEventHead; te; te = te->next) {
         /* Is this an 'after' event? */
         if (te->timeProc == JimAfterTimeHandler) {
-            if (Jim_StringEqObj(scriptObj, te->clientData)) {
+            if (Jim_StringEqObj(scriptObj, (Jim_Obj *)te->clientData)) {
                 return te->id;
             }
         }
@@ -315,7 +315,7 @@ static __device__ void Jim_FreeTimeHandler(Jim_Interp *interp, Jim_TimeEvent *te
 __device__ jim_wide Jim_DeleteTimeHandler(Jim_Interp *interp, jim_wide id)
 {
     Jim_TimeEvent *te;
-    Jim_EventLoop *eventLoop = Jim_GetAssocData(interp, "eventloop");
+    Jim_EventLoop *eventLoop = (Jim_EventLoop *)Jim_GetAssocData(interp, "eventloop");
 
     if (id > eventLoop->timeEventNextId) {
         return -2;              /* wrong event ID */
@@ -354,7 +354,7 @@ __device__ int Jim_ProcessEvents(Jim_Interp *interp, int flags)
 {
     jim_wide sleep_us = -1;
     int processed = 0;
-    Jim_EventLoop *eventLoop = Jim_GetAssocData(interp, "eventloop");
+    Jim_EventLoop *eventLoop = (Jim_EventLoop *)Jim_GetAssocData(interp, "eventloop");
     Jim_FileEvent *fe = eventLoop->fileEventHead;
     Jim_TimeEvent *te;
     jim_wide maxId;
@@ -516,7 +516,7 @@ static __device__ void JimELAssocDataDeleProc(Jim_Interp *interp, void *data)
     void *next;
     Jim_FileEvent *fe;
     Jim_TimeEvent *te;
-    Jim_EventLoop *eventLoop = data;
+    Jim_EventLoop *eventLoop = (Jim_EventLoop *)data;
 
     fe = eventLoop->fileEventHead;
     while (fe) {
@@ -524,7 +524,7 @@ static __device__ void JimELAssocDataDeleProc(Jim_Interp *interp, void *data)
         if (fe->finalizerProc)
             fe->finalizerProc(interp, fe->clientData);
         Jim_Free(fe);
-        fe = next;
+        fe = (Jim_FileEvent *)next;
     }
 
     te = eventLoop->timeEventHead;
@@ -533,14 +533,14 @@ static __device__ void JimELAssocDataDeleProc(Jim_Interp *interp, void *data)
         if (te->finalizerProc)
             te->finalizerProc(interp, te->clientData);
         Jim_Free(te);
-        te = next;
+        te = (Jim_TimeEvent *)next;
     }
     Jim_Free(data);
 }
 
 static __device__ int JimELVwaitCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
-    Jim_EventLoop *eventLoop = Jim_CmdPrivData(interp);
+    Jim_EventLoop *eventLoop = (Jim_EventLoop *)Jim_CmdPrivData(interp);
     Jim_Obj *oldValue;
     int rc;
 
@@ -589,7 +589,7 @@ static __device__ int JimELVwaitCommand(Jim_Interp *interp, int argc, Jim_Obj *c
 
 static __device__ int JimELUpdateCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
-    Jim_EventLoop *eventLoop = Jim_CmdPrivData(interp);
+    Jim_EventLoop *eventLoop = (Jim_EventLoop *)Jim_CmdPrivData(interp);
     static const char * const options[] = {
         "idletasks", NULL
     };
@@ -613,23 +613,23 @@ static __device__ int JimELUpdateCommand(Jim_Interp *interp, int argc, Jim_Obj *
     return JIM_OK;
 }
 
-static void JimAfterTimeHandler(Jim_Interp *interp, void *clientData)
+static __device__ void JimAfterTimeHandler(Jim_Interp *interp, void *clientData)
 {
-    Jim_Obj *objPtr = clientData;
+    Jim_Obj *objPtr = (Jim_Obj *)clientData;
 
     Jim_EvalObjBackground(interp, objPtr);
 }
 
-static void JimAfterTimeEventFinalizer(Jim_Interp *interp, void *clientData)
+static __device__ void JimAfterTimeEventFinalizer(Jim_Interp *interp, void *clientData)
 {
-    Jim_Obj *objPtr = clientData;
+    Jim_Obj *objPtr = (Jim_Obj *)clientData;
 
     Jim_DecrRefCount(interp, objPtr);
 }
 
 static __device__ int JimELAfterCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
-    Jim_EventLoop *eventLoop = Jim_CmdPrivData(interp);
+    Jim_EventLoop *eventLoop = (Jim_EventLoop *)Jim_CmdPrivData(interp);
     double ms = 0;
     jim_wide id;
     Jim_Obj *objPtr, *idObjPtr;
@@ -723,7 +723,7 @@ static __device__ int JimELAfterCommand(Jim_Interp *interp, int argc, Jim_Obj *c
                     Jim_TimeEvent *e = JimFindTimeHandlerById(eventLoop, id);
                     if (e && e->timeProc == JimAfterTimeHandler) {
                         Jim_Obj *listObj = Jim_NewListObj(interp, NULL, 0);
-                        Jim_ListAppendElement(interp, listObj, e->clientData);
+                        Jim_ListAppendElement(interp, listObj, (Jim_Obj *)e->clientData);
                         Jim_ListAppendElement(interp, listObj, Jim_NewStringObj(interp, e->initialus ? "timer" : "idle", -1));
                         Jim_SetResult(interp, listObj);
                         return JIM_OK;
@@ -748,7 +748,7 @@ __device__ int Jim_eventloopInit(Jim_Interp *interp)
     if (Jim_PackageProvide(interp, "eventloop", "1.0", JIM_ERRMSG))
         return JIM_ERR;
 
-    eventLoop = Jim_Alloc(sizeof(*eventLoop));
+    eventLoop = (Jim_EventLoop *)Jim_Alloc(sizeof(*eventLoop));
     memset(eventLoop, 0, sizeof(*eventLoop));
 
     Jim_SetAssocData(interp, "eventloop", JimELAssocDataDeleProc, eventLoop);

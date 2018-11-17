@@ -39,14 +39,14 @@ enum {
 
 struct time_time {
 	sentinelMessage Base;
-	__device__ time_time() : Base(true, TIME_TIME) { sentinelDeviceSend(&Base, sizeof(time_time)); }
+	__device__ time_time() : Base(TIME_TIME, FLOW_WAIT) { sentinelDeviceSend(&Base, sizeof(time_time)); }
 	time_t RC;
 };
 
 struct time_mktime {
 	sentinelMessage Base;
 	struct tm *Tp;
-	__device__ time_mktime(struct tm *tp) : Base(true, TIME_MKTIME), Tp(tp) { sentinelDeviceSend(&Base, sizeof(time_mktime)); }
+	__device__ time_mktime(struct tm *tp) : Base(TIME_MKTIME, FLOW_WAIT), Tp(tp) { sentinelDeviceSend(&Base, sizeof(time_mktime)); }
 	time_t RC;
 };
 
@@ -69,7 +69,7 @@ struct time_strftime {
 	}
 	sentinelMessage Base;
 	const char *Buf; size_t Maxsize; const char *Str; const struct tm Tp;
-	__device__ time_strftime(const char *buf, size_t maxsize, const char *str, const struct tm *tp) : Base(true, TIME_STRFTIME, SENTINEL_CHUNK, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Buf(buf), Maxsize(maxsize), Str(str), Tp(*tp) { sentinelDeviceSend(&Base, sizeof(time_strftime)); }
+	__device__ time_strftime(const char *buf, size_t maxsize, const char *str, const struct tm *tp) : Base(TIME_STRFTIME, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare), SENTINELPOSTFIX(Postfix)), Buf(buf), Maxsize(maxsize), Str(str), Tp(*tp) { sentinelDeviceSend(&Base, sizeof(time_strftime)); }
 	size_t RC;
 	void *Ptr;
 };

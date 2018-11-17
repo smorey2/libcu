@@ -69,6 +69,8 @@ static __device__ mode_t __umask = 0;
 __device__ int expandPath(const char *path, char *newPath) {
 	register unsigned char *d = (unsigned char *)newPath;
 	register unsigned char *s;
+	if (!path)
+		panic("expandPath: null path");
 	// add cwd
 	if (path[0] != ':') {
 		s = (unsigned char *)__cwd;
@@ -101,7 +103,7 @@ __device__ int expandPath(const char *path, char *newPath) {
 static __device__ dirEnt_t *expandAndFindEnt(const char *path, char *newPath, int *pathLength = 0) {
 	int len = expandPath(path, newPath);
 	if (pathLength) *pathLength = len;
-	dirEnt_t *ent = !strcmp(newPath, ":\\")
+	dirEnt_t *ent = (newPath[0] == ':' && newPath[1] == '\\' && !newPath[2])
 		? &__iob_root
 		: (dirEnt_t *)hashFind(&__iob_dir, newPath);
 	return ent;
@@ -114,7 +116,7 @@ static __device__ dirEnt_t *findDirInPath(const char *path, const char **file) {
 		return nullptr;
 	}
 	*file2 = 0;
-	dirEnt_t *ent = !strcmp(path, ":\\")
+	dirEnt_t *ent = (path[0] == ':' && !path[1])
 		? &__iob_root
 		: (dirEnt_t *)hashFind(&__iob_dir, path);
 	*file2 = '\\';

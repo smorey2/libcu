@@ -23,8 +23,8 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
-#include <string.h>
-#include <ctype.h>
+#include <stringcu.h>
+#include <ctypecu.h>
 
 #include "jimautoconf.h"
 #include <jim.h>

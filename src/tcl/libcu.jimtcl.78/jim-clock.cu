@@ -18,15 +18,15 @@
 #define _GNU_SOURCE
 #endif
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <time.h>
+#include <stdlibcu.h>
+#include <stringcu.h>
+#include <stdiocu.h>
+#include <sys/timecu.h>
 
 #include <jim-subcmd.h>
 
 #ifdef HAVE_SYS_TIME_H
-#include <sys/time.h>
+#include <sys/timecu.h>
 #endif
 
 struct clock_options {

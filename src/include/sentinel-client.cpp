@@ -26,34 +26,68 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength) {
 		printf("sentinel: client map not defined. did you start sentinel?\n");
 		exit(0);
 	}
+
+	// ATTACH
 #if __OS_WIN
 	long id = InterlockedAdd((long *)&map->SetId, SENTINEL_MSGSIZE) - SENTINEL_MSGSIZE;
 #elif __OS_UNIX
 	long id = __sync_fetch_and_add((long *)&map->SetId, SENTINEL_MSGSIZE) - SENTINEL_MSGSIZE;
 #endif
-	sentinelCommand *cmd = (sentinelCommand *)&map->Data[id % sizeof(map->Data)];
+	sentinelCommand *cmd = (sentinelCommand *)&map->Data[id % sizeof(map->Data)]; //cmd->Data = (char *)cmd + ROUND8_(sizeof(sentinelCommand));
+	if (cmd->Magic != SENTINEL_MAGIC) {
+		printf("Bad Sentinel Magic");
+		exit(1);
+	}
 	volatile long *control = (volatile long *)&cmd->Control;
-	//while (InterlockedCompareExchange((long *)control, 1, 0) != 0) { }
-	//cmd->Data = (char *)cmd + ROUND8_(sizeof(sentinelCommand));
-	cmd->Magic = SENTINEL_MAGIC;
+#if __OS_WIN
+	/* spin-lock */ while (InterlockedCompareExchange((long *)control, 1, 0) != 0) {} // device in-progress
+#elif __OS_UNIX
+	/* spin-lock */ while (__sync_val_compare_and_swap((long *)control, 1, 0) != 0) {} // device in-progress
+#endif
+
+
+	// PREPARE
 	cmd->Length = msgLength;
 	if (msg->Prepare && !msg->Prepare(msg, cmd->Data, cmd->Data + ROUND8_(msgLength) + msg->Size, _sentinelClientMapOffset)) {
 		printf("msg too long");
 		exit(0);
 	}
+
+	// FLOW-OUT
+	if (msg->Flow & FLOW_JUMBOOUT) {
+		while (true) {
+#if __OS_WIN
+			/* spin-lock */ while (InterlockedCompareExchange((long *)control, 9, 10) != 10) {}
+#elif __OS_UNIX
+			/* spin-lock */ while (__sync_val_compare_and_swap((long *)control, 9, 10) != 10) {}
+#endif
+		}
+	}
 	memcpy(cmd->Data, msg, msgLength);
 	//printf("Msg: %d[%d]'", msg->OP, msgLength); for (int i = 0; i < msgLength; i++) printf("%02x", ((char *)msg)[i] & 0xff); printf("'\n");
+	*control = 2; // client signal that data is ready to process
 
-	*control = 2;
-	if (msg->Wait) {
+	// FLOW-IN
+	if (msg->Flow & FLOW_JUMBOIN) {
+		while (true) {
 #if __OS_WIN
-		while (InterlockedCompareExchange((long *)control, 5, 4) != 4) {}
+			/* spin-lock */ while (InterlockedCompareExchange((long *)control, 9, 10) != 10) {}
 #elif __OS_UNIX
-		while (__sync_val_compare_and_swap((long *)control, 5, 4) != 4) {}
+			/* spin-lock */ while (__sync_val_compare_and_swap((long *)control, 9, 10) != 10) {}
+#endif
+		}
+	}
+
+	// FLOW-WAIT
+	if (msg->Flow & FLOW_WAIT) {
+#if __OS_WIN
+		/* spin-lock */ while (InterlockedCompareExchange((long *)control, 9, 4) != 4) {}
+#elif __OS_UNIX
+		/* spin-lock */ while (__sync_val_compare_and_swap((long *)control, 9, 4) != 4) {}
 #endif
 		memcpy(msg, cmd->Data, msgLength);
-		*control = 0;
 	}
+	*control = 0; // normal state
 #endif
 }
 
@@ -105,7 +139,7 @@ void sentinelClientShutdown() {
 #endif
 }
 
-__forceinline__ int getprocessid_() { host_getprocessid msg; return msg.RC; }
+static __forceinline__ int getprocessid_() { host_getprocessid msg; return msg.RC; }
 
 static char *sentinelClientRedirPipelineArgs[] = { (char *)"^0" };
 void sentinelClientRedir(pipelineRedir *redir) {

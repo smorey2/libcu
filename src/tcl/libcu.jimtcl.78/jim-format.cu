@@ -39,8 +39,8 @@
  * See the file "tcl.license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
-#include <ctype.h>
-#include <string.h>
+#include <ctypecu.h>
+#include <stringcu.h>
 
 #include <jim.h>
 #include "utf8.h"
@@ -325,7 +325,7 @@ __device__ Jim_Obj *Jim_FormatString(Jim_Interp *interp, Jim_Obj *fmtObjPtr, int
                 /* Increase the size of the buffer if needed */
                 if (num_buffer_size < length + 1) {
                     num_buffer_size = length + 1;
-                    num_buffer = Jim_Realloc(num_buffer, num_buffer_size);
+                    num_buffer = (char *)Jim_Realloc(num_buffer, num_buffer_size);
                 }
 
                 j = 0;
@@ -417,7 +417,7 @@ __device__ Jim_Obj *Jim_FormatString(Jim_Interp *interp, Jim_Obj *fmtObjPtr, int
             /* Increase the size of the buffer if needed */
             if (num_buffer_size < length + 1) {
                 num_buffer_size = length + 1;
-                num_buffer = Jim_Realloc(num_buffer, num_buffer_size);
+                num_buffer = (char *)Jim_Realloc(num_buffer, num_buffer_size);
             }
 
             if (doubleType) {

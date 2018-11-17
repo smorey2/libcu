@@ -1,15 +1,15 @@
-#include <errno.h>
-#include <string.h>
+#include <errnocu.h>
+#include <stringcu.h>
 
 #include "jimautoconf.h"
 #include <jim.h>
 
 #ifdef USE_LINENOISE
 #ifdef HAVE_UNISTD_H
-    #include <unistd.h>
+    #include <unistdcu.h>
 #endif
 #ifdef HAVE_SYS_STAT_H
-    #include <sys/stat.h>
+    #include <sys/statcu.h>
 #endif
 #include "linenoise.h"
 #else
@@ -48,7 +48,7 @@ char *Jim_HistoryGetline(Jim_Interp *interp, const char *prompt)
     return result;
 #else
     int len;
-    char *line = malloc(MAX_LINE_LEN);
+    char *line = (char *)malloc(MAX_LINE_LEN);
 
     fputs(prompt, stdout);
     fflush(stdout);
@@ -113,7 +113,7 @@ struct JimCompletionInfo {
     Jim_Obj *command;
 };
 
-static void JimCompletionCallback(const char *prefix, linenoiseCompletions *comp, void *userdata)
+static __device__ void JimCompletionCallback(const char *prefix, linenoiseCompletions *comp, void *userdata)
 {
     struct JimCompletionInfo *info = (struct JimCompletionInfo *)userdata;
     Jim_Obj *objv[2];
@@ -135,7 +135,7 @@ static void JimCompletionCallback(const char *prefix, linenoiseCompletions *comp
     }
 }
 
-static void JimHistoryFreeCompletion(Jim_Interp *interp, void *data)
+static __device__ void JimHistoryFreeCompletion(Jim_Interp *interp, void *data)
 {
     struct JimCompletionInfo *compinfo = data;
 

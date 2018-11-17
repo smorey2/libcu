@@ -48,12 +48,14 @@ These defines are used for Sentinel:
 * `SENTINEL_DEVICEMAPS` - the number of device to host maps, and threads to create
 * `SENTINEL_MSGSIZE` - the size of a message structure including its header information
 * `SENTINEL_MSGCOUNT` - the number of message structures available in a given map
+* `SENTINEL_CHUNK` - the chunking size available in a message
 ```
 #define SENTINEL_NAME "Sentinel"
 #define SENTINEL_MAGIC (unsigned short)0xC811
 #define SENTINEL_DEVICEMAPS 1
-#define SENTINEL_MSGSIZE 4096
-#define SENTINEL_MSGCOUNT 1
+#define SENTINEL_MSGSIZE 5120
+#define SENTINEL_MSGCOUNT 5
+#define SENTINEL_CHUNK 4096
 ```
 
 ### SentinelContext
@@ -92,9 +94,10 @@ Each `sentinelCommand` represents a command being passed across the bus, and has
 * `Control` handles flow control, and is marked volatile to by-pass any caching issues
 	* 0 - normal state
 	* 1 - device in-progress
-	* 2 - client signal that data is ready to process
+	* 2 - device signal that data is ready to process
 	* 3 - host in-progress
 	* 4 - host signal that results are ready to read
+	* 10 - jumbo
 * `Length` and `Data` represent the embeded `sentinelMessage`
 ```
 sentinelCommand
@@ -108,27 +111,27 @@ sentinelCommand
 Each `sentinelMessage` is a custom message being passed across the bus
 ```
 sentinelMessage
-- Wait - flag to asyc or wait
+- Flow - flow control to asyc or wait
 - OP - operation
 - Size - size of message
 - Prepare() - method to prepare message for transport
 ```
 
-### sentinelRedirect
+<!-- ### sentinelRedirect
 The `sentinelRedirect` holds stdin, stdout, stderr for redirection
 ```
 sentinelRedirect
 - In - stdin
 - Out - stdout
 - Err - stderr
-```
+``` -->
 
 ### SentinelClientMessage
 The `sentinelClientMessage` holds `sentinelMessage` and `sentinelRedirect`
 ```
 sentinelClientMessage
 - Base - sentinelMessage
-- Redir - sentinelRedirect
+- Redir - pipelineRedir
 ```
 
 ### SentinelExecutor
@@ -167,7 +170,7 @@ struct module_simple {
 	sentinelMessage Base;
 	int Value;
 	__device__ module_simple(int value)
-		: Base(true, MODULE_SIMPLE), Value(value) { sentinelDeviceSend(&Base, sizeof(module_simple)); }
+		: Base(MODULE_SIMPLE), Value(value) { sentinelDeviceSend(&Base, sizeof(module_simple)); }
 	int RC;
 };
 ```
@@ -181,7 +184,7 @@ Message asset(s) referenced outside of the message payload, like string values, 
 ```
 struct module_string {
 	static __forceinline __device__ char *Prepare(module_string *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = (t->Str ? (int)strlen(t->Str) + 1 : 0);
+		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
 		char *str = (char *)(data += _ROUND8(sizeof(*t)));
 		char *end = (char *)(data += strLength);
 		if (end > dataEnd) return nullptr;
@@ -192,7 +195,7 @@ struct module_string {
 	sentinelMessage Base;
 	const char *Str;
 	__device__ module_string(const char *str)
-		: Base(true, MODULE_STRING, 1024, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(module_string)); }
+		: Base(MODULE_STRING, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(module_string)); }
 	int RC;
 };
 ```
