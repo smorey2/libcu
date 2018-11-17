@@ -31,6 +31,8 @@ __forceinline__ int __convertSMVer2Cores(int major, int minor) {
 		{ 0x60, 64 }, // Pascal Generation (SM 6.0) GP100 class
 		{ 0x61, 128}, // Pascal Generation (SM 6.1) GP10x class
 		{ 0x62, 128}, // Pascal Generation (SM 6.2) GP10x class
+		{ 0x70, 64 }, // Volta Generation (SM 7.0) GV10x class
+		{ 0x75, 64 }, // Turing Generation (SM 7.5) GT10x class
 		{   -1, -1 }
 	};
 	int index = 0;
