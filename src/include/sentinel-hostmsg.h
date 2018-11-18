@@ -35,7 +35,7 @@ enum {
 
 struct host_getprocessid {
 	sentinelMessage Base;
-	host_getprocessid() : Base(HOST_GETPROCESSID, FLOW_WAIT) { sentinelClientSend(&Base, sizeof(host_getprocessid)); }
+	host_getprocessid() : Base(HOST_GETPROCESSID, SENTINELFLOW_WAIT) { sentinelClientSend(&Base, sizeof(host_getprocessid)); }
 	int RC;
 };
 

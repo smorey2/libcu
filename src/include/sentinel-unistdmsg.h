@@ -48,7 +48,7 @@ enum {
 struct unistd_access {
 	sentinelMessage Base;
 	const char *Str; int Type;
-	__device__ unistd_access(const char *str, int type) : Base(UNISTD_ACCESS, FLOW_WAIT, SENTINEL_CHUNK), Str(str), Type(type) { sentinelDeviceSend(&Base, sizeof(unistd_access), PtrsIn); }
+	__device__ unistd_access(const char *str, int type) : Base(UNISTD_ACCESS, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str), Type(type) { sentinelDeviceSend(&Base, sizeof(unistd_access), PtrsIn); }
 	int RC;
 	sentinelInPtr PtrsIn[2] = {
 		{ &Str, -1 },
@@ -59,21 +59,21 @@ struct unistd_access {
 struct unistd_lseek {
 	sentinelMessage Base;
 	int Handle; long long Offset; int Whence; bool Bit64;
-	__device__ unistd_lseek(int fd, long long offset, int whence, bool bit64) : Base(UNISTD_LSEEK, FLOW_WAIT), Handle(fd), Offset(offset), Whence(whence), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(unistd_lseek)); }
+	__device__ unistd_lseek(int fd, long long offset, int whence, bool bit64) : Base(UNISTD_LSEEK, SENTINELFLOW_WAIT), Handle(fd), Offset(offset), Whence(whence), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(unistd_lseek)); }
 	long long RC;
 };
 
 struct unistd_close {
 	sentinelMessage Base;
 	int Handle;
-	__device__ unistd_close(int fd) : Base(UNISTD_CLOSE, FLOW_WAIT), Handle(fd) { sentinelDeviceSend(&Base, sizeof(unistd_close)); }
+	__device__ unistd_close(int fd) : Base(UNISTD_CLOSE, SENTINELFLOW_WAIT), Handle(fd) { sentinelDeviceSend(&Base, sizeof(unistd_close)); }
 	int RC;
 };
 
 struct unistd_read {
 	sentinelMessage Base;
 	int Handle; void *Buf; size_t Size;
-	__device__ unistd_read(bool wait, int fd, void *buf, size_t size) : Base(UNISTD_READ, wait ? FLOW_WAIT : FLOW_NONE, SENTINEL_CHUNK), Handle(fd), Buf(buf), Size(size) { PtrsOut[0].size = size; sentinelDeviceSend(&Base, sizeof(unistd_read), nullptr, PtrsOut); }
+	__device__ unistd_read(bool wait, int fd, void *buf, size_t size) : Base(UNISTD_READ, wait ? SENTINELFLOW_WAIT : SENTINELFLOW_NONE, SENTINEL_CHUNK), Handle(fd), Buf(buf), Size(size) { PtrsOut[0].size = size; sentinelDeviceSend(&Base, sizeof(unistd_read), nullptr, PtrsOut); }
 	size_t RC;
 	void *Ptr;
 	sentinelOutPtr PtrsOut[2] = {
@@ -85,7 +85,7 @@ struct unistd_read {
 struct unistd_write {
 	sentinelMessage Base;
 	int Handle; const void *Ptr; size_t Size;
-	__device__ unistd_write(bool wait, int fd, const void *ptr, size_t size) : Base(UNISTD_WRITE, wait ? FLOW_WAIT : FLOW_NONE, SENTINEL_CHUNK), Handle(fd), Ptr(ptr), Size(size) { PtrsIn[0].size = size; sentinelDeviceSend(&Base, sizeof(unistd_write), PtrsIn); }
+	__device__ unistd_write(bool wait, int fd, const void *ptr, size_t size) : Base(UNISTD_WRITE, wait ? SENTINELFLOW_WAIT : SENTINELFLOW_NONE, SENTINEL_CHUNK), Handle(fd), Ptr(ptr), Size(size) { PtrsIn[0].size = size; sentinelDeviceSend(&Base, sizeof(unistd_write), PtrsIn); }
 	size_t RC;
 	sentinelInPtr PtrsIn[2] = {
 		{ &Ptr, 0 },
@@ -96,7 +96,7 @@ struct unistd_write {
 struct unistd_chown {
 	sentinelMessage Base;
 	const char *Str; int Owner; int Group;
-	__device__ unistd_chown(const char *str, int owner, int group) : Base(UNISTD_CHOWN, FLOW_WAIT, SENTINEL_CHUNK), Str(str), Owner(owner), Group(group) { sentinelDeviceSend(&Base, sizeof(unistd_chown), PtrsIn); }
+	__device__ unistd_chown(const char *str, int owner, int group) : Base(UNISTD_CHOWN, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str), Owner(owner), Group(group) { sentinelDeviceSend(&Base, sizeof(unistd_chown), PtrsIn); }
 	int RC;
 	sentinelInPtr PtrsIn[2] = {
 		{ &Str, -1 },
@@ -107,7 +107,7 @@ struct unistd_chown {
 struct unistd_chdir {
 	sentinelMessage Base;
 	const char *Str;
-	__device__ unistd_chdir(const char *str) : Base(UNISTD_CHDIR, FLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(unistd_chdir), PtrsIn); }
+	__device__ unistd_chdir(const char *str) : Base(UNISTD_CHDIR, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(unistd_chdir), PtrsIn); }
 	int RC;
 	sentinelInPtr PtrsIn[2] = {
 		{ &Str, -1 },
@@ -118,7 +118,7 @@ struct unistd_chdir {
 struct unistd_getcwd {
 	sentinelMessage Base;
 	char *Ptr; size_t Size;
-	__device__ unistd_getcwd(char *buf, size_t size) : Base(UNISTD_GETCWD, FLOW_WAIT, SENTINEL_CHUNK), Ptr(buf), Size(size) { sentinelDeviceSend(&Base, sizeof(unistd_getcwd), nullptr, PtrsOut); }
+	__device__ unistd_getcwd(char *buf, size_t size) : Base(UNISTD_GETCWD, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Ptr(buf), Size(size) { sentinelDeviceSend(&Base, sizeof(unistd_getcwd), nullptr, PtrsOut); }
 	char *RC;
 	sentinelOutPtr PtrsOut[2] = {
 		{ &Ptr, nullptr, -1 },
@@ -129,14 +129,14 @@ struct unistd_getcwd {
 struct unistd_dup {
 	sentinelMessage Base;
 	int Handle; int Handle2; bool Dup1;
-	__device__ unistd_dup(int fd, int fd2, bool dup1) : Base(UNISTD_DUP, FLOW_WAIT), Handle(fd), Handle2(fd2), Dup1(dup1) { sentinelDeviceSend(&Base, sizeof(unistd_dup)); }
+	__device__ unistd_dup(int fd, int fd2, bool dup1) : Base(UNISTD_DUP, SENTINELFLOW_WAIT), Handle(fd), Handle2(fd2), Dup1(dup1) { sentinelDeviceSend(&Base, sizeof(unistd_dup)); }
 	int RC;
 };
 
 struct unistd_unlink {
 	sentinelMessage Base;
 	const char *Str;
-	__device__ unistd_unlink(const char *str) : Base(UNISTD_UNLINK, FLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(unistd_unlink), PtrsIn); }
+	__device__ unistd_unlink(const char *str) : Base(UNISTD_UNLINK, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(unistd_unlink), PtrsIn); }
 	int RC;
 	sentinelInPtr PtrsIn[2] = {
 		{ &Str, -1 },
@@ -147,7 +147,7 @@ struct unistd_unlink {
 struct unistd_rmdir {
 	sentinelMessage Base;
 	const char *Str;
-	__device__ unistd_rmdir(const char *str) : Base(UNISTD_RMDIR, FLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(unistd_rmdir), PtrsIn); }
+	__device__ unistd_rmdir(const char *str) : Base(UNISTD_RMDIR, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(unistd_rmdir), PtrsIn); }
 	int RC;
 	sentinelInPtr PtrsIn[2] = {
 		{ &Str, -1 },

@@ -42,7 +42,7 @@ enum {
 struct dirent_opendir {
 	sentinelMessage Base;
 	const char *Str;
-	__device__ dirent_opendir(const char *str) : Base(DIRENT_OPENDIR, FLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(dirent_opendir), PtrsIn); }
+	__device__ dirent_opendir(const char *str) : Base(DIRENT_OPENDIR, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(dirent_opendir), PtrsIn); }
 	DIR *RC;
 	sentinelInPtr PtrsIn[2] = {
 		{ &Str, -1 },
@@ -53,7 +53,7 @@ struct dirent_opendir {
 struct dirent_closedir {
 	sentinelMessage Base;
 	DIR *Ptr;
-	__device__ dirent_closedir(DIR *ptr) : Base(DIRENT_CLOSEDIR, FLOW_WAIT), Ptr(ptr) { sentinelDeviceSend(&Base, sizeof(dirent_closedir)); }
+	__device__ dirent_closedir(DIR *ptr) : Base(DIRENT_CLOSEDIR, SENTINELFLOW_WAIT), Ptr(ptr) { sentinelDeviceSend(&Base, sizeof(dirent_closedir)); }
 	int RC;
 };
 
@@ -82,7 +82,7 @@ struct dirent_readdir {
 #endif
 	sentinelMessage Base;
 	DIR *Ptr; bool Bit64;
-	__device__ dirent_readdir(DIR *ptr, bool bit64) : Base(DIRENT_READDIR, FLOW_WAIT, SENTINEL_CHUNK), Ptr(ptr), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(dirent_readdir)); }
+	__device__ dirent_readdir(DIR *ptr, bool bit64) : Base(DIRENT_READDIR, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Ptr(ptr), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(dirent_readdir)); }
 	struct dirent *RC;
 #ifdef __USE_LARGEFILE64
 	struct dirent64 *RC64;
@@ -92,7 +92,7 @@ struct dirent_readdir {
 struct dirent_rewinddir {
 	sentinelMessage Base;
 	DIR *Ptr;
-	__device__ dirent_rewinddir(DIR *ptr) : Base(DIRENT_REWINDDIR, FLOW_WAIT), Ptr(ptr) { sentinelDeviceSend(&Base, sizeof(dirent_rewinddir)); }
+	__device__ dirent_rewinddir(DIR *ptr) : Base(DIRENT_REWINDDIR, SENTINELFLOW_WAIT), Ptr(ptr) { sentinelDeviceSend(&Base, sizeof(dirent_rewinddir)); }
 };
 
 #endif  /* _SENTINEL_DIRENTMSG_H */

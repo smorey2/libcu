@@ -48,14 +48,14 @@ enum {
 struct fcntl_fcntl {
 	sentinelMessage Base;
 	int Handle; int Cmd; int P0; bool Bit64;
-	__device__ fcntl_fcntl(int fd, int cmd, int p0, bool bit64) : Base(FCNTL_FCNTL, FLOW_WAIT), Handle(fd), Cmd(cmd), P0(p0), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(fcntl_fcntl)); }
+	__device__ fcntl_fcntl(int fd, int cmd, int p0, bool bit64) : Base(FCNTL_FCNTL, SENTINELFLOW_WAIT), Handle(fd), Cmd(cmd), P0(p0), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(fcntl_fcntl)); }
 	int RC;
 };
 
 struct fcntl_open {
 	sentinelMessage Base;
 	const char *Str; int OFlag; int P0; bool Bit64;
-	__device__ fcntl_open(const char *str, int oflag, int p0, bool bit64) : Base(FCNTL_OPEN, FLOW_WAIT, SENTINEL_CHUNK), Str(str), OFlag(oflag), P0(p0), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(fcntl_open), PtrsIn); }
+	__device__ fcntl_open(const char *str, int oflag, int p0, bool bit64) : Base(FCNTL_OPEN, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str), OFlag(oflag), P0(p0), Bit64(bit64) { sentinelDeviceSend(&Base, sizeof(fcntl_open), PtrsIn); }
 	int RC;
 	sentinelInPtr PtrsIn[2] = {
 		{ &Str, -1 },
@@ -66,7 +66,7 @@ struct fcntl_open {
 struct fcntl_stat {
 	sentinelMessage Base;
 	const char *Str; struct stat *Buf; struct _stat64 *Buf64; bool Bit64; bool LStat;
-	__device__ fcntl_stat(const char *str, struct stat *buf, struct _stat64 *buf64, bool bit64, bool lstat_) : Base(FCNTL_STAT, FLOW_WAIT, SENTINEL_CHUNK), Str(str), Buf(buf), Buf64(buf64), Bit64(bit64), LStat(lstat_) { if (bit64) { PtrsOut[0].buf = &Buf64; PtrsOut[0].size = sizeof(struct _stat64); } sentinelDeviceSend(&Base, sizeof(fcntl_stat), PtrsIn, PtrsOut); }
+	__device__ fcntl_stat(const char *str, struct stat *buf, struct _stat64 *buf64, bool bit64, bool lstat_) : Base(FCNTL_STAT, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str), Buf(buf), Buf64(buf64), Bit64(bit64), LStat(lstat_) { if (bit64) { PtrsOut[0].buf = &Buf64; PtrsOut[0].size = sizeof(struct _stat64); } sentinelDeviceSend(&Base, sizeof(fcntl_stat), PtrsIn, PtrsOut); }
 	int RC;
 	void *Ptr;
 	sentinelInPtr PtrsIn[2] = {
@@ -82,7 +82,7 @@ struct fcntl_stat {
 struct fcntl_fstat {
 	sentinelMessage Base;
 	int Handle; struct stat *Buf; struct _stat64 *Buf64; bool Bit64;
-	__device__ fcntl_fstat(int fd, struct stat *buf, struct _stat64 *buf64, bool bit64) : Base(FCNTL_FSTAT, FLOW_WAIT, SENTINEL_CHUNK), Handle(fd), Buf(buf), Buf64(buf64), Bit64(bit64) { if (bit64) { PtrsOut[0].buf = &Buf64; PtrsOut[0].size = sizeof(struct _stat64); } sentinelDeviceSend(&Base, sizeof(fcntl_fstat), nullptr, PtrsOut); }
+	__device__ fcntl_fstat(int fd, struct stat *buf, struct _stat64 *buf64, bool bit64) : Base(FCNTL_FSTAT, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Handle(fd), Buf(buf), Buf64(buf64), Bit64(bit64) { if (bit64) { PtrsOut[0].buf = &Buf64; PtrsOut[0].size = sizeof(struct _stat64); } sentinelDeviceSend(&Base, sizeof(fcntl_fstat), nullptr, PtrsOut); }
 	int RC;
 	void *Ptr;
 	sentinelOutPtr PtrsOut[2] = {
@@ -94,7 +94,7 @@ struct fcntl_fstat {
 struct fcntl_chmod {
 	sentinelMessage Base;
 	const char *Str; mode_t Mode;
-	__device__ fcntl_chmod(const char *str, mode_t mode) : Base(FCNTL_CHMOD, FLOW_WAIT, SENTINEL_CHUNK), Str(str), Mode(mode) { sentinelDeviceSend(&Base, sizeof(fcntl_chmod), PtrsIn); }
+	__device__ fcntl_chmod(const char *str, mode_t mode) : Base(FCNTL_CHMOD, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str), Mode(mode) { sentinelDeviceSend(&Base, sizeof(fcntl_chmod), PtrsIn); }
 	int RC;
 	sentinelInPtr PtrsIn[2] = {
 		{ &Str, -1 },
@@ -105,7 +105,7 @@ struct fcntl_chmod {
 struct fcntl_mkdir {
 	sentinelMessage Base;
 	const char *Str; mode_t Mode;
-	__device__ fcntl_mkdir(const char *str, mode_t mode) : Base(FCNTL_MKDIR, FLOW_WAIT, SENTINEL_CHUNK), Str(str), Mode(mode) { sentinelDeviceSend(&Base, sizeof(fcntl_mkdir), PtrsIn); }
+	__device__ fcntl_mkdir(const char *str, mode_t mode) : Base(FCNTL_MKDIR, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str), Mode(mode) { sentinelDeviceSend(&Base, sizeof(fcntl_mkdir), PtrsIn); }
 	int RC;
 	sentinelInPtr PtrsIn[2] = {
 		{ &Str, -1 },
@@ -116,7 +116,7 @@ struct fcntl_mkdir {
 struct fcntl_mkfifo {
 	sentinelMessage Base;
 	const char *Str; mode_t Mode;
-	__device__ fcntl_mkfifo(const char *str, mode_t mode) : Base(FCNTL_MKFIFO, FLOW_WAIT, SENTINEL_CHUNK), Str(str), Mode(mode) { sentinelDeviceSend(&Base, sizeof(fcntl_mkfifo), PtrsIn); }
+	__device__ fcntl_mkfifo(const char *str, mode_t mode) : Base(FCNTL_MKFIFO, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str), Mode(mode) { sentinelDeviceSend(&Base, sizeof(fcntl_mkfifo), PtrsIn); }
 	int RC;
 	sentinelInPtr PtrsIn[2] = {
 		{ &Str, -1 },

@@ -64,8 +64,8 @@ int unsetenv(const char *name) {
 #endif
 
 bool sentinelDefaultHostExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*, char*, char*, intptr_t)) {
-	if (data->OP > TIME_STRFTIME) return false;
-	switch (data->OP) {
+	if (data->op > TIME_STRFTIME) return false;
+	switch (data->op) {
 #if __OS_WIN
 	case HOST_GETPROCESSID: { host_getprocessid *msg = (host_getprocessid *)data; msg->RC = GetCurrentProcessId(); return true; }
 #elif __OS_UNIX
@@ -76,8 +76,8 @@ bool sentinelDefaultHostExecutor(void *tag, sentinelMessage *data, int length, c
 }
 
 bool sentinelDefaultDeviceExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*, char*, char*, intptr_t)) {
-	if (data->OP > TIME_STRFTIME) return false;
-	switch (data->OP) {
+	if (data->op > TIME_STRFTIME) return false;
+	switch (data->op) {
 	case STDIO_REMOVE: { stdio_remove *msg = (stdio_remove *)data; msg->RC = remove(msg->Str); return true; }
 	case STDIO_RENAME: { stdio_rename *msg = (stdio_rename *)data; msg->RC = rename(msg->Str, msg->Str2); return true; }
 	case STDIO_FCLOSE: { stdio_fclose *msg = (stdio_fclose *)data; msg->RC = fclose(msg->File); return true; }
@@ -89,8 +89,8 @@ bool sentinelDefaultDeviceExecutor(void *tag, sentinelMessage *data, int length,
 	case STDIO_FPUTC: { stdio_fputc *msg = (stdio_fputc *)data; msg->RC = fputc(msg->Ch, msg->File); return true; }
 	case STDIO_FPUTS: { stdio_fputs *msg = (stdio_fputs *)data; msg->RC = fputs(msg->Str, msg->File); return true; }
 	case STDIO_UNGETC: { stdio_ungetc *msg = (stdio_ungetc *)data; msg->RC = ungetc(msg->Ch, msg->File); return true; }
-	case STDIO_FREAD: { stdio_fread *msg = (stdio_fread *)data; msg->RC = fread(msg->Base.Ptr, msg->Size, msg->Num, msg->File); return true; }
-	case STDIO_FWRITE: { stdio_fwrite *msg = (stdio_fwrite *)data; msg->RC = fwrite(msg->Base.Ptr, msg->Size, msg->Num, msg->File); return true; }
+	case STDIO_FREAD: { stdio_fread *msg = (stdio_fread *)data; msg->RC = fread(msg->Ptr, msg->Size, msg->Num, msg->File); return true; }
+	case STDIO_FWRITE: { stdio_fwrite *msg = (stdio_fwrite *)data; msg->RC = fwrite(msg->Ptr, msg->Size, msg->Num, msg->File); return true; }
 	case STDIO_FSEEK: { stdio_fseek *msg = (stdio_fseek *)data; msg->RC = fseek(msg->File, msg->Offset, msg->Origin); return true; }
 	case STDIO_FTELL: { stdio_ftell *msg = (stdio_ftell *)data; msg->RC = ftell(msg->File); return true; }
 	case STDIO_REWIND: { stdio_rewind *msg = (stdio_rewind *)data; rewind(msg->File); return true; }
@@ -133,7 +133,7 @@ bool sentinelDefaultDeviceExecutor(void *tag, sentinelMessage *data, int length,
 #endif
 		return true; }
 	case UNISTD_CLOSE: { unistd_close *msg = (unistd_close *)data; msg->RC = close(msg->Handle); return true; }
-	case UNISTD_READ: { unistd_read *msg = (unistd_read *)data; msg->RC = read(msg->Handle, msg->Base.Ptr, (int)msg->Size); return true; }
+	case UNISTD_READ: { unistd_read *msg = (unistd_read *)data; msg->RC = read(msg->Handle, msg->Ptr, (int)msg->Size); return true; }
 	case UNISTD_WRITE: { unistd_write *msg = (unistd_write *)data; msg->RC = write(msg->Handle, msg->Ptr, (int)msg->Size); return true; }
 	case UNISTD_CHOWN: { unistd_chown *msg = (unistd_chown *)data; msg->RC = chown(msg->Str, msg->Owner, msg->Group); return true; }
 	case UNISTD_CHDIR: { unistd_chdir *msg = (unistd_chdir *)data; msg->RC = chdir(msg->Str); return true; }

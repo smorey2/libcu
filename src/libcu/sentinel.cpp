@@ -5,6 +5,8 @@
 #include <io.h>
 #define THREADHANDLE HANDLE
 #define THREADCALL unsigned int __stdcall
+#define HOST_SPINLOCK(SET, WHEN) while (_threadHostHandle && (s_ = InterlockedCompareExchange((long *)control, SET, WHEN)) != WHEN) { /*printf("(%d)", s_);*/ Sleep(50); }
+#define DEVICE_SPINLOCK(SET, WHEN) while (_threadDeviceHandle[threadId] && (s_ = InterlockedCompareExchange((long *)control, SET, WHEN)) != WHEN) { /*printf("(%d)", s_);*/ Sleep(50); }
 #elif __OS_UNIX
 #include <stdlib.h>
 #include <string.h>
@@ -15,27 +17,31 @@
 #include <pthread.h>
 #define THREADHANDLE pthread_t
 #define THREADCALL void *
+#define HOST_SPINLOCK(SET, WHEN) (while (_threadHostHandle && (s_ = __sync_val_compare_and_swap((long *)control, SET, WHEN)) != WHEN) { /*printf("(%d)", s_);*/ Sleep(50); })
+#define DEVICE_SPINLOCK(SET, WHEN) (while (_threadDeviceHandle[threadId] && (s_ = __sync_val_compare_and_swap((long *)control, SET, WHEN)) != WHEN) { /*printf("(%d)", s_);*/ Sleep(50); })
 #endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <cuda_runtimecu.h>
 
-void sentinelCommand::Dump() {
-	register unsigned char *b = (unsigned char *)&Data;
-	register int l = Length;
-	printf("Cmd: %d[%d]'", ((sentinelMessage*)Data)->OP, l); for (int i = 0; i < l; i++) printf("%02x", b[i] & 0xff); printf("'\n");
+void sentinelCommand::dump() {
+	register unsigned char *b = (unsigned char *)&data;
+	register int l = length;
+	printf("cmd: %d[%d]'", ((sentinelMessage*)data)->op, l); for (int i = 0; i < l; i++) printf("%02x", b[i] & 0xff); printf("'\n");
 }
 
-void sentinelMap::Dump() {
+void sentinelMap::dump() {
 	register unsigned char *b = (unsigned char *)this;
 	register int l = sizeof(sentinelMap);
-	printf("Map: 0x%p[%d]'", b, l); for (int i = 0; i < l; i++) printf("%02x", b[i] & 0xff); printf("'\n");
+	printf("map: 0x%p[%d]'", b, l); for (int i = 0; i < l; i++) printf("%02x", b[i] & 0xff); printf("'\n");
 }
 
 static sentinelContext _ctx;
 static sentinelExecutor _baseHostExecutor = { nullptr, "base", sentinelDefaultHostExecutor, nullptr };
 static sentinelExecutor _baseDeviceExecutor = { nullptr, "base", sentinelDefaultDeviceExecutor, nullptr };
+
+static char *executeTrans(sentinelCommand *cmd, int threadId);
 
 // HOSTSENTINEL
 #if HAS_HOSTSENTINEL
@@ -43,43 +49,31 @@ static THREADHANDLE _threadHostHandle = 0;
 static THREADCALL sentinelHostThread(void *data) {
 	unsigned int s_;
 	sentinelContext *ctx = &_ctx;
-	sentinelMap *map = ctx->HostMap;
+	sentinelMap *map = ctx->hostMap;
 	while (map) {
-		long id = map->GetId;
-		sentinelCommand *cmd = (sentinelCommand *)&map->Data[id % sizeof(map->Data)];
-		if (cmd->Magic != SENTINEL_MAGIC) {
-			printf("Bad Sentinel Magic");
-			exit(1);
+		long id = map->getId;
+		sentinelCommand *cmd = (sentinelCommand *)&map->data[id % sizeof(map->data)];
+		if (cmd->magic != SENTINEL_MAGIC) {
+			printf("bad sentinel magic"); exit(1);
 		}
-		volatile long *control = (volatile long *)&cmd->Control;
-#if __OS_WIN
-		/* spin-lock */ while (_threadHostHandle && (s_ = InterlockedCompareExchange((long *)control, 3, 2)) != 2) { /*printf("(%d)", s_);*/ Sleep(50); } //
-#elif __OS_UNIX
-		/* spin-lock */ while (_threadHostHandle && (s_ = __sync_val_compare_and_swap((long *)control, 3, 2)) != 2) { /*printf("(%d)", s_);*/ Sleep(50); } //
-#endif
+		int *unknown = &cmd->unknown; volatile long *control = (volatile long *)&cmd->control;
+		HOST_SPINLOCK(SENTINELCONTROL_HOST, SENTINELCONTROL_DEVICERDY);
 		if (!_threadHostHandle) return 0;
-		sentinelMessage *msg = (sentinelMessage *)cmd->Data;
+		char *trans = *unknown ? executeTrans(cmd, -1) : nullptr;
+		sentinelMessage *msg = (sentinelMessage *)cmd->data;
 		//map->Dump();
 		//cmd->Dump();
 
-		// FLOW-OUT
-		//if (msg->Flow & FLOW_JUMBOOUT) {
-		//	*control = 10;
-		//}
-
 		// EXECUTE
 		char *(*hostPrepare)(void*, char*, char*, intptr_t) = nullptr;
-		for (sentinelExecutor *exec = _ctx.HostList; exec && exec->Executor && !exec->Executor(exec->Tag, msg, cmd->Length, &hostPrepare); exec = exec->Next) {}
+		for (sentinelExecutor *exec = _ctx.hostList; exec && exec->executor && !exec->executor(exec->tag, msg, cmd->length, &hostPrepare); exec = exec->next) {}
 		//printf(".");
 
-		// FLOW-IN
-		//if (msg->Flow & FLOW_JUMBOIN) {
-		//	*control = 10;
-		//}
-
 		// FLOW-WAIT
-		*control = msg->Flow & FLOW_WAIT ? 4 : 0;
-		map->GetId += SENTINEL_MSGSIZE;
+		*control = msg->flow & SENTINELFLOW_WAIT ? SENTINELCONTROL_HOSTRDY : SENTINELCONTROL_NORMAL;
+		map->getId += SENTINEL_MSGSIZE;
+		if (trans)
+			free(trans);
 	}
 	return 0;
 }
@@ -87,58 +81,70 @@ static THREADCALL sentinelHostThread(void *data) {
 
 // DEVICESENTINEL
 #if HAS_DEVICESENTINEL
+
 static THREADHANDLE _threadDeviceHandle[SENTINEL_DEVICEMAPS];
 static THREADCALL sentinelDeviceThread(void *data) {
 	unsigned int s_;
 	int threadId = (int)(intptr_t)data;
 	sentinelContext *ctx = &_ctx;
-	sentinelMap *map = ctx->DeviceMap[threadId];
+	sentinelMap *map = ctx->deviceMap[threadId];
 	while (map) {
-		long id = map->GetId;
-		sentinelCommand *cmd = (sentinelCommand *)&map->Data[id % sizeof(map->Data)];
-		if (cmd->Magic != SENTINEL_MAGIC) {
-			printf("Bad Sentinel Magic");
-			exit(1);
+		long id = map->getId;
+		sentinelCommand *cmd = (sentinelCommand *)&map->data[id % sizeof(map->data)];
+		if (cmd->magic != SENTINEL_MAGIC) {
+			printf("bad sentinel magic"); exit(1);
 		}
-		volatile long *control = (volatile long *)&cmd->Control;
-#if __OS_WIN
-		/* spin-lock */ while (_threadDeviceHandle[threadId] && (s_ = InterlockedCompareExchange((long *)control, 3, 2)) != 2) { /*printf("(%d)", s_);*/ Sleep(50); }
-#elif __OS_UNIX
-		/* spin-lock */ while (_threadDeviceHandle[threadId] && (s_ = __sync_val_compare_and_swap((long *)control, 3, 2)) != 2) { /*printf("(%d)", s_);*/ Sleep(50); }
-#endif
+		int *unknown = &cmd->unknown; volatile long *control = (volatile long *)&cmd->control;
+		DEVICE_SPINLOCK(SENTINELCONTROL_HOST, SENTINELCONTROL_DEVICERDY);
 		if (!_threadDeviceHandle[threadId]) return 0;
-		sentinelMessage *msg = (sentinelMessage *)&cmd->Data; //(cmd->Data + map->Offset);
-		//sentinelJumboMessage *jumboMsg = (sentinelJumboMessage *)msg;
+		char *trans = *unknown ? executeTrans(cmd, threadId) : nullptr;
+		sentinelMessage *msg = (sentinelMessage *)&cmd->data;
 		//map->Dump();
 		//cmd->Dump();
 
-		// FLOW-IN
-		//if (msg->Flow & FLOW_JUMBOIN && jumboMsg->Size > jumboMsg->SafeSize) {
-		//	jumboMsg->Ptr = (char *)malloc(jumboMsg->Size);
-		//}
-
 		// EXECUTE
 		char *(*hostPrepare)(void*, char*, char*, intptr_t) = nullptr;
-		for (sentinelExecutor *exec = _ctx.DeviceList; exec && exec->Executor && !exec->Executor(exec->Tag, msg, cmd->Length, &hostPrepare); exec = exec->Next) {}
+		for (sentinelExecutor *exec = _ctx.deviceList; exec && exec->executor && !exec->executor(exec->tag, msg, cmd->length, &hostPrepare); exec = exec->next) {}
 		//printf(".");
-		char *data = cmd->Data + cmd->Length, *dataEnd = data + msg->Size;
-		if (hostPrepare && !hostPrepare(msg, data, dataEnd, map->Offset)) {
-			printf("msg too long");
-			exit(0);
+		char *data = cmd->data + cmd->length, *dataEnd = data + msg->size;
+		if (hostPrepare && !hostPrepare(msg, data, dataEnd, map->offset)) {
+			printf("msg too long"); exit(0);
 		}
 
-		// FLOW-IN
-		//if (msg->Flow & FLOW_JUMBOIN) {
-		//	*control = 10;
-		//}
-
 		// FLOW-WAIT
-		*control = msg->Flow & FLOW_WAIT ? 4 : 0;
-		map->GetId += SENTINEL_MSGSIZE;
+		*control = msg->flow & SENTINELFLOW_WAIT ? SENTINELCONTROL_HOSTRDY : SENTINELCONTROL_NORMAL;
+		map->getId += SENTINEL_MSGSIZE;
+		if (trans)
+			free(trans);
 	}
 	return 0;
 }
 #endif
+
+// EXECUTETRANS
+static char *executeTrans(sentinelCommand *cmd, int threadId) {
+	unsigned int s_;
+	int *unknown = &cmd->unknown; volatile long *control = (volatile long *)&cmd->control;
+	char *data = cmd->data;
+	char *ptr = nullptr;
+	
+	while (*unknown != 0) {
+		int length = cmd->length;
+		switch (*unknown) {
+		case 1:
+			ptr = *(char **)data = (char *)malloc(*(int *)data);
+			*control = SENTINELCONTROL_HOSTRDY;
+			break;
+		case 2:
+			memcpy(ptr, data, length); ptr += length;
+			*control = SENTINELCONTROL_HOSTRDY;
+			break;
+		}
+		if (threadId == -1) { HOST_SPINLOCK(SENTINELCONTROL_HOST, SENTINELCONTROL_DEVICERDY); }
+		else { DEVICE_SPINLOCK(SENTINELCONTROL_HOST, SENTINELCONTROL_DEVICERDY); }
+	}
+	return ptr;
+}
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/aa366551(v=vs.85).aspx
 // https://github.com/pathscale/nvidia_sdk_samples/blob/master/simpleStreams/0_Simple/simpleStreams/simpleStreams.cu
@@ -163,17 +169,14 @@ void sentinelServerInitialize(sentinelExecutor *deviceExecutor, char *mapHostNam
 #if __OS_WIN
 		_hostMapHandle = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(sentinelMap) + MEMORY_ALIGNMENT, mapHostName);
 		if (!_hostMapHandle) {
-			printf("Could not create file mapping object (%d).\n", GetLastError());
-			exit(1);
+			printf("Could not create file mapping object (%d).\n", GetLastError()); exit(1);
 		}
 		_hostMap = (int *)MapViewOfFile(_hostMapHandle, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(sentinelMap) + MEMORY_ALIGNMENT);
 		if (!_hostMap) {
-			printf("Could not map view of file (%d).\n", GetLastError());
-			CloseHandle(_hostMapHandle);
-			exit(1);
+			printf("Could not map view of file (%d).\n", GetLastError()); CloseHandle(_hostMapHandle); exit(1);
 		}
-		_sentinelHostMap = _ctx.HostMap = (sentinelMap *)ROUNDN_(_hostMap, MEMORY_ALIGNMENT);
-		_sentinelHostMap->Offset = (intptr_t)_sentinelHostMap;
+		_sentinelHostMap = _ctx.hostMap = (sentinelMap *)ROUNDN_(_hostMap, MEMORY_ALIGNMENT);
+		_sentinelHostMap->offset = (intptr_t)_sentinelHostMap;
 #elif __OS_UNIX
 		struct stat sb;
 		int fd = open(mapHostName, O_RDONLY | O_CREAT);
@@ -183,19 +186,18 @@ void sentinelServerInitialize(sentinelExecutor *deviceExecutor, char *mapHostNam
 		if (!S_ISREG(sb.st_mode)) { fprintf(stderr, "%s is not a file\n", mapHostName); exit(1); }
 		_hostMap = mmap(NULL, sizeof(sentinelMap) + MEMORY_ALIGNMENT, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, fd, 0);
 		if (!_hostMap) {
-			printf("Could not map view of file.\n");
-			exit(1);
+			printf("Could not map view of file.\n"); exit(1);
 		}
 		if (close(fd) == -1) { perror("close"); exit(1); }
-		_sentinelHostMap = _ctx.HostMap = (sentinelMap *)ROUNDN_(_hostMap, MEMORY_ALIGNMENT);
-		_sentinelHostMap->Offset = 0;
+		_sentinelHostMap = _ctx.hostMap = (sentinelMap *)ROUNDN_(_hostMap, MEMORY_ALIGNMENT);
+		_sentinelHostMap->offset = 0;
 #endif
 
-		// clear commands
+		// initialize commands
 		for (int j = 0; j < SENTINEL_MSGCOUNT*SENTINEL_MSGSIZE; j += SENTINEL_MSGSIZE) {
-			sentinelCommand *cmd = (sentinelCommand *)&_ctx.HostMap->Data[j];
-			cmd->Magic = SENTINEL_MAGIC;
-			cmd->Control = 0;
+			sentinelCommand *cmd = (sentinelCommand *)&_ctx.hostMap->data[j];
+			cmd->magic = SENTINEL_MAGIC;
+			cmd->control = 0;
 		}
 
 		// register executor
@@ -205,9 +207,8 @@ void sentinelServerInitialize(sentinelExecutor *deviceExecutor, char *mapHostNam
 #if __OS_WIN
 		_threadHostHandle = (HANDLE)_beginthreadex(0, 0, sentinelHostThread, nullptr, 0, 0);
 #elif __OS_UNIX
-		int err; if ((err = pthread_create(&_threadHostHandle, NULL, &sentinelDeviceThread, NULL))) {
-			printf("Could not create host thread (%s).\n", strerror(err));
-			exit(1);
+		int err; if ((err = pthread_create(&_threadHostHandle, NULL, &sentinelHostThread, NULL))) {
+			printf("Could not create host thread (%s).\n", strerror(err)); exit(1);
 		}
 #endif
 	}
@@ -220,19 +221,19 @@ void sentinelServerInitialize(sentinelExecutor *deviceExecutor, char *mapHostNam
 		sentinelMap *d_deviceMap[SENTINEL_DEVICEMAPS];
 		for (int i = 0; i < SENTINEL_DEVICEMAPS; i++) {
 			cudaErrorCheckF(cudaHostAlloc((void **)&_deviceMap[i], sizeof(sentinelMap), cudaHostAllocPortable | cudaHostAllocMapped), goto initialize_error);
-			d_deviceMap[i] = _ctx.DeviceMap[i] = (sentinelMap *)_deviceMap[i];
-			cudaErrorCheckF(cudaHostGetDevicePointer((void **)&d_deviceMap[i], _ctx.DeviceMap[i], 0), goto initialize_error);
+			d_deviceMap[i] = _ctx.deviceMap[i] = (sentinelMap *)_deviceMap[i];
+			cudaErrorCheckF(cudaHostGetDevicePointer((void **)&d_deviceMap[i], _ctx.deviceMap[i], 0), goto initialize_error);
 #ifndef _WIN64
-			_ctx.DeviceMap[i]->Offset = (intptr_t)((char *)_deviceMap[i] - (char *)d_deviceMap[i]);
-			//printf("chk: %x %x [%x]\n", (char *)_deviceMap[i], (char *)d_deviceMap[i], _ctx.DeviceMap[i]->Offset);
+			_ctx.deviceMap[i]->offset = (intptr_t)((char *)_deviceMap[i] - (char *)d_deviceMap[i]);
+			//printf("chk: %x %x [%x]\n", (char *)_deviceMap[i], (char *)d_deviceMap[i], _ctx.deviceMap[i]->Offset);
 #else
-			_ctx.DeviceMap[i]->Offset = 0;
+			_ctx.deviceMap[i]->offset = 0;
 #endif
-			// clear commands
+			// initialize commands
 			for (int j = 0; j < SENTINEL_MSGCOUNT*SENTINEL_MSGSIZE; j += SENTINEL_MSGSIZE) {
-				sentinelCommand *cmd = (sentinelCommand *)&_ctx.DeviceMap[i]->Data[j];
-				cmd->Magic = SENTINEL_MAGIC;
-				cmd->Control = 0;
+				sentinelCommand *cmd = (sentinelCommand *)&_ctx.deviceMap[i]->data[j];
+				cmd->magic = SENTINEL_MAGIC;
+				cmd->control = 0;
 			}
 		}
 		cudaErrorCheckF(cudaMemcpyToSymbol(_sentinelDeviceMap, &d_deviceMap, sizeof(d_deviceMap)), goto initialize_error);
@@ -250,8 +251,7 @@ void sentinelServerInitialize(sentinelExecutor *deviceExecutor, char *mapHostNam
 #elif __OS_UNIX
 		int err; for (int i = 0; i < SENTINEL_DEVICEMAPS; i++)
 			if ((err = pthread_create(&_threadDeviceHandle[i], NULL, &sentinelDeviceThread, (void *)(intptr_t)i))) {
-				printf("Could not create device thread (%s).\n", strerror(err));
-				exit(1);
+				printf("Could not create device thread (%s).\n", strerror(err)); exit(1);
 			}
 #endif
 	}
@@ -295,38 +295,38 @@ void sentinelServerShutdown() {
 }
 
 sentinelExecutor *sentinelFindExecutor(const char *name, bool forDevice) {
-	sentinelExecutor *list = forDevice ? _ctx.DeviceList : _ctx.HostList;
+	sentinelExecutor *list = forDevice ? _ctx.deviceList : _ctx.hostList;
 	sentinelExecutor *exec = nullptr;
-	for (exec = list; exec && name && strcmp(name, exec->Name); exec = exec->Next) {}
+	for (exec = list; exec && name && strcmp(name, exec->name); exec = exec->next) {}
 	return exec;
 }
 
 static void sentinelUnlinkExecutor(sentinelExecutor *exec, bool forDevice) {
-	sentinelExecutor *list = forDevice ? _ctx.DeviceList : _ctx.HostList;
+	sentinelExecutor *list = forDevice ? _ctx.deviceList : _ctx.hostList;
 	if (!exec) {}
 	else if (list == exec)
-		if (forDevice) _ctx.DeviceList = exec->Next;
-		else _ctx.HostList = exec->Next;
+		if (forDevice) _ctx.deviceList = exec->next;
+		else _ctx.hostList = exec->next;
 	else if (list) {
 		sentinelExecutor *p = list;
-		while (p->Next && p->Next != exec)
-			p = p->Next;
-		if (p->Next == exec)
-			p->Next = exec->Next;
+		while (p->next && p->next != exec)
+			p = p->next;
+		if (p->next == exec)
+			p->next = exec->next;
 	}
 }
 
 void sentinelRegisterExecutor(sentinelExecutor *exec, bool makeDefault, bool forDevice) {
 	sentinelUnlinkExecutor(exec, forDevice);
-	sentinelExecutor *list = forDevice ? _ctx.DeviceList : _ctx.HostList;
+	sentinelExecutor *list = forDevice ? _ctx.deviceList : _ctx.hostList;
 	if (makeDefault || !list) {
-		exec->Next = list;
-		if (forDevice) _ctx.DeviceList = exec;
-		else _ctx.HostList = exec;
+		exec->next = list;
+		if (forDevice) _ctx.deviceList = exec;
+		else _ctx.hostList = exec;
 	}
 	else {
-		exec->Next = list->Next;
-		list->Next = exec;
+		exec->next = list->next;
+		list->next = exec;
 	}
 }
 

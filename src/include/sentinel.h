@@ -53,12 +53,21 @@ extern "C" {
 #define SENTINEL_MSGCOUNT 5
 #define SENTINEL_CHUNK 4096
 
-#define FLOW_NONE 0
-#define FLOW_WAIT 1
+#define SENTINELCONTROL_TRANSFER -1
+#define SENTINELCONTROL_NORMAL 0
+#define SENTINELCONTROL_DEVICE 1
+#define SENTINELCONTROL_DEVICERDY 2
+#define SENTINELCONTROL_HOST 3
+#define SENTINELCONTROL_HOSTRDY 4
+#define SENTINELCONTROL_DEVICE2 5
+
+#define SENTINELFLOW_NONE 0
+#define SENTINELFLOW_WAIT 1
 
 	typedef struct sentinelInPtr {
 		void *field;
 		int size;
+		void *unknown;
 	} sentinelInPtr;
 
 	typedef struct sentinelOutPtr {
@@ -66,60 +75,58 @@ extern "C" {
 		void *buf;
 		int size;
 		void *sizeField = nullptr;
+		void *unknown;
 	} sentinelOutPtr;
 
 	typedef struct sentinelMessage {
-		unsigned short OP;
-		unsigned char Flow;
-		unsigned char Unknown;
-		int Size;
-		char *(*Prepare)(void*, char*, char*, intptr_t);
-		bool(*Postfix)(void*, intptr_t);
-		__device__ sentinelMessage(unsigned short op, unsigned char flow = FLOW_WAIT, int size = 0, char *(*prepare)(void*, char*, char*, intptr_t) = nullptr, bool(*postfix)(void*, intptr_t) = nullptr)
-			: OP(op), Flow(flow), Size(size), Prepare(prepare), Postfix(postfix) { }
-		void *Ptr = nullptr;
+		unsigned short op;
+		unsigned char flow;
+		unsigned char unknown;
+		int size;
+		char *(*prepare)(void*, char*, char*, intptr_t);
+		bool(*postfix)(void*, intptr_t);
+		__device__ sentinelMessage(unsigned short op, unsigned char flow = SENTINELFLOW_WAIT, int size = 0, char *(*prepare)(void*, char*, char*, intptr_t) = nullptr, bool(*postfix)(void*, intptr_t) = nullptr)
+			: op(op), flow(flow), size(size), prepare(prepare), postfix(postfix) { }
 	} sentinelMessage;
 #define SENTINELPREPARE(P) ((char *(*)(void*,char*,char*,intptr_t))&P)
 #define SENTINELPOSTFIX(P) ((bool (*)(void*,intptr_t))&P)
 
 	typedef struct sentinelClientMessage {
-		sentinelMessage Base;
-		pipelineRedir Redir;
-		sentinelClientMessage(pipelineRedir redir, unsigned short op, unsigned char flow = FLOW_WAIT, int size = 0, char *(*prepare)(void*, char*, char*, intptr_t) = nullptr, bool(*postfix)(void*, intptr_t) = nullptr)
-			: Base(op, flow, size, prepare, postfix), Redir(redir) { }
+		sentinelMessage base;
+		pipelineRedir redir;
+		sentinelClientMessage(pipelineRedir redir, unsigned short op, unsigned char flow = SENTINELFLOW_WAIT, int size = 0, char *(*prepare)(void*, char*, char*, intptr_t) = nullptr, bool(*postfix)(void*, intptr_t) = nullptr)
+			: base(op, flow, size, prepare, postfix), redir(redir) { }
 	} sentinelClientMessage;
 
 	typedef struct __align__(8) {
-		unsigned short Magic;
-		volatile long Control;
-		int Length;
-#ifndef _WIN64
-		int Unknown;
-#endif
-		char Data[1];
-		void Dump();
+		unsigned short magic;
+		volatile long control;
+		int unknown;
+		int length;
+		char data[1];
+		void dump();
 	} sentinelCommand;
 
 	typedef struct __align__(8) {
-		long GetId;
-		volatile long SetId;
-		intptr_t Offset;
-		char Data[SENTINEL_MSGSIZE*SENTINEL_MSGCOUNT];
-		void Dump();
+		long getId;
+		volatile long setId;
+		intptr_t offset;
+		char data[SENTINEL_MSGSIZE*SENTINEL_MSGCOUNT];
+		void dump();
 	} sentinelMap;
 
 	typedef struct sentinelExecutor {
-		sentinelExecutor *Next;
-		const char *Name;
-		bool(*Executor)(void*, sentinelMessage*, int, char*(**)(void*, char*, char*, intptr_t));
-		void *Tag;
+		sentinelExecutor *next;
+		const char *name;
+		bool(*executor)(void*, sentinelMessage*, int, char*(**)(void*, char*, char*, intptr_t));
+		void *tag;
 	} sentinelExecutor;
 
 	typedef struct sentinelContext {
-		sentinelMap *DeviceMap[SENTINEL_DEVICEMAPS];
-		sentinelMap *HostMap;
-		sentinelExecutor *HostList;
-		sentinelExecutor *DeviceList;
+		sentinelMap *deviceMap[SENTINEL_DEVICEMAPS];
+		sentinelMap *hostMap;
+		sentinelExecutor *hostList;
+		sentinelExecutor *deviceList;
 	} sentinelContext;
 
 	//#if HAS_HOSTSENTINEL

@@ -3,46 +3,62 @@
 #include <stdlibcu.h>
 #include <sentinel.h>
 
+#define DEVICE_SPINLOCK(SET, WHEN) do { s_ = *control; /*printf("%d ", s_);*/ __syncthreads(); } while (s_ != WHEN); *control = SET; __syncthreads();
+
 __BEGIN_DECLS;
 
 #if HAS_DEVICESENTINEL
 
-//static __forceinline__ __device__ char *Prepare(fcntl_open *t, char *data, char *dataEnd, intptr_t offset) {
-//	int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
-//	char *str = (char *)(data += ROUND8_(sizeof(*t)));
-//	char *end = (char *)(data += strLength);
-//	if (end > dataEnd) return nullptr;
-//	memcpy(str, t->Str, strLength);
-//	if (t->Str) t->Str = str + offset;
-//	return end;
-//}
+static __device__ char *executeTransIn(sentinelCommand *cmd, int size, sentinelInPtr *list, intptr_t offset) {
+	unsigned int s_;
+	int *unknown = &cmd->unknown; volatile long *control = (volatile long *)&cmd->control;
+	char *data = cmd->data;
+	// create memory
+	*(int *)data = size;
+	*unknown = 1; *control = SENTINELCONTROL_DEVICERDY;
+	DEVICE_SPINLOCK(SENTINELCONTROL_DEVICE, SENTINELCONTROL_HOSTRDY);
+	char *ptr = *(char **)data;
+	// transfer
+	for (sentinelInPtr *p = list; p; p = (sentinelInPtr *)p->unknown) {
+		char **field = (char **)p->field;
+		int size = p->size, length = 0; const char *v = (const char *)*field;
+		while (size > 0) {
+			length = cmd->length = size > SENTINEL_MSGSIZE ? SENTINEL_MSGSIZE : size;
+			memcpy(data, (void *)v, length); size -= length; v += length;
+			*unknown = 2; *control = SENTINELCONTROL_DEVICERDY;
+			DEVICE_SPINLOCK(SENTINELCONTROL_DEVICE, SENTINELCONTROL_HOSTRDY);
+		}
+		*field = ptr; ptr += size;
+		p->unknown = nullptr;
+	}
+	*unknown = 0; *control = SENTINELCONTROL_DEVICERDY;
+}
 
-//static __forceinline__ __device__ char *Prepare(fcntl_fstat *t, char *data, char *dataEnd, intptr_t offset) {
-//	char *ptr = (char *)(data += ROUND8_(sizeof(*t)));
-//	char *end = (char *)(data += SENTINEL_CHUNK);
-//	if (end > dataEnd) return nullptr;
-//	t->Ptr = ptr + offset;
-//	return end;
-//}
+static __device__ char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, sentinelCommand *cmd, char *data, char *dataEnd, intptr_t offset) {
+	char *ptr = data, *next;
+	int transSize = 0;
+	sentinelInPtr *transInList = nullptr;
+	sentinelOutPtr *transOutList = nullptr;
 
-static __device__ char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, char *data, char *dataEnd, intptr_t offset) {
-	char *ptr, *next;
-	if (ptrsIn) {
-		ptr = data;
+	// PREPARE
+	if (ptrsIn)
 		for (sentinelInPtr *p = ptrsIn; p->field; p++) {
 			char **field = (char **)p->field;
 			int size = p->size != -1 ? p->size : (p->size = *field ? (int)strlen(*field) + 1 : 0);
 			next = ptr + size;
-			if (size && next <= dataEnd) {
-				memcpy(ptr, *field, size);
-				*field = ptr + offset;
+			if (!size)
+				p->unknown = nullptr;
+			else if (next <= dataEnd) {
+				p->unknown = ptr;
 				ptr = next;
 			}
-			else return nullptr;
+			else {
+				p->unknown = transInList; transInList = p;
+				transSize += size;
+			}
 		}
-	}
 	if (ptrsOut) {
-		ptr = ptrsOut[0].field != (char *)-1 ? data : ptr;
+		ptr = ptrsOut[0].field == (char *)-1 ? ptr : data;
 		for (sentinelOutPtr *p = ptrsOut; p->field; p++) {
 			char **field = (char **)p->field;
 			int size = p->size != -1 ? p->size : dataEnd - ptr;
@@ -51,25 +67,54 @@ static __device__ char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsO
 				*field = data + offset;
 				ptr = next;
 			}
-			else return nullptr;
+			else {
+				p->unknown = transOutList; transOutList = p;
+				transSize += size;
+			}
 		}
+	}
+
+	// TRANSFER IN
+	if (transSize)
+		executeTransIn(cmd, transSize, transInList, offset);
+
+	// PACK
+	for (sentinelInPtr *p = ptrsIn; p->field; p++) {
+		char **field = (char **)p->field;
+		char *ptr = (char *)p->unknown;
+		if (!ptr || !*field)
+			continue;
+		memcpy(ptr, *field, p->size);
+		*field = ptr + offset;
 	}
 	return data;
 }
 
-//static __forceinline__ __device__ bool Postfix(fcntl_fstat *t, intptr_t offset) {
-//	char *ptr = (char *)t->Ptr - offset;
-//	if (!t->Bit64) memcpy(t->Buf, ptr, sizeof(struct stat));
-//	else memcpy(t->Buf64, ptr, sizeof(struct _stat64));
-//	return true;
-//}
-//static __forceinline__ __device__ bool Postfix(unistd_read *t, intptr_t offset) {
-//	char *ptr = (char *)t->Ptr - offset;
-//	if (t->RC > 0) memcpy(t->Buf, ptr, t->RC);
-//	return true;
-//}
+static __device__ char *executeTransOut(sentinelCommand *cmd, sentinelInPtr *list, intptr_t offset) {
+	//unsigned int s_;
+	//int *unknown = &cmd->unknown; volatile long *control = (volatile long *)&cmd->control;
+	//char *data = cmd->data;
+	//// create memory
+	//*data = size;
+	//*unknown = 1; *control = SENTINELCONTROL_DEVICERDY;
+	//DEVICE_SPINLOCK(SENTINELCONTROL_DEVICE, SENTINELCONTROL_NORMAL);
+	////
+	//for (sentinelInPtr *p = list; p; p = (sentinelInPtr *)p->unknown) {
+	//	char **field = (char **)p->field;
+	//	int size = p->size, length = 0; const char *v = (const char *)*field;
+	//	while (size > 0) {
+	//		length = cmd->length = size > SENTINEL_MSGSIZE ? SENTINEL_MSGSIZE : size;
+	//		memcpy(data, (void *)v, length); size -= length; v += length;
+	//	}
+	//	//*field = ptr + offset;
+	//	p->unknown = nullptr;
+	//}
+}
 
-static __device__ bool postfixPtrs(sentinelOutPtr *ptrsOut, intptr_t offset) {
+static __device__ bool postfixPtrs(sentinelOutPtr *ptrsOut, sentinelCommand *cmd, intptr_t offset) {
+	// TRANSFER OUT
+	//executeTransOut(cmd, transInList, offset);
+
 	for (sentinelOutPtr *p = ptrsOut; p->field; p++) {
 		char **buf = (char **)p->buf;
 		if (!*buf)
@@ -92,49 +137,32 @@ __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength, sentinel
 		panic("sentinel: device map not defined. did you start sentinel?\n");
 
 	// ATTACH
-	long id = atomicAdd((int *)&map->SetId, SENTINEL_MSGSIZE);
-	sentinelCommand *cmd = (sentinelCommand *)&map->Data[id % sizeof(map->Data)]; //cmd->Data = (char *)cmd + ROUND8_(sizeof(sentinelCommand));
-	if (cmd->Magic != SENTINEL_MAGIC)
+	long id = atomicAdd((int *)&map->setId, SENTINEL_MSGSIZE);
+	sentinelCommand *cmd = (sentinelCommand *)&map->data[id % sizeof(map->data)];
+	if (cmd->magic != SENTINEL_MAGIC)
 		panic("Bad Sentinel Magic");
-	volatile long *control = (volatile long *)&cmd->Control;
-	/* spin-lock */ do { s_ = *control; /*printf("%d ", s_);*/ __syncthreads(); } while (s_ != 0); __syncthreads();
-	//*control = 1; // device in-progress
+	int *unknown = &cmd->unknown; volatile long *control = (volatile long *)&cmd->control;
+	DEVICE_SPINLOCK(SENTINELCONTROL_DEVICE, SENTINELCONTROL_NORMAL);
 
 	// PREPARE
-	cmd->Length = msgLength;
-	char *data = cmd->Data + ROUND8_(msgLength), *dataEnd = data + msg->Size;
-	if ((ptrsIn || ptrsOut) && !(data = preparePtrs(ptrsIn, ptrsOut, data, dataEnd, map->Offset)))
+	cmd->length = msgLength;
+	char *data = cmd->data + ROUND8_(msgLength), *dataEnd = data + msg->size;
+	if (((ptrsIn || ptrsOut) && !(data = preparePtrs(ptrsIn, ptrsOut, cmd, data, dataEnd, map->offset))) ||
+		(msg->prepare && !msg->prepare(msg, data, dataEnd, map->offset)))
 		panic("msg too long");
-	if (msg->Prepare && !msg->Prepare(msg, data, dataEnd, map->Offset))
-		panic("msg too long");
-
-	// FLOW-OUT
-	//if (msg->Flow & FLOW_JUMBOOUT) {
-	//	while (true) {
-	//		/* spin-lock */ do { s_ = *control; /*printf("%d ", s_);*/ __syncthreads(); } while (s_ != 10); __syncthreads();
-	//	}
-	//}
-	memcpy(cmd->Data, msg, msgLength);
-	//printf("Msg: %d[%d]'", msg->OP, msgLength); for (int i = 0; i < msgLength; i++) printf("%02x", ((char *)msg)[i] & 0xff); printf("'\n");
-	*control = 2; // client signal that data is ready to process
-
-	// FLOW-IN
-	//if (msg->Flow & FLOW_JUMBOIN) {
-	//	while (true) {
-	//		/* spin-lock */ do { s_ = *control; /*printf("%d ", s_);*/ __syncthreads(); } while (s_ != 10); __syncthreads();
-	//	}
-	//}
+	memcpy(cmd->data, msg, msgLength);
+	//printf("msg: %d[%d]'", msg->op, msgLength); for (int i = 0; i < msgLength; i++) printf("%02x", ((char *)msg)[i] & 0xff); printf("'\n");
+	*unknown = 0; *control = SENTINELCONTROL_DEVICERDY;
 
 	// FLOW-WAIT
-	if (msg->Flow & FLOW_WAIT) {
-		/* spin-lock */ do { s_ = *control; /*printf("%d ", s_);*/ __syncthreads(); } while (s_ != 4); __syncthreads();
-		memcpy(msg, cmd->Data, msgLength);
-		if (ptrsOut && !postfixPtrs(ptrsOut, map->Offset))
-			panic("postfix error");
-		if (msg->Postfix && !msg->Postfix(msg, map->Offset))
+	if (msg->flow & SENTINELFLOW_WAIT) {
+		DEVICE_SPINLOCK(SENTINELCONTROL_DEVICE2, SENTINELCONTROL_HOSTRDY);
+		memcpy(msg, cmd->data, msgLength);
+		if ((ptrsOut && !postfixPtrs(ptrsOut, cmd, map->offset)) ||
+			(msg->postfix && !msg->postfix(msg, map->offset)))
 			panic("postfix error");
 	}
-	*control = 0; // normal state
+	*control = SENTINELCONTROL_NORMAL;
 }
 
 #endif

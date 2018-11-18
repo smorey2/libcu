@@ -43,13 +43,13 @@ enum {
 struct stdlib_exit {
 	sentinelMessage Base;
 	bool Std; int Status;
-	__device__ stdlib_exit(bool std, int status) : Base(STDLIB_EXIT, FLOW_WAIT), Std(std), Status(status) { sentinelDeviceSend(&Base, sizeof(stdlib_exit)); }
+	__device__ stdlib_exit(bool std, int status) : Base(STDLIB_EXIT, SENTINELFLOW_WAIT), Std(std), Status(status) { sentinelDeviceSend(&Base, sizeof(stdlib_exit)); }
 };
 
 struct stdlib_system {
 	sentinelMessage Base;
 	const char *Str;
-	__device__ stdlib_system(const char *str) : Base(STDLIB_SYSTEM, FLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_system), PtrsIn); }
+	__device__ stdlib_system(const char *str) : Base(STDLIB_SYSTEM, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_system), PtrsIn); }
 	int RC;
 	sentinelInPtr PtrsIn[2] = {
 		{ &Str, -1 },
@@ -71,7 +71,7 @@ struct stdlib_getenv {
 	}
 	sentinelMessage Base;
 	const char *Str;
-	__device__ stdlib_getenv(const char *str) : Base(STDLIB_GETENV, FLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_getenv), PtrsIn); }
+	__device__ stdlib_getenv(const char *str) : Base(STDLIB_GETENV, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_getenv), PtrsIn); }
 	char *RC;
 	sentinelInPtr PtrsIn[2] = {
 		{ &Str, -1 },
@@ -82,7 +82,7 @@ struct stdlib_getenv {
 struct stdlib_setenv {
 	sentinelMessage Base;
 	const char *Str; const char *Str2; int Replace;
-	__device__ stdlib_setenv(const char *str, const char *str2, int replace) : Base(STDLIB_SETENV, FLOW_WAIT, SENTINEL_CHUNK), Str(str), Str2(str2), Replace(replace) { sentinelDeviceSend(&Base, sizeof(stdlib_setenv), PtrsIn); }
+	__device__ stdlib_setenv(const char *str, const char *str2, int replace) : Base(STDLIB_SETENV, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str), Str2(str2), Replace(replace) { sentinelDeviceSend(&Base, sizeof(stdlib_setenv), PtrsIn); }
 	int RC;
 	sentinelInPtr PtrsIn[3] = {
 		{ &Str, -1 },
@@ -94,7 +94,7 @@ struct stdlib_setenv {
 struct stdlib_unsetenv {
 	sentinelMessage Base;
 	const char *Str;
-	__device__ stdlib_unsetenv(const char *str) : Base(STDLIB_UNSETENV, FLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_unsetenv), PtrsIn); }
+	__device__ stdlib_unsetenv(const char *str) : Base(STDLIB_UNSETENV, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_unsetenv), PtrsIn); }
 	int RC;
 	sentinelInPtr PtrsIn[2] = {
 		{ &Str, -1 },
@@ -105,7 +105,7 @@ struct stdlib_unsetenv {
 struct stdlib_mktemp {
 	sentinelMessage Base;
 	char *Str;
-	__device__ stdlib_mktemp(char *str) : Base(STDLIB_MKTEMP, FLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_mktemp), PtrsIn); }
+	__device__ stdlib_mktemp(char *str) : Base(STDLIB_MKTEMP, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_mktemp), PtrsIn); }
 	char *RC;
 	sentinelInPtr PtrsIn[2] = {
 		{ &Str, -1 },
@@ -121,7 +121,7 @@ struct stdlib_mkstemp {
 	}
 	sentinelMessage Base;
 	char *Str;
-	__device__ stdlib_mkstemp(char *str) : Base(STDLIB_MKSTEMP, FLOW_WAIT, SENTINEL_CHUNK, nullptr, SENTINELPOSTFIX(Postfix)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_mkstemp), PtrsIn); }
+	__device__ stdlib_mkstemp(char *str) : Base(STDLIB_MKSTEMP, SENTINELFLOW_WAIT, SENTINEL_CHUNK, nullptr, SENTINELPOSTFIX(Postfix)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_mkstemp), PtrsIn); }
 	int RC;
 	void *Ptr;
 	sentinelInPtr PtrsIn[2] = {
