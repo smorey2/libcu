@@ -41,7 +41,7 @@ static sentinelContext _ctx;
 static sentinelExecutor _baseHostExecutor = { nullptr, "base", sentinelDefaultHostExecutor, nullptr };
 static sentinelExecutor _baseDeviceExecutor = { nullptr, "base", sentinelDefaultDeviceExecutor, nullptr };
 
-static char *executeTrans(sentinelCommand *cmd, int threadId);
+static char *executeTrans(sentinelCommand *cmd, char *trans, int threadId);
 
 // HOSTSENTINEL
 #if HAS_HOSTSENTINEL
@@ -59,7 +59,7 @@ static THREADCALL sentinelHostThread(void *data) {
 		int *unknown = &cmd->unknown; volatile long *control = (volatile long *)&cmd->control;
 		HOST_SPINLOCK(SENTINELCONTROL_HOST, SENTINELCONTROL_DEVICERDY);
 		if (!_threadHostHandle) return 0;
-		char *trans = *unknown ? executeTrans(cmd, -1) : nullptr;
+		char *trans = *unknown ? executeTrans(cmd, nullptr, -1) : nullptr;
 		sentinelMessage *msg = (sentinelMessage *)cmd->data;
 		//map->Dump();
 		//cmd->Dump();
@@ -70,7 +70,10 @@ static THREADCALL sentinelHostThread(void *data) {
 		//printf(".");
 
 		// FLOW-WAIT
-		*control = msg->flow & SENTINELFLOW_WAIT ? SENTINELCONTROL_HOSTRDY : SENTINELCONTROL_NORMAL;
+		if (msg->flow & SENTINELFLOW_WAIT) {
+			*control = SENTINELCONTROL_HOSTRDY;
+		}
+		else *control = SENTINELCONTROL_NORMAL;
 		map->getId += SENTINEL_MSGSIZE;
 		if (trans)
 			free(trans);
@@ -97,7 +100,7 @@ static THREADCALL sentinelDeviceThread(void *data) {
 		int *unknown = &cmd->unknown; volatile long *control = (volatile long *)&cmd->control;
 		DEVICE_SPINLOCK(SENTINELCONTROL_HOST, SENTINELCONTROL_DEVICERDY);
 		if (!_threadDeviceHandle[threadId]) return 0;
-		char *trans = *unknown ? executeTrans(cmd, threadId) : nullptr;
+		char *trans = *unknown ? executeTrans(cmd, nullptr, threadId) : nullptr;
 		sentinelMessage *msg = (sentinelMessage *)&cmd->data;
 		//map->Dump();
 		//cmd->Dump();
@@ -106,13 +109,20 @@ static THREADCALL sentinelDeviceThread(void *data) {
 		char *(*hostPrepare)(void*, char*, char*, intptr_t) = nullptr;
 		for (sentinelExecutor *exec = _ctx.deviceList; exec && exec->executor && !exec->executor(exec->tag, msg, cmd->length, &hostPrepare); exec = exec->next) {}
 		//printf(".");
+
+		// host-prepare
 		char *data = cmd->data + cmd->length, *dataEnd = data + msg->size;
 		if (hostPrepare && !hostPrepare(msg, data, dataEnd, map->offset)) {
 			printf("msg too long"); exit(0);
 		}
 
 		// FLOW-WAIT
-		*control = msg->flow & SENTINELFLOW_WAIT ? SENTINELCONTROL_HOSTRDY : SENTINELCONTROL_NORMAL;
+		if (msg->flow & SENTINELFLOW_WAIT) {
+			*control = SENTINELCONTROL_HOSTRDY;
+			DEVICE_SPINLOCK(SENTINELCONTROL_HOST, SENTINELCONTROL_DEVICERDY);
+			if (*unknown) executeTrans(cmd, trans, threadId);
+		}
+		else *control = SENTINELCONTROL_NORMAL;
 		map->getId += SENTINEL_MSGSIZE;
 		if (trans)
 			free(trans);
@@ -122,28 +132,28 @@ static THREADCALL sentinelDeviceThread(void *data) {
 #endif
 
 // EXECUTETRANS
-static char *executeTrans(sentinelCommand *cmd, int threadId) {
+static char *executeTrans(sentinelCommand *cmd, char *trans, int threadId) {
 	unsigned int s_;
 	int *unknown = &cmd->unknown; volatile long *control = (volatile long *)&cmd->control;
-	char *data = cmd->data;
-	char *ptr = nullptr;
-	
+	char *data = cmd->data, *ptr = trans;
 	while (*unknown != 0) {
 		int length = cmd->length;
 		switch (*unknown) {
 		case 1:
-			ptr = *(char **)data = (char *)malloc(*(int *)data);
-			*control = SENTINELCONTROL_HOSTRDY;
+			ptr = trans = *(char **)data = (char *)malloc(*(int *)data);
 			break;
 		case 2:
 			memcpy(ptr, data, length); ptr += length;
-			*control = SENTINELCONTROL_HOSTRDY;
+			break;
+		case 3:
+			memcpy(data, ptr, length); ptr += length;
 			break;
 		}
+		*control = SENTINELCONTROL_HOSTRDY;
 		if (threadId == -1) { HOST_SPINLOCK(SENTINELCONTROL_HOST, SENTINELCONTROL_DEVICERDY); }
 		else { DEVICE_SPINLOCK(SENTINELCONTROL_HOST, SENTINELCONTROL_DEVICERDY); }
 	}
-	return ptr;
+	return trans;
 }
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/aa366551(v=vs.85).aspx
@@ -211,7 +221,7 @@ void sentinelServerInitialize(sentinelExecutor *deviceExecutor, char *mapHostNam
 			printf("Could not create host thread (%s).\n", strerror(err)); exit(1);
 		}
 #endif
-	}
+		}
 #endif
 
 #if HAS_DEVICESENTINEL
@@ -261,7 +271,7 @@ initialize_error:
 	perror("sentinelServerInitialize:Error");
 	sentinelServerShutdown();
 	exit(1);
-}
+	}
 
 void sentinelServerShutdown() {
 	// close host map
@@ -289,8 +299,8 @@ void sentinelServerShutdown() {
 			if (_threadDeviceHandle[i]) { pthread_cancel(_threadDeviceHandle[i]); _threadDeviceHandle[i] = 0; }
 #endif
 			if (_deviceMap[i]) { cudaErrorCheckA(cudaFreeHost(_deviceMap[i])); _deviceMap[i] = nullptr; }
-		}
 	}
+}
 #endif
 }
 
