@@ -5,7 +5,7 @@
 #include <sentinel-client.cpp>
 #include <ext/pipeline.cpp>
 
-__forceinline__ int drm_(pipelineRedir *redir, char *str) { fileutils_drm msg(redir[0], str); redir[1].Read(); return msg.RC; }
+__forceinline__ int drm_(pipelineRedir *redir, char *str) { fileutils_drm msg(redir[0], str); pipelineRead(redir[1]); return msg.rc; }
 
 int main(int argc, char **argv) {
 	atexit(sentinelClientShutdown);

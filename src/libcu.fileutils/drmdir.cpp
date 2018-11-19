@@ -6,7 +6,7 @@
 #include <ext/pipeline.cpp>
 
 unsigned short _newMode = 0666; // & ~umask(0);
-__forceinline__ int drmdir_(pipelineRedir *redir, char *str) { fileutils_drmdir msg(redir[0], str); redir[1].Read(); return msg.RC; }
+__forceinline__ int drmdir_(pipelineRedir *redir, char *str) { fileutils_drmdir msg(redir[0], str); pipelineRead(redir[1]); return msg.rc; }
 
 int removeDir(pipelineRedir *redir, char *name, int f) {
 	int r, r2 = 2;

@@ -6,7 +6,7 @@ __global__ void g_dcd(pipelineRedir redir, char *str) {
 	d_dcd_rc = 0;
 }
 int dcd(pipelineRedir redir, char *str) {
-	redir.Open();
+	pipelineOpen(redir);
 	char *d_str;
 	if (str) {
 		size_t strLength = strlen(str) + 1;
@@ -16,6 +16,6 @@ int dcd(pipelineRedir redir, char *str) {
 	else d_str = 0;
 	g_dcd<<<1, 1>>>(redir, d_str);
 	if (d_str) cudaFree(d_str);
-	redir.Close();
+	pipelineClose(redir);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dcd_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

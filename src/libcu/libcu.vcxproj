@@ -30,6 +30,7 @@
     <ClInclude Include="..\include\cuda_runtimecu.h" />
     <ClInclude Include="..\include\ext\hash.h" />
     <ClInclude Include="..\include\ext\memfile.h" />
+    <ClInclude Include="..\include\ext\mutex.h" />
     <ClInclude Include="..\include\ext\pipeline.h" />
     <ClInclude Include="..\include\fcntlcu.h" />
     <ClInclude Include="..\include\grpcu.h" />
@@ -80,6 +81,7 @@
     <None Include="locale\none.cu" />
     <None Include="locale\utf8.cu" />
     <None Include="locale\xlocale.cu" />
+    <None Include="ext\mutex.cu" />
     <CudaCompile Include="program.cu" />
     <CudaCompile Include="libcu.cu" />
     <CudaCompile Include="libcu.stdlib.cu" />

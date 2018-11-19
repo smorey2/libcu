@@ -8,7 +8,7 @@ __global__ void g_dchown(pipelineRedir redir, char *str, int uid) {
 	d_dchown_rc = (stat(str, &statbuf) < 0 || chown(str, uid, statbuf.st_gid) < 0);
 }
 int dchown(pipelineRedir redir, char *str, int uid) {
-	redir.Open();
+	pipelineOpen(redir);
 	char *d_str;
 	if (str) {
 		size_t strLength = strlen(str) + 1;
@@ -18,6 +18,6 @@ int dchown(pipelineRedir redir, char *str, int uid) {
 	else d_str = 0;
 	g_dchown<<<1, 1>>>(redir, d_str, uid);
 	if (d_str) cudaFree(d_str);
-	redir.Close();
+	pipelineClose(redir);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dchown_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

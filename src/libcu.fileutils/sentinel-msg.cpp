@@ -23,24 +23,24 @@ int dcd(pipelineRedir redir, char *str);
 extern "C" bool sentinelFileUtilsExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*, char*, char*, intptr_t)) {
 	if (data->op < FILEUTILS_DCAT || data->op > FILEUTILS_DCD) return false;
 	switch (data->op) {
-	case FILEUTILS_DCAT: { fileutils_dcat *msg = (fileutils_dcat *)data; msg->RC = dcat(msg->Base.redir, msg->Str); return true; }
-	case FILEUTILS_DCHGRP: { fileutils_dchgrp *msg = (fileutils_dchgrp *)data; msg->RC = dchgrp(msg->Base.redir, msg->Str, msg->Gid); return true; }
-	case FILEUTILS_GETGRNAM: { fileutils_getgrnam *msg = (fileutils_getgrnam *)data; msg->RC = dchgrp_getgrnam(msg->Base.redir, msg->Str); return true; }
-	case FILEUTILS_DCHMOD: { fileutils_dchmod *msg = (fileutils_dchmod *)data; msg->RC = dchmod(msg->Base.redir, msg->Str, msg->Mode); return true; }
-	case FILEUTILS_DCHOWN: { fileutils_dchown *msg = (fileutils_dchown *)data; msg->RC = dchown(msg->Base.redir, msg->Str, msg->Uid); return true; }
-	case FILEUTILS_GETPWNAM: { fileutils_getpwnam *msg = (fileutils_getpwnam *)data; msg->RC = dchown_getpwnam_(msg->Base.redir, msg->Str); return true; }
-	case FILEUTILS_DCMP: { fileutils_dcmp *msg = (fileutils_dcmp *)data; msg->RC = dcmp(msg->Base.redir, msg->Str, msg->Str2); return true; }
-	case FILEUTILS_DCP: { fileutils_dcp *msg = (fileutils_dcp *)data; msg->RC = dcp(msg->Base.redir, msg->Str, msg->Str2, msg->SetModes); return true; }
-	case FILEUTILS_ISADIR: { fileutils_isadir *msg = (fileutils_isadir *)data; msg->RC = dcp_isadir_(msg->Base.redir, msg->Str); return true; }
-	case FILEUTILS_DGREP: { fileutils_dgrep *msg = (fileutils_dgrep *)data; msg->RC = dgrep(msg->Base.redir, msg->Str, msg->Str2, msg->IgnoreCase, msg->TellName, msg->TellLine); return true; }
-	case FILEUTILS_DLS: { fileutils_dls *msg = (fileutils_dls *)data; msg->RC = dls(msg->Base.redir, msg->Str, msg->Flags, msg->EndSlash); return true; }
-	case FILEUTILS_DMKDIR: { fileutils_dmkdir *msg = (fileutils_dmkdir *)data; msg->RC = dmkdir(msg->Base.redir, msg->Str, msg->Mode); return true; }
-	case FILEUTILS_DMORE: { fileutils_dmore *msg = (fileutils_dmore *)data; msg->RC = dmore(msg->Base.redir, msg->Str, msg->Fd); return true; }
-	case FILEUTILS_DMV: { fileutils_dmv *msg = (fileutils_dmv *)data; msg->RC = dmv(msg->Base.redir, msg->Str, msg->Str2); return true; }
-	case FILEUTILS_DRM: { fileutils_drm *msg = (fileutils_drm *)data; msg->RC = drm(msg->Base.redir, msg->Str); return true; }
-	case FILEUTILS_DRMDIR: { fileutils_drmdir *msg = (fileutils_drmdir *)data; msg->RC = drmdir(msg->Base.redir, msg->Str); return true; }
-	case FILEUTILS_DPWD: { fileutils_dpwd *msg = (fileutils_dpwd *)data; msg->RC = dpwd(msg->Base.redir, msg->Ptr); return true; }
-	case FILEUTILS_DCD: { fileutils_dcd *msg = (fileutils_dcd *)data; msg->RC = dcd(msg->Base.redir, msg->Str); return true; }
+	case FILEUTILS_DCAT: { fileutils_dcat *msg = (fileutils_dcat *)data; msg->rc = dcat(msg->base.redir, msg->str); return true; }
+	case FILEUTILS_DCHGRP: { fileutils_dchgrp *msg = (fileutils_dchgrp *)data; msg->rc = dchgrp(msg->base.redir, msg->str, msg->gid); return true; }
+	case FILEUTILS_GETGRNAM: { fileutils_getgrnam *msg = (fileutils_getgrnam *)data; msg->rc = dchgrp_getgrnam(msg->base.redir, msg->str); return true; }
+	case FILEUTILS_DCHMOD: { fileutils_dchmod *msg = (fileutils_dchmod *)data; msg->rc = dchmod(msg->base.redir, msg->str, msg->mode); return true; }
+	case FILEUTILS_DCHOWN: { fileutils_dchown *msg = (fileutils_dchown *)data; msg->rc = dchown(msg->base.redir, msg->str, msg->uid); return true; }
+	case FILEUTILS_GETPWNAM: { fileutils_getpwnam *msg = (fileutils_getpwnam *)data; msg->rc = dchown_getpwnam_(msg->base.redir, msg->str); return true; }
+	case FILEUTILS_DCMP: { fileutils_dcmp *msg = (fileutils_dcmp *)data; msg->rc = dcmp(msg->base.redir, msg->str, msg->str2); return true; }
+	case FILEUTILS_DCP: { fileutils_dcp *msg = (fileutils_dcp *)data; msg->rc = dcp(msg->base.redir, msg->str, msg->str2, msg->setModes); return true; }
+	case FILEUTILS_ISADIR: { fileutils_isadir *msg = (fileutils_isadir *)data; msg->rc = dcp_isadir_(msg->base.redir, msg->str); return true; }
+	case FILEUTILS_DGREP: { fileutils_dgrep *msg = (fileutils_dgrep *)data; msg->rc = dgrep(msg->base.redir, msg->str, msg->str2, msg->ignoreCase, msg->tellName, msg->tellLine); return true; }
+	case FILEUTILS_DLS: { fileutils_dls *msg = (fileutils_dls *)data; msg->rc = dls(msg->base.redir, msg->str, msg->flags, msg->endSlash); return true; }
+	case FILEUTILS_DMKDIR: { fileutils_dmkdir *msg = (fileutils_dmkdir *)data; msg->rc = dmkdir(msg->base.redir, msg->str, msg->mode); return true; }
+	case FILEUTILS_DMORE: { fileutils_dmore *msg = (fileutils_dmore *)data; msg->rc = dmore(msg->base.redir, msg->str, msg->fd); return true; }
+	case FILEUTILS_DMV: { fileutils_dmv *msg = (fileutils_dmv *)data; msg->rc = dmv(msg->base.redir, msg->str, msg->str2); return true; }
+	case FILEUTILS_DRM: { fileutils_drm *msg = (fileutils_drm *)data; msg->rc = drm(msg->base.redir, msg->str); return true; }
+	case FILEUTILS_DRMDIR: { fileutils_drmdir *msg = (fileutils_drmdir *)data; msg->rc = drmdir(msg->base.redir, msg->str); return true; }
+	case FILEUTILS_DPWD: { fileutils_dpwd *msg = (fileutils_dpwd *)data; msg->rc = dpwd(msg->base.redir, msg->ptr); return true; }
+	case FILEUTILS_DCD: { fileutils_dcd *msg = (fileutils_dcd *)data; msg->rc = dcd(msg->base.redir, msg->str); return true; }
 	}
 	return false;
 }

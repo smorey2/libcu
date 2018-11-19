@@ -6,7 +6,7 @@
 #include <ext/pipeline.cpp>
 
 unsigned short _newMode = 0666; // & ~umask(0);
-__forceinline__ int dmkdir_(pipelineRedir *redir, char *name, unsigned short mode) { fileutils_dmkdir msg(redir[0], name, mode); redir[1].Read(); return msg.RC; }
+__forceinline__ int dmkdir_(pipelineRedir *redir, char *name, unsigned short mode) { fileutils_dmkdir msg(redir[0], name, mode); pipelineRead(redir[1]); return msg.rc; }
 
 int makeDir(pipelineRedir *redir, char *name, int f) {
 	char iname[256];

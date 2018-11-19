@@ -1,5 +1,5 @@
 /*
-sentinel-hostmsg.h - messages for sentinel
+mutex.h - xxx
 The MIT License
 
 Copyright (c) 2016 Sky Morey
@@ -23,20 +23,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
-#ifndef _SENTINEL_HOSTMSG_H
-#define _SENTINEL_HOSTMSG_H
+#ifndef _EXT_MUTEX_H
+#define _EXT_MUTEX_H
+#ifdef  __cplusplus
+extern "C" {
+#endif
+	/* Mutex with exponential back-off. */
+	extern __device__ void mutex_lock(unsigned int *mutex);
+	/* Mutex unlock. */
+	extern __device__ void mutex_unlock(unsigned int *mutex);
 
-#include <sentinel.h>
-
-enum {
-	HOST_GETPROCESSID = 1,
-};
-
-struct host_getprocessid {
-	sentinelMessage base;
-	host_getprocessid() : base(HOST_GETPROCESSID, SENTINELFLOW_WAIT) { sentinelClientSend(&base, sizeof(host_getprocessid)); }
-	int rc;
-};
-
-#endif  /* _SENTINEL_HOSTMSG_H */
+#ifdef  __cplusplus
+}
+#endif
+#endif  /* _EXT_MUTEX_H */

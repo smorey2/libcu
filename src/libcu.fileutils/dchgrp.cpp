@@ -7,8 +7,8 @@
 #include <grpcu.h>
 
 #define	isdecimal(ch) ((ch) >= '0' && (ch) <= '9')
-__forceinline__ struct group *dchgrp_getgrnam_(pipelineRedir *redir, char *str) { fileutils_getgrnam msg(redir[0], str); redir[1].Read(); return msg.RC; }
-__forceinline__ int dchgrp_(pipelineRedir *redir, char *str, int gid) { fileutils_dchgrp msg(redir[0], str, gid); redir[1].Read(); return msg.RC; }
+__forceinline__ struct group *dchgrp_getgrnam_(pipelineRedir *redir, char *str) { fileutils_getgrnam msg(redir[0], str); pipelineRead(redir[1]); return msg.rc; }
+__forceinline__ int dchgrp_(pipelineRedir *redir, char *str, int gid) { fileutils_dchgrp msg(redir[0], str, gid); pipelineRead(redir[1]); return msg.rc; }
 
 int main(int argc, char **argv) {
 	atexit(sentinelClientShutdown);

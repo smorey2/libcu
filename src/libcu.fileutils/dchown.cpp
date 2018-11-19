@@ -7,8 +7,8 @@
 #include <pwdcu.h>
 
 #define	isdecimal(ch) ((ch) >= '0' && (ch) <= '9')
-__forceinline__ struct passwd *dchgrp_getpwnam_(pipelineRedir *redir, char *str) { fileutils_getpwnam msg(redir[0], str); redir[1].Read(); return msg.RC; }
-__forceinline__ int dchown_(pipelineRedir *redir, char *str, int uid) { fileutils_dchown msg(redir[0], str, uid); redir[1].Read(); return msg.RC; }
+__forceinline__ struct passwd *dchgrp_getpwnam_(pipelineRedir *redir, char *str) { fileutils_getpwnam msg(redir[0], str); pipelineRead(redir[1]); return msg.rc; }
+__forceinline__ int dchown_(pipelineRedir *redir, char *str, int uid) { fileutils_dchown msg(redir[0], str, uid); pipelineRead(redir[1]); return msg.rc; }
 
 int main(int argc, char	**argv) {
 	atexit(sentinelClientShutdown);

@@ -12,7 +12,7 @@
 #define	LSF_MULT	0x08
 #define LSF_ALL		0x10		// List files starting with `.'
 #define LSF_CLASS	0x20		// Classify files (append symbol)
-__forceinline__ int dls_(pipelineRedir *redir, char *str, int flags, bool endSlash) { fileutils_dls msg(redir[0], str, flags, endSlash); redir[1].Read(); return msg.RC; }
+__forceinline__ int dls_(pipelineRedir *redir, char *str, int flags, bool endSlash) { fileutils_dls msg(redir[0], str, flags, endSlash); pipelineRead(redir[1]); return msg.rc; }
 
 int main(int argc, const char **argv) {
 	atexit(sentinelClientShutdown);

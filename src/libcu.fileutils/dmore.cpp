@@ -9,7 +9,7 @@
 #define _read read
 #endif
 
-__forceinline__ int dmore_(pipelineRedir *redir, char *str, int fd) { fileutils_dmore msg(redir[0], str, fd); redir[1].Read(); return msg.RC; }
+__forceinline__ int dmore_(pipelineRedir *redir, char *str, int fd) { fileutils_dmore msg(redir[0], str, fd); pipelineRead(redir[1]); return msg.rc; }
 
 int main(int argc, char **argv) {
 	atexit(sentinelClientShutdown);

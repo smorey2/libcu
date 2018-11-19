@@ -38,32 +38,32 @@ enum {
 };
 
 struct time_time {
-	sentinelMessage Base;
-	__device__ time_time() : Base(TIME_TIME, SENTINELFLOW_WAIT) { sentinelDeviceSend(&Base, sizeof(time_time)); }
-	time_t RC;
+	sentinelMessage base;
+	__device__ time_time() : base(TIME_TIME, SENTINELFLOW_WAIT) { sentinelDeviceSend(&base, sizeof(time_time)); }
+	time_t rc;
 };
 
 struct time_mktime {
-	sentinelMessage Base;
-	struct tm *Tp;
-	__device__ time_mktime(struct tm *tp) : Base(TIME_MKTIME, SENTINELFLOW_WAIT), Tp(tp) { sentinelDeviceSend(&Base, sizeof(time_mktime)); }
-	time_t RC;
+	sentinelMessage base;
+	struct tm *tp;
+	__device__ time_mktime(struct tm *tp) : base(TIME_MKTIME, SENTINELFLOW_WAIT), tp(tp) { sentinelDeviceSend(&base, sizeof(time_mktime)); }
+	time_t rc;
 };
 
 struct time_strftime {
-	sentinelMessage Base;
-	const char *Buf; size_t Maxsize; const char *Str; const struct tm Tp;
-	__device__ time_strftime(const char *buf, size_t maxsize, const char *str, const struct tm *tp) : Base(TIME_STRFTIME, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Buf(buf), Maxsize(maxsize), Str(str), Tp(*tp) { sentinelDeviceSend(&Base, sizeof(time_strftime), PtrsIn, PtrsOut); }
-	size_t RC;
-	void *Ptr;
-	sentinelInPtr PtrsIn[2] = {
-		{ &Str, -1 },
-		nullptr
+	sentinelMessage base;
+	const char *buf; size_t maxsize; const char *str; const struct tm tp;
+	__device__ time_strftime(const char *buf, size_t maxsize, const char *str, const struct tm *tp) : base(TIME_STRFTIME, SENTINELFLOW_WAIT, SENTINEL_CHUNK), buf(buf), maxsize(maxsize), str(str), tp(*tp) { sentinelDeviceSend(&base, sizeof(time_strftime), ptrsIn, ptrsOut); }
+	size_t rc;
+	void *ptr;
+	sentinelInPtr ptrsIn[2] = {
+		{ &str, -1 },
+		{ nullptr }
 	};
-	sentinelOutPtr PtrsOut[3] = {
+	sentinelOutPtr ptrsOut[3] = {
 		{ (void *)-1 },
-		{ &Ptr, &Buf, -1, &RC },
-		nullptr
+		{ &ptr, &buf, -1, &rc },
+		{ nullptr }
 	};
 };
 

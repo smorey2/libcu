@@ -8,7 +8,7 @@
 __BEGIN_DECLS;
 
 __device__ int vfcntl_(int fd, int cmd, va_list va) {
-	if (ISHOSTHANDLE(fd)) { fcntl_fcntl msg(fd, cmd, va_arg(va, int), false); return msg.RC; }
+	if (ISHOSTHANDLE(fd)) { fcntl_fcntl msg(fd, cmd, va_arg(va, int), false); return msg.rc; }
 	panic("Not Implemented");
 	// (int fd, unsigned int cmd, unsigned long arg, struct file *filp)
 	//	long err = -EINVAL;
@@ -29,7 +29,7 @@ __device__ int vfcntl_(int fd, int cmd, va_list va) {
 __device__ int fcntl_(int fd, int cmd, ...) { va_list va; va_start(va, cmd); int r = vfcntl_(fd, cmd, va); va_end(va); return r; }
 #ifdef __USE_LARGEFILE64
 __device__ int vfcntl64_(int fd, int cmd, va_list va) {
-	if (ISHOSTHANDLE(fd)) { fcntl_fcntl msg(fd, cmd, va_arg(va, int), true); return msg.RC; }
+	if (ISHOSTHANDLE(fd)) { fcntl_fcntl msg(fd, cmd, va_arg(va, int), true); return msg.rc; }
 	panic("Not Implemented");
 	return 0;
 }
@@ -37,13 +37,13 @@ __device__ int fcntl64_(int fd, int cmd, ...) { va_list va; va_start(va, cmd); i
 #endif
 
 __device__ int vopen_(const char *file, int oflag, va_list va) {
-	if (ISHOSTPATH(file)) { fcntl_open msg(file, oflag, va_arg(va, int), false); return msg.RC; }
+	if (ISHOSTPATH(file)) { fcntl_open msg(file, oflag, va_arg(va, int), false); return msg.rc; }
 	int fd; fsystemOpen(file, oflag, &fd); return fd;
 }
 __device__ int open_(const char *file, int oflag, ...) { va_list va; va_start(va, oflag); int r = vopen_(file, oflag, va); va_end(va); return r; }
 #ifdef __USE_LARGEFILE64
 __device__ int vopen64_(const char *file, int oflag, va_list va) {
-	if (ISHOSTPATH(file)) { fcntl_open msg(file, oflag, va_arg(va, int), true); return msg.RC; }
+	if (ISHOSTPATH(file)) { fcntl_open msg(file, oflag, va_arg(va, int), true); return msg.rc; }
 	int fd; fsystemOpen(file, oflag, &fd); return fd;
 }
 __device__ int open64_(const char *file, int oflag, ...) { va_list va; va_start(va, oflag); int r = vopen64_(file, oflag, va); va_end(va); return r; }
@@ -51,7 +51,7 @@ __device__ int open64_(const char *file, int oflag, ...) { va_list va; va_start(
 
 /* Close the file descriptor FD.  */
 __device__ int close_(int fd) {
-	if (ISHOSTHANDLE(fd)) { unistd_close msg(fd); return msg.RC; }
+	if (ISHOSTHANDLE(fd)) { unistd_close msg(fd); return msg.rc; }
 	fsystemClose(fd);
 	return 0;
 }

@@ -17,8 +17,8 @@
 #include <pthread.h>
 #define THREADHANDLE pthread_t
 #define THREADCALL void *
-#define HOST_SPINLOCK(SET, WHEN) (while (_threadHostHandle && (s_ = __sync_val_compare_and_swap((long *)control, SET, WHEN)) != WHEN) { /*printf("(%d)", s_);*/ Sleep(50); })
-#define DEVICE_SPINLOCK(SET, WHEN) (while (_threadDeviceHandle[threadId] && (s_ = __sync_val_compare_and_swap((long *)control, SET, WHEN)) != WHEN) { /*printf("(%d)", s_);*/ Sleep(50); })
+#define HOST_SPINLOCK(SET, WHEN) while (_threadHostHandle && (s_ = __sync_val_compare_and_swap((long *)control, SET, WHEN)) != WHEN) { /*printf("(%d)", s_);*/ sleep(50); }
+#define DEVICE_SPINLOCK(SET, WHEN) while (_threadDeviceHandle[threadId] && (s_ = __sync_val_compare_and_swap((long *)control, SET, WHEN)) != WHEN) { /*printf("(%d)", s_);*/ sleep(50); }
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -72,6 +72,8 @@ static THREADCALL sentinelHostThread(void *data) {
 		// FLOW-WAIT
 		if (msg->flow & SENTINELFLOW_WAIT) {
 			*control = SENTINELCONTROL_HOSTRDY;
+			HOST_SPINLOCK(SENTINELCONTROL_HOST, SENTINELCONTROL_DEVICERDY);
+			if (*unknown) executeTrans(cmd, trans, -1);
 		}
 		else *control = SENTINELCONTROL_NORMAL;
 		map->getId += SENTINEL_MSGSIZE;

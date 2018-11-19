@@ -107,12 +107,18 @@
     <ClInclude Include="..\include\sentinel-hostmsg.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\ext\mutex.h">
+      <Filter>include\ext</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="libcu.cu" />
     <CudaCompile Include="program.cu" />
     <CudaCompile Include="libcu.stdlib.cu" />
     <CudaCompile Include="stringcu.cu" />
+    <CudaCompile Include="ext\mutex.cu">
+      <Filter>ext</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="_content">

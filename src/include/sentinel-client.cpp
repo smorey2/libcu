@@ -16,7 +16,7 @@
 
 #if HAS_HOSTSENTINEL
 
-static char *executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset);
+static void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset);
 static char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, sentinelCommand *cmd, char *data, char *dataEnd, intptr_t offset, sentinelOutPtr *&transListOut) {
 	char *ptr = data, *next;
 	int transSize = 0;
@@ -44,11 +44,10 @@ static char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, sentine
 		ptr = ptrsOut[0].field == (char *)-1 ? ptr : data;
 		for (sentinelOutPtr *p = ptrsOut; p->field; p++) {
 			char **field = (char **)p->field;
-			int size = p->size != -1 ? p->size : dataEnd - ptr;
+			int size = p->size != -1 ? p->size : (int)(dataEnd - ptr);
 			next = ptr + size;
 			if (!size) {}
 			else if (next <= dataEnd) {
-			if (next <= dataEnd) {
 				*field = ptr + offset;
 				ptr = next;
 			}
@@ -93,7 +92,7 @@ static bool postfixPtrs(sentinelOutPtr *ptrsOut, sentinelCommand *cmd, intptr_t 
 
 static sentinelMap *_sentinelClientMap = nullptr;
 static intptr_t _sentinelClientMapOffset = 0;
-void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrsIn = nullptr, sentinelOutPtr *ptrsOut = nullptr) {
+void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut) {
 #ifndef _WIN64
 	printf("Sentinel client currently only works in x64.\n"); abort();
 #else
@@ -105,7 +104,7 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrs
 #if __OS_WIN
 	long id = InterlockedAdd((long *)&map->setId, SENTINEL_MSGSIZE) - SENTINEL_MSGSIZE;
 #elif __OS_UNIX
-	long id = __sync_fetch_and_add((long *)&map->SetId, SENTINEL_MSGSIZE) - SENTINEL_MSGSIZE;
+	long id = __sync_fetch_and_add((long *)&map->setId, SENTINEL_MSGSIZE) - SENTINEL_MSGSIZE;
 #endif
 	sentinelCommand *cmd = (sentinelCommand *)&map->data[id % sizeof(map->data)];
 	if (cmd->magic != SENTINEL_MAGIC)
@@ -120,6 +119,7 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrs
 	if (((ptrsIn || ptrsOut) && !(data = preparePtrs(ptrsIn, ptrsOut, cmd, data, dataEnd, offset, transListOut))) ||
 		(msg->prepare && !msg->prepare(msg, data, dataEnd, offset)))
 		panic("msg too long");
+	cmd->length = msgLength;
 	memcpy(cmd->data, msg, msgLength);
 	//printf("msg: %d[%d]'", msg->op, msgLength); for (int i = 0; i < msgLength; i++) printf("%02x", ((char *)msg)[i] & 0xff); printf("'\n");
 	*unknown = 0; *control = SENTINELCONTROL_DEVICERDY;
@@ -128,6 +128,7 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrs
 	if (msg->flow & SENTINELFLOW_WAIT) {
 		HOST_SPINLOCK(SENTINELCONTROL_DEVICE, SENTINELCONTROL_HOSTRDY);
 		executeTrans(cmd, 0, nullptr, transListOut, offset);
+		cmd->length = msgLength;
 		memcpy(msg, cmd->data, msgLength);
 		if ((ptrsOut && !postfixPtrs(ptrsOut, cmd, offset)) ||
 			(msg->postfix && !msg->postfix(msg, offset)))
@@ -138,8 +139,7 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrs
 #endif
 }
 
-static char *executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset) {
-	unsigned int s_;
+static void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset) {
 	int *unknown = &cmd->unknown; volatile long *control = (volatile long *)&cmd->control;
 	char *data = cmd->data;
 	// create memory
@@ -226,13 +226,13 @@ void sentinelClientShutdown() {
 #endif
 }
 
-static __forceinline__ int getprocessid_() { host_getprocessid msg; return msg.RC; }
+static __forceinline__ int getprocessid_() { host_getprocessid msg; return msg.rc; }
 
 static char *sentinelClientRedirPipelineArgs[] = { (char *)"^0" };
 void sentinelClientRedir(pipelineRedir *redir) {
 #if __OS_WIN
 	HANDLE process = OpenProcess(PROCESS_DUP_HANDLE, FALSE, getprocessid_());
-	CreatePipeline(1, sentinelClientRedirPipelineArgs, nullptr, &redir[1].Input, &redir[1].Output, &redir[1].Error, process, redir);
+	pipelineCreate(1, sentinelClientRedirPipelineArgs, nullptr, &redir[1].input, &redir[1].output, &redir[1].error, process, redir);
 #elif __OS_UNIX
 #endif
 }

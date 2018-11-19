@@ -98,7 +98,7 @@ differ:
 	return;
 }
 int dcmp(pipelineRedir redir, char *str, char *str2) {
-	redir.Open();
+	pipelineOpen(redir);
 	char *d_str;
 	char *d_str2;
 	if (str) {
@@ -116,6 +116,6 @@ int dcmp(pipelineRedir redir, char *str, char *str2) {
 	g_dcmp<<<1, 1>>>(redir, d_str, d_str2);
 	if (d_str) cudaFree(d_str);
 	if (d_str2) cudaFree(d_str2);
-	redir.Close();
+	pipelineClose(redir);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dcmp_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

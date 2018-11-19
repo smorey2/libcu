@@ -193,7 +193,7 @@ void lsfile(char *cp) {
  * If the directory name is NULL, then the original filename is returned.
  * The built path is in a static area, and is overwritten for each call.
  */
-char * buildname(char *dirname, char *filename) {
+char *buildname(char *dirname, char *filename) {
 	char		*cp;
 	static	char	buf[PATHLEN];
 

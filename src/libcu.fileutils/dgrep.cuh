@@ -69,7 +69,7 @@ __global__ void g_dgrep(pipelineRedir redir, char *name, char *word, bool ignore
 }
 
 int dgrep(pipelineRedir redir, char *str, char *str2, bool ignoreCase, bool tellName, bool tellLine) {
-	redir.Open();
+	pipelineOpen(redir);
 	char *d_str;
 	char *d_str2;
 	if (str) {
@@ -87,6 +87,6 @@ int dgrep(pipelineRedir redir, char *str, char *str2, bool ignoreCase, bool tell
 	g_dgrep<<<1, 1>>>(redir, d_str, d_str2, ignoreCase, tellName, tellLine);
 	if (d_str) cudaFree(d_str);
 	if (d_str2) cudaFree(d_str2);
-	redir.Close();
+	pipelineClose(redir);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dgrep_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

@@ -13,7 +13,7 @@ void dumpfile(FILE *f) {
 		fwrite(readbuf, nred, 1, stdout);
 }
 
-__forceinline__ int dcat_(pipelineRedir *redir, char *str) { fileutils_dcat msg(redir[0], str); redir[1].Read(); return msg.RC; }
+__forceinline__ int dcat_(pipelineRedir *redir, char *str) { fileutils_dcat msg(redir[0], str); pipelineRead(redir[1]); return msg.rc; }
 
 int main(int argc, const char **argv) {
 	atexit(sentinelClientShutdown);

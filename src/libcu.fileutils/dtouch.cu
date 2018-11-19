@@ -6,7 +6,7 @@ int main(int argc, char **argv) {
 	int i, ncreate = 0;
 	struct stat sbuf;
 	int fd, er;
-	if ((argv[1][0] == '-') && (argv[1][1] == 'c'))
+	if (argv[1][0] == '-' && argv[1][1] == 'c')
 		ncreate = 1;
 	for (i = ncreate + 1; i < argc; i++) {
 		if (argv[i][0] != '-') {

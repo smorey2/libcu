@@ -6,7 +6,7 @@ __global__ void g_dcp(pipelineRedir redir, char *srcName, char *destName, bool s
 	d_dcp_rc = copyFile(srcName, destName, setModes);
 }
 int dcp(pipelineRedir redir, char *str, char *str2, bool setModes) {
-	redir.Open();
+	pipelineOpen(redir);
 	char *d_str;
 	char *d_str2;
 	if (str) {
@@ -24,6 +24,6 @@ int dcp(pipelineRedir redir, char *str, char *str2, bool setModes) {
 	g_dcp<<<1, 1>>>(redir, d_str, d_str2, setModes);
 	if (d_str) cudaFree(d_str);
 	if (d_str2) cudaFree(d_str2);
-	redir.Close();
+	pipelineClose(redir);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dcp_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

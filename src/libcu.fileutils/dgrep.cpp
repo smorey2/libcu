@@ -5,7 +5,7 @@
 #include <sentinel-client.cpp>
 #include <ext/pipeline.cpp>
 
-__forceinline__ int dgrep_(pipelineRedir *redir, char *str, char *str2, bool ignoreCase, bool tellName, bool tellLine) { fileutils_dgrep msg(redir[0], str, str2, ignoreCase, tellName, tellLine); redir[1].Read(); return msg.RC; }
+__forceinline__ int dgrep_(pipelineRedir *redir, char *str, char *str2, bool ignoreCase, bool tellName, bool tellLine) { fileutils_dgrep msg(redir[0], str, str2, ignoreCase, tellName, tellLine); pipelineRead(redir[1]); return msg.rc; }
 
 int main(int argc, char **argv) {
 	atexit(sentinelClientShutdown);

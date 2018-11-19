@@ -7,7 +7,7 @@
 
 #define	isoctal(ch)	((ch) >= '0' && (ch) <= '7')
 
-__forceinline__ int dchmod_(pipelineRedir *redir, char *str, int mode) { fileutils_dchmod msg(redir[0], str, mode); redir[1].Read(); return msg.RC; }
+__forceinline__ int dchmod_(pipelineRedir *redir, char *str, int mode) { fileutils_dchmod msg(redir[0], str, mode); pipelineRead(redir[1]); return msg.rc; }
 
 int main(int argc, char **argv) {
 	atexit(sentinelClientShutdown);

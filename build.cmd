@@ -23,11 +23,11 @@ popd
 rem BUILD32
 mkdir build32
 pushd build32
-cmake -G "Visual Studio 11 2012" -Darch="%CUARCH%" -DCMAKE_CUDA_FLAGS="-arch=sm_%CUARCH%" ../../src
+rem cmake -G "Visual Studio 11 2012" -Darch="%CUARCH%" -DCMAKE_CUDA_FLAGS="-arch=sm_%CUARCH%" ../../src
 popd
-cmake --build build32 --config Debug
+rem cmake --build build32 --config Debug
 pushd build32
-ctest -C Debug
+rem ctest -C Debug
 popd
 
 

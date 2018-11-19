@@ -63,29 +63,29 @@ SentinelContext is a singleton which represents the state of Sentinel. Sentinel 
 
 `SentinelServerInitialize` execution:
 * Creates `SENTINEL_DEVICEMAPS` instances of `sentinelMap`, each with it's own processing thread, and stores them in DeviceMap.
-* Sets a single linked list of `sentinelExecutor(s)` for the processesing of all device to host messages in `DeviceList`.
+* Sets a single linked list of `sentinelExecutor(s)` for the processesing of all device to host messages in `deviceList`.
 * Creates a single instance of `sentinelMap`, with it's own processing thread, and stores it in HostMap.
-* Sets a single linked list of `sentinelExecutor(s)` for the processesing of all host to host messages in `HostList`.
+* Sets a single linked list of `sentinelExecutor(s)` for the processesing of all host to host messages in `hostList`.
 ```
 sentinelContext
-- DeviceMap[SENTINEL_DEVICEMAPS] - sentinelMap(s) used for device
-- HostMap - sentinelMap used for host IPC
-- HostList - linked list of sentinelExecutor(s) for host processing
-- DeviceList - linked list of sentinelExecutor(s) for device processing
+- deviceMap[SENTINEL_DEVICEMAPS] - sentinelMap(s) used for device
+- hostMap - sentinelMap used for host IPC
+- hostList - linked list of sentinelExecutor(s) for host processing
+- deviceList - linked list of sentinelExecutor(s) for device processing
 ```
 
 ### SentinelMap
 Each `sentinelMap` has a dedicated processing thread and can hold `SENTINEL_MSGCOUNT` messages of size `SENTINEL_MSGSIZE`, this size must include the `sentinelCommand` size.
-* `GetId` is a rolling index into the next message to read
-* New messages are written to `SetId`, which is marked volatile to by-pass any caching issues
-* `Offset(s)` are applied as appropreate to align mapped memory between host and device coordinates
+* `getId` is a rolling index into the next message to read
+* New messages are written to `setId`, which is marked volatile to by-pass any caching issues
+* `offset(s)` are applied as appropreate to align mapped memory between host and device coordinates
 * Data contains all `sentinelCommand(s)` with embedded `sentinelMessage(s)` with a queue depth of `SENTINEL_MSGCOUNT`. `SENTINEL_MSGSIZE` must include the `sentinelCommand` size 
 ```
 sentinelMap
-- GetId - current reading location
-- SetId:volatile - current writing location, atomicaly incremeted by SENTINEL_MSGSIZE 
-- Offset - used for map alignment
-- Data[SENTINEL_MSGSIZE*SENTINEL_MSGCOUNT]
+- getId - current reading location
+- setId:volatile - current writing location, atomicaly incremeted by SENTINEL_MSGSIZE 
+- offset - used for map alignment
+- data[SENTINEL_MSGSIZE*SENTINEL_MSGCOUNT]
 ```
 
 ### SentinelCommand
@@ -97,51 +97,51 @@ Each `sentinelCommand` represents a command being passed across the bus, and has
 	* 2 - device signal that data is ready to process
 	* 3 - host in-progress
 	* 4 - host signal that results are ready to read
-	* 10 - jumbo
 * `Length` and `Data` represent the embeded `sentinelMessage`
 ```
 sentinelCommand
-- Magic - magic
-- Control:volatile - control flag
-- Length - length of data
-- Data[...] - data
+- magic - magic
+- control:volatile - control flag
+- unknown - internal field
+- length - length of data
+- data[...] - data
 ```
 
 ### SentinelMessage
 Each `sentinelMessage` is a custom message being passed across the bus
 ```
 sentinelMessage
-- Flow - flow control to asyc or wait
-- OP - operation
-- Size - size of message
-- Prepare() - method to prepare message for transport
+- op - operation
+- flow - flow control to asyc or wait
+- unknown - internal field
+- size - size of message
+- prepare() - method to prepare message for transport
+- postfix() - method to postfix message after transport
 ```
 
-<!-- ### sentinelRedirect
-The `sentinelRedirect` holds stdin, stdout, stderr for redirection
+### pipelineRedir
+The `pipelineRedir` holds stdin, stdout, stderr for redirection
 ```
-sentinelRedirect
-- In - stdin
-- Out - stdout
-- Err - stderr
-``` -->
+pipelineRedir
+- ... - defined else where
+```
 
 ### SentinelClientMessage
-The `sentinelClientMessage` holds `sentinelMessage` and `sentinelRedirect`
+The `sentinelClientMessage` holds `sentinelMessage` and `pipelineRedir`
 ```
 sentinelClientMessage
-- Base - sentinelMessage
-- Redir - pipelineRedir
+- base - sentinelMessage
+- redir - pipelineRedir
 ```
 
 ### SentinelExecutor
 The `sentinelExecutor` is responsible for executing message on host.
 ```
 sentinelExecutor
-- Next - linked list pointer
-- Name - name of executor
-- Executor() - attempts to process messages
-- Tag - optional data for executor
+- next - linked list pointer
+- name - name of executor
+- executor() - attempts to process messages
+- tag - optional data for executor
 ```
 
 
@@ -158,54 +158,73 @@ The following is an example of creating a custom message, and using it.
 enum {
 	MODULE_SIMPLE = 500,
 	MODULE_STRING,
+	MODULE_CUSTOM,
 };
 ```
 
-### Message
-A simple message with a integer value named `Value`, and a integer return code named `RC`.
-* `Base` must be first
-* `Base` constructor parameters of `size` and `prepare` can be ignored
+### Message - Simple
+A simple message with a integer value named `value`, and a integer return code named `rc`.
+* `base` must be first
+* `base` constructor parameters of `flow`, `size`, `prepare` and `postfix` can be ignored
 ```
 struct module_simple {
-	sentinelMessage Base;
-	int Value;
-	__device__ module_simple(int value)
-		: Base(MODULE_SIMPLE), Value(value) { sentinelDeviceSend(&Base, sizeof(module_simple)); }
-	int RC;
+	sentinelMessage base;
+	int value;
+	__device__ module_simple(int value) : base(MODULE_SIMPLE), value(value) { sentinelDeviceSend(&base, sizeof(module_simple)); }
+	int rc;
 };
 ```
 
-### Message
+### Message - String
+Message asset(s) referenced outside of the message payload, like string values, must be coalesced into the message payload. refered values offset(s) must be adjusted to align memory maps.
+* `base` must be first
+* `base` constructor parameters of `size` are required
+* `size` should contain enough space to hold the message with it's embeded values, and must be remain under the `SENTINEL_MSGSIZE` plus the `sentinelCommand` overhead size, or sentinel paging will occur.
+* `ptrsIn` defines references, replacing the original pointers with the emeded one and apply the offset to align memory maps.
+```
+struct module_string {
+	sentinelMessage base;
+	const char *str;
+	__device__ module_string(const char *str) : base(MODULE_STRING, FLOW_WAIT, SENTINEL_CHUNK), str(str) { sentinelDeviceSend(&base, sizeof(module_string), ptrsIn); }
+	int rc;
+	sentinelInPtr ptrsIn[2] = {
+		{ &str, -1 },
+		{ nullptr }
+	};
+};
+```
+
+### Message - Custom
 Message asset(s) referenced outside of the message payload, like string values, must be coalesced into the message payload. refered values offset(s) must be adjusted to align memory maps.
 * `Base` must be first
 * `Base` constructor parameters of `size` and `prepare` are required
 * `size` should contain enough space to hold the message with it's embeded values, and must be remain under the `SENTINEL_MSGSIZE` plus the `sentinelCommand` overhead size.
 * `prepare` must embed referenced values, replacing the original pointers with the emeded one and apply the offset to align memory maps.
 ```
-struct module_string {
-	static __forceinline __device__ char *Prepare(module_string *t, char *data, char *dataEnd, intptr_t offset) {
-		int strLength = t->Str ? (int)strlen(t->Str) + 1 : 0;
-		char *str = (char *)(data += _ROUND8(sizeof(*t)));
-		char *end = (char *)(data += strLength);
+struct module_custom {
+	static __forceinline __device__ char *prepare(module_string *t, char *data, char *dataEnd, intptr_t offset) {
+		int strLength = t->str ? (int)strlen(t->str) + 1 : 0;
+		char *str = data;
+		char *end = data += strLength;
 		if (end > dataEnd) return nullptr;
-		memcpy(str, t->Str, strLength);
-		t->Str = str + offset;
+		memcpy(str, t->str, strLength);
+		t->str = str + offset;
 		return end;
 	}
-	sentinelMessage Base;
-	const char *Str;
-	__device__ module_string(const char *str)
-		: Base(MODULE_STRING, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(Prepare)), Str(str) { sentinelDeviceSend(&Base, sizeof(module_string)); }
-	int RC;
+	sentinelMessage base;
+	const char *str;
+	__device__ module_string(const char *str) : base(MODULE_CUSTOM, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(prepare)), str(str) { sentinelDeviceSend(&base, sizeof(module_custom)); }
+	int rc;
 };
 ```
 
 ### Executor
 ```
 bool sentinelExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*,char*,char*,intptr_t)) {
-	switch (data->OP) {
-	case MODULE_SIMPLE: { module_simple *msg = (module_simple *)data; msg->RC = msg->Value; return true; }
-	case MODULE_STRING: { module_string *msg = (module_string *)data; msg->RC = strlen(msg->Str); return true; }
+	switch (data->op) {
+	case MODULE_SIMPLE: { module_simple *msg = (module_simple *)data; msg->rc = msg->value; return true; }
+	case MODULE_STRING: { module_string *msg = (module_string *)data; msg->rc = strlen(msg->str); return true; }
+	case MODULE_CUSTOM: { module_custom *msg = (module_custom *)data; msg->rc = strlen(msg->str); return true; }
 	}
 	return false;
 }
@@ -215,11 +234,17 @@ bool sentinelExecutor(void *tag, sentinelMessage *data, int length, char *(**hos
 to call:
 ```
 module_simple msg(123);
-int rc = msg.RC;
+int rc = msg.rc;
 ```
 
 to call:
 ```
 module_string msg("123");
-int rc = msg.RC;
+int rc = msg.rc;
+```
+
+to call:
+```
+module_custom msg("123");
+int rc = msg.rc;
 ```

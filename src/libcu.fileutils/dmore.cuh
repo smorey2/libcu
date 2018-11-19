@@ -50,7 +50,7 @@ __global__ void g_dmore(pipelineRedir redir, char *name, int fd) {
 	d_dmore_rc = -1;
 }
 int dmore(pipelineRedir redir, char *str, int fd) {
-	redir.Open();
+	pipelineOpen(redir);
 	char *d_str;
 	if (str) {
 		size_t strLength = strlen(str) + 1;
@@ -60,6 +60,6 @@ int dmore(pipelineRedir redir, char *str, int fd) {
 	else d_str = 0;
 	g_dmore<<<1, 1>>>(redir, d_str, fd);
 	if (d_str) cudaFree(d_str);
-	redir.Close();
+	pipelineClose(redir);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dmore_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

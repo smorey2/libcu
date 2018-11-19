@@ -690,7 +690,7 @@ __device__ hash_t __env_dir = HASHINIT;
 
 /* Return the value of envariable NAME, or NULL if it doesn't exist.  */
 __device__ char *getenv_(const char *name) {
-	if (ISHOSTENV(name)) { stdlib_getenv msg(name); return msg.RC; }
+	if (ISHOSTENV(name)) { stdlib_getenv msg(name); return msg.rc; }
 	char *r = (char *)hashFind(&__env_dir, name);
 	//if (!r && (!strcmp(name, ":HOME") || !strcmp(name, ":PATH"))) r = (char *)":\\";
 	return r;
@@ -698,7 +698,7 @@ __device__ char *getenv_(const char *name) {
 
 /* Set NAME to VALUE in the environment. If REPLACE is nonzero, overwrite an existing value.  */
 __device__ int setenv_(const char *name, const char *value, int replace) {
-	if (ISHOSTENV(name)) { stdlib_setenv msg(name, value, replace); return msg.RC; }
+	if (ISHOSTENV(name)) { stdlib_setenv msg(name, value, replace); return msg.rc; }
 	if (!replace && hashFind(&__env_dir, name)) return 0;
 	hashInsert(&__env_dir, name, (void *)value);
 	return 0;
@@ -706,7 +706,7 @@ __device__ int setenv_(const char *name, const char *value, int replace) {
 
 /* Remove the variable NAME from the environment.  */
 __device__ int unsetenv_(const char *name) {
-	if (ISHOSTENV(name)) { stdlib_unsetenv msg(name); return msg.RC; }
+	if (ISHOSTENV(name)) { stdlib_unsetenv msg(name); return msg.rc; }
 	hashInsert(&__env_dir, name, nullptr);
 	return 0;
 }
@@ -747,19 +747,19 @@ static __device__ int __maketemp(char *template_, register int *fd) {
 
 /* Generate a unique temporary file name from TEMPLATE. */
 __device__ char *mktemp_(char *template_) {
-	if (ISHOSTPATH(template_)) { stdlib_mktemp msg(template_); strcpy(template_, msg.RC); return msg.RC; }
+	if (ISHOSTPATH(template_)) { stdlib_mktemp msg(template_); strcpy(template_, msg.rc); return msg.rc; }
 	return __maketemp(template_, nullptr) ? template_ : nullptr;
 }
 
 /* Generate a unique temporary file name from TEMPLATE. */
 __device__ int mkstemp_(char *template_) {
-	if (ISHOSTPATH(template_)) { stdlib_mkstemp msg(template_); strcpy(template_, (const char *)msg.Ptr); return msg.RC; }
+	if (ISHOSTPATH(template_)) { stdlib_mkstemp msg(template_); strcpy(template_, (const char *)msg.ptr); return msg.rc; }
 	int fd; return __maketemp(template_, &fd) ? fd : -1;
 }
 
 /* Execute the given line as a shell command.  */
 __device__ int system_(const char *command) {
-	stdlib_system msg(command); return msg.RC;
+	stdlib_system msg(command); return msg.rc;
 }
 
 /* Do a binary search for KEY in BASE, which consists of NMEMB elements of SIZE bytes each, using COMPAR to perform the comparisons.  */

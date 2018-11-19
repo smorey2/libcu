@@ -41,97 +41,93 @@ enum {
 };
 
 struct stdlib_exit {
-	sentinelMessage Base;
-	bool Std; int Status;
-	__device__ stdlib_exit(bool std, int status) : Base(STDLIB_EXIT, SENTINELFLOW_WAIT), Std(std), Status(status) { sentinelDeviceSend(&Base, sizeof(stdlib_exit)); }
+	sentinelMessage base;
+	bool std; int status;
+	__device__ stdlib_exit(bool std, int status) : base(STDLIB_EXIT, SENTINELFLOW_WAIT), std(std), status(status) { sentinelDeviceSend(&base, sizeof(stdlib_exit)); }
 };
 
 struct stdlib_system {
-	sentinelMessage Base;
-	const char *Str;
-	__device__ stdlib_system(const char *str) : Base(STDLIB_SYSTEM, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_system), PtrsIn); }
-	int RC;
-	sentinelInPtr PtrsIn[2] = {
-		{ &Str, -1 },
-		nullptr
+	sentinelMessage base;
+	const char *str;
+	__device__ stdlib_system(const char *str) : base(STDLIB_SYSTEM, SENTINELFLOW_WAIT, SENTINEL_CHUNK), str(str) { sentinelDeviceSend(&base, sizeof(stdlib_system), ptrsIn); }
+	int rc;
+	sentinelInPtr ptrsIn[2] = {
+		{ &str, -1 },
+		{ nullptr }
 	};
 };
 
 struct stdlib_getenv {
-	static __forceinline__ __host__ char *HostPrepare(stdlib_getenv *t, char *data, char *dataEnd, intptr_t offset) {
-		if (!t->RC) return data;
-		int ptrLength = t->RC ? (int)strlen(t->RC) + 1 : 0;
-		if (ptrLength > SENTINEL_CHUNK) { ptrLength = SENTINEL_CHUNK; t->RC[ptrLength] = 0; }
+	static __forceinline__ __host__ char *hostPrepare(stdlib_getenv *t, char *data, char *dataEnd, intptr_t offset) {
+		if (!t->rc) return data;
+		int ptrLength = t->rc ? (int)strlen(t->rc) + 1 : 0;
+		if (ptrLength > SENTINEL_CHUNK) { ptrLength = SENTINEL_CHUNK; t->rc[ptrLength] = 0; }
 		char *ptr = (char *)(data += ROUND8_(sizeof(*t)));
 		char *end = (char *)(data += ptrLength);
 		if (end > dataEnd) return nullptr;
-		memcpy(ptr, t->RC, ptrLength);
-		t->RC = (char *)(ptr - offset);
+		memcpy(ptr, t->rc, ptrLength);
+		t->rc = (char *)(ptr - offset);
 		return end;
 	}
-	sentinelMessage Base;
-	const char *Str;
-	__device__ stdlib_getenv(const char *str) : Base(STDLIB_GETENV, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_getenv), PtrsIn); }
-	char *RC;
-	sentinelInPtr PtrsIn[2] = {
-		{ &Str, -1 },
-		nullptr
+	sentinelMessage base;
+	const char *str;
+	__device__ stdlib_getenv(const char *str) : base(STDLIB_GETENV, SENTINELFLOW_WAIT, SENTINEL_CHUNK), str(str) { sentinelDeviceSend(&base, sizeof(stdlib_getenv), ptrsIn); }
+	char *rc;
+	sentinelInPtr ptrsIn[2] = {
+		{ &str, -1 },
+		{ nullptr }
 	};
 };
 
 struct stdlib_setenv {
-	sentinelMessage Base;
-	const char *Str; const char *Str2; int Replace;
-	__device__ stdlib_setenv(const char *str, const char *str2, int replace) : Base(STDLIB_SETENV, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str), Str2(str2), Replace(replace) { sentinelDeviceSend(&Base, sizeof(stdlib_setenv), PtrsIn); }
-	int RC;
-	sentinelInPtr PtrsIn[3] = {
-		{ &Str, -1 },
-		{ &Str2, -1 },
-		nullptr
+	sentinelMessage base;
+	const char *str; const char *str2; int replace;
+	__device__ stdlib_setenv(const char *str, const char *str2, int replace) : base(STDLIB_SETENV, SENTINELFLOW_WAIT, SENTINEL_CHUNK), str(str), str2(str2), replace(replace) { sentinelDeviceSend(&base, sizeof(stdlib_setenv), ptrsIn); }
+	int rc;
+	sentinelInPtr ptrsIn[3] = {
+		{ &str, -1 },
+		{ &str2, -1 },
+		{ nullptr }
 	};
 };
 
 struct stdlib_unsetenv {
-	sentinelMessage Base;
-	const char *Str;
-	__device__ stdlib_unsetenv(const char *str) : Base(STDLIB_UNSETENV, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_unsetenv), PtrsIn); }
-	int RC;
-	sentinelInPtr PtrsIn[2] = {
-		{ &Str, -1 },
-		nullptr
+	sentinelMessage base;
+	const char *str;
+	__device__ stdlib_unsetenv(const char *str) : base(STDLIB_UNSETENV, SENTINELFLOW_WAIT, SENTINEL_CHUNK), str(str) { sentinelDeviceSend(&base, sizeof(stdlib_unsetenv), ptrsIn); }
+	int rc;
+	sentinelInPtr ptrsIn[2] = {
+		{ &str, -1 },
+		{ nullptr }
 	};
 };
 
 struct stdlib_mktemp {
-	sentinelMessage Base;
-	char *Str;
-	__device__ stdlib_mktemp(char *str) : Base(STDLIB_MKTEMP, SENTINELFLOW_WAIT, SENTINEL_CHUNK), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_mktemp), PtrsIn); }
-	char *RC;
-	sentinelInPtr PtrsIn[2] = {
-		{ &Str, -1 },
-		nullptr
+	sentinelMessage base;
+	char *str;
+	__device__ stdlib_mktemp(char *str) : base(STDLIB_MKTEMP, SENTINELFLOW_WAIT, SENTINEL_CHUNK), str(str) { sentinelDeviceSend(&base, sizeof(stdlib_mktemp), ptrsIn); }
+	char *rc;
+	sentinelInPtr ptrsIn[2] = {
+		{ &str, -1 },
+		{ nullptr }
 	};
 };
 
 struct stdlib_mkstemp {
-	static __forceinline__ __device__ bool Postfix(stdlib_mkstemp *t, intptr_t offset) {
-		char *ptr = (char *)t->Ptr - offset;
-		if (t->Str) strcpy(t->Str, ptr);
+	static __forceinline__ __device__ bool postfix(stdlib_mkstemp *t, intptr_t offset) {
+		char *ptr = (char *)t->ptr - offset;
+		if (t->str) strcpy(t->str, ptr);
 		return true;
 	}
-	sentinelMessage Base;
-	char *Str;
-	__device__ stdlib_mkstemp(char *str) : Base(STDLIB_MKSTEMP, SENTINELFLOW_WAIT, SENTINEL_CHUNK, nullptr, SENTINELPOSTFIX(Postfix)), Str(str) { sentinelDeviceSend(&Base, sizeof(stdlib_mkstemp), PtrsIn); }
-	int RC;
-	void *Ptr;
-	sentinelInPtr PtrsIn[2] = {
-		{ &Str, -1 },
-		nullptr
+	sentinelMessage base;
+	char *str;
+	__device__ stdlib_mkstemp(char *str) : base(STDLIB_MKSTEMP, SENTINELFLOW_WAIT, SENTINEL_CHUNK, nullptr, SENTINELPOSTFIX(postfix)), str(str) { sentinelDeviceSend(&base, sizeof(stdlib_mkstemp), ptrsIn); }
+	int rc;
+	void *ptr;
+	sentinelInPtr ptrsIn[2] = {
+		{ &str, -1 },
+		{ nullptr }
 	};
-	//sentinelOutPtr PtrsIn[2] = {
-	//	{ &Ptr, &Str, -1 },
-	//	nullptr
-	//};
 };
 
 #endif  /* _SENTINEL_STDLIBMSG_H */

@@ -15,7 +15,7 @@ __global__ void g_isadir(pipelineRedir redir, char *name) {
 }
 
 bool dcp_isadir_(pipelineRedir redir, char *str) {
-	redir.Open();
+	pipelineOpen(redir);
 	char *d_str;
 	if (str) {
 		size_t strLength = strlen(str) + 1;
@@ -25,6 +25,6 @@ bool dcp_isadir_(pipelineRedir redir, char *str) {
 	else d_str = 0;
 	g_isadir<<<1, 1>>>(redir, d_str);
 	if (d_str) cudaFree(d_str);
-	redir.Close();
+	pipelineClose(redir);
 	return m_isadir_rc;
 }

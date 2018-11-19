@@ -5,8 +5,8 @@
 #include <sentinel-client.cpp>
 #include <ext/pipeline.cpp>
 
-__forceinline__ bool dmv_isadir_(pipelineRedir *redir, char *str) { fileutils_isadir msg(redir[0], str); redir[1].Read(); return msg.RC; }
-__forceinline__ int dmv_(pipelineRedir *redir, char *str, char *str2) { fileutils_dmv msg(redir[0], str, str2); redir[1].Read(); return msg.RC; }
+__forceinline__ bool dmv_isadir_(pipelineRedir *redir, char *str) { fileutils_isadir msg(redir[0], str); pipelineRead(redir[1]); return msg.rc; }
+__forceinline__ int dmv_(pipelineRedir *redir, char *str, char *str2) { fileutils_dmv msg(redir[0], str, str2); pipelineRead(redir[1]); return msg.rc; }
 
 // Build a path name from the specified directory name and file name. If the directory name is NULL, then the original filename is returned.
 // The built path is in a static area, and is overwritten for each call.

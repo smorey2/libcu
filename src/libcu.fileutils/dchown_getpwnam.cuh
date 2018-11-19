@@ -7,7 +7,7 @@ __global__ void g_getpwnam(pipelineRedir redir, char *name) {
 	m_getpwnam_rc = getpwnam(name);
 }
 struct passwd *dchown_getpwnam_(pipelineRedir redir, char *str) {
-	redir.Open();
+	pipelineOpen(redir);
 	char *d_str;
 	if (str) {
 		size_t strLength = strlen(str) + 1;
@@ -17,5 +17,6 @@ struct passwd *dchown_getpwnam_(pipelineRedir redir, char *str) {
 	else d_str = 0;
 	g_getpwnam<<<1, 1>>>(redir, d_str);
 	if (d_str) cudaFree(d_str);
+	pipelineClose(redir);
 	return m_getpwnam_rc;
 }

@@ -7,7 +7,7 @@ __global__ void g_dmkdir(pipelineRedir redir, char *str, unsigned short mode) {
 	d_dmkdir_rc = mkdir(str, mode);
 }
 int dmkdir(pipelineRedir redir, char *str, unsigned short mode) {
-	redir.Open();
+	pipelineOpen(redir);
 	char *d_str;
 	if (str) {
 		size_t strLength = strlen(str) + 1;
@@ -17,6 +17,6 @@ int dmkdir(pipelineRedir redir, char *str, unsigned short mode) {
 	else d_str = 0;
 	g_dmkdir<<<1, 1>>>(redir, d_str, mode);
 	if (d_str) cudaFree(d_str);
-	redir.Close();
+	pipelineClose(redir);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dmkdir_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

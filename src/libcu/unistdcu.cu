@@ -7,7 +7,7 @@ __BEGIN_DECLS;
 
 /* Test for access to NAME using the real UID and real GID.  */
 __device__ int access_(const char *name, int mode) {
-	if (ISHOSTPATH(name)) { unistd_access msg(name, mode); return msg.RC; }
+	if (ISHOSTPATH(name)) { unistd_access msg(name, mode); return msg.rc; }
 	int r; fsystemAccess(name, mode, &r); return r;
 }
 
@@ -15,14 +15,14 @@ __device__ int access_(const char *name, int mode) {
 the current position (if WHENCE is SEEK_CUR), or the end of the file (if WHENCE is SEEK_END).
 Return the new file position.  */
 __device__ off_t lseek_(int fd, off_t offset, int whence) {
-	if (ISHOSTHANDLE(fd)) { unistd_lseek msg(fd, offset, whence, false); return msg.RC; }
+	if (ISHOSTHANDLE(fd)) { unistd_lseek msg(fd, offset, whence, false); return msg.rc; }
 	panic("Not Implemented");
 	return 0;
 }
 
 #ifdef __USE_LARGEFILE64
 __device__ off64_t lseek64_(int fd, off64_t offset, int whence) {
-	if (ISHOSTHANDLE(fd)) { unistd_lseek msg(fd, offset, whence, true); return msg.RC; }
+	if (ISHOSTHANDLE(fd)) { unistd_lseek msg(fd, offset, whence, true); return msg.rc; }
 	panic("Not Implemented");
 	return 0;
 }
@@ -35,11 +35,11 @@ __device__ off64_t lseek64_(int fd, off64_t offset, int whence) {
 __device__ size_t read_(int fd, void *buf, size_t nbytes, bool wait) {
 	if (ISHOSTHANDLE(fd)) {
 #ifndef _NOJUMBO
-		unistd_read msg(wait, fd, buf, nbytes); return msg.RC;
+		unistd_read msg(wait, fd, buf, nbytes); return msg.rc;
 #else
 		size_t rc = 1; const char *v = (const char *)buf;
 		while (nbytes > 0 && rc > 0) {
-			unistd_read msg(true, fd, (void *)v, nbytes > SENTINEL_CHUNK ? SENTINEL_CHUNK : nbytes, stream); rc = msg.RC; nbytes -= rc; v += rc;
+			unistd_read msg(true, fd, (void *)v, nbytes > SENTINEL_CHUNK ? SENTINEL_CHUNK : nbytes, stream); rc = msg.rc; nbytes -= rc; v += rc;
 		}
 		return v - buf;
 #endif
@@ -57,11 +57,11 @@ __device__ size_t read_(int fd, void *buf, size_t nbytes, bool wait) {
 __device__ size_t write_(int fd, const void *buf, size_t nbytes, bool wait) {
 	if (ISHOSTHANDLE(fd)) {
 #ifndef _NOJUMBO
-		unistd_write msg(wait, fd, buf, nbytes); return msg.RC;
+		unistd_write msg(wait, fd, buf, nbytes); return msg.rc;
 #else
 		size_t rc = 1; const char *v = (const char *)ptr;
 		while (nbytes > 0 && rc > 0) {
-			unistd_write msg(true, fd, (void *)v, nbytes > SENTINEL_CHUNK ? SENTINEL_CHUNK : nbytes, stream); rc = msg.RC; nbytes -= rc; v += rc;
+			unistd_write msg(true, fd, (void *)v, nbytes > SENTINEL_CHUNK ? SENTINEL_CHUNK : nbytes, stream); rc = msg.rc; nbytes -= rc; v += rc;
 		}
 		return v - buf;
 #endif
@@ -91,13 +91,13 @@ __device__ void usleep_(unsigned long milliseconds) {
 
 /* Change the owner and group of FILE.  */
 __device__ int chown_(const char *file, uid_t owner, gid_t group) {
-	if (ISHOSTPATH(file)) { __cwd[0] = 0; unistd_chown msg(file, owner, group); return msg.RC; }
+	if (ISHOSTPATH(file)) { __cwd[0] = 0; unistd_chown msg(file, owner, group); return msg.rc; }
 	return 0;
 }
 
 /* Change the process's working directory to PATH.  */
 __device__ int chdir_(const char *path) {
-	if (ISHOSTPATH(path)) { __cwd[0] = 0; unistd_chdir msg(path); return msg.RC; }
+	if (ISHOSTPATH(path)) { __cwd[0] = 0; unistd_chdir msg(path); return msg.rc; }
 	return fsystemChdir(path);
 }
 
@@ -106,7 +106,7 @@ directory couldn't be determined or SIZE was too small. If successful, returns B
 an array is allocated with `malloc'; the array is SIZE bytes long, unless SIZE == 0, in which case it is as
 big as necessary.  */
 __device__ char *getcwd_(char *buf, size_t size) {
-	if (!__cwd[0]) { unistd_getcwd msg(buf, size); return msg.RC; }
+	if (!__cwd[0]) { unistd_getcwd msg(buf, size); return msg.rc; }
 	int pathLength = strlen(__cwd);
 	return size > pathLength ? strncpy(buf, __cwd, size) : nullptr;
 }
@@ -114,14 +114,14 @@ __device__ char *getcwd_(char *buf, size_t size) {
 /* dup1:true - Duplicate FD, returning a new file descriptor on the same file.  */
 /* dup1:false - Duplicate FD to FD2, closing FD2 and making it open on the same file.  */
 __device__ int dup_(int fd) {
-	if (ISHOSTHANDLE(fd)) { unistd_dup msg(fd, -1, true); return msg.RC; }
+	if (ISHOSTHANDLE(fd)) { unistd_dup msg(fd, -1, true); return msg.rc; }
 	panic("Not Implemented");
 	return 0;
 }
 
 /* Duplicate FD to FD2, closing FD2 and making it open on the same file.  */
 __device__ int dup2_(int fd, int fd2) {
-	if (ISHOSTHANDLE(fd)) { unistd_dup msg(fd, fd2, false); return msg.RC; }
+	if (ISHOSTHANDLE(fd)) { unistd_dup msg(fd, fd2, false); return msg.rc; }
 	panic("Not Implemented");
 	return 0;
 }
@@ -131,13 +131,13 @@ extern __device__ char **__environ_ = nullptr;
 
 /* Remove the link NAME.  */
 __device__ int unlink_(const char *filename) {
-	if (ISHOSTPATH(filename)) { unistd_unlink msg(filename); return msg.RC; }
+	if (ISHOSTPATH(filename)) { unistd_unlink msg(filename); return msg.rc; }
 	return fsystemUnlink(filename, false);
 }
 
 /* Remove the directory PATH.  */
 __device__ int rmdir_(const char *path) {
-	if (ISHOSTPATH(path)) { unistd_rmdir msg(path); return msg.RC; }
+	if (ISHOSTPATH(path)) { unistd_rmdir msg(path); return msg.rc; }
 	return fsystemUnlink(path, true);
 }
 

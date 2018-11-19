@@ -9,7 +9,7 @@ __BEGIN_DECLS;
 
 #if HAS_DEVICESENTINEL
 
-static __device__ char *executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset);
+static __device__ void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset);
 static __device__ char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, sentinelCommand *cmd, char *data, char *dataEnd, intptr_t offset, sentinelOutPtr *&transListOut) {
 	char *ptr = data, *next;
 	int transSize = 0;
@@ -37,7 +37,7 @@ static __device__ char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsO
 		ptr = ptrsOut[0].field == (char *)-1 ? ptr : data;
 		for (sentinelOutPtr *p = ptrsOut; p->field; p++) {
 			char **field = (char **)p->field;
-			int size = p->size != -1 ? p->size : dataEnd - ptr;
+			int size = p->size != -1 ? p->size : (int)(dataEnd - ptr);
 			next = ptr + size;
 			if (!size) {}
 			else if (next <= dataEnd) {
@@ -106,6 +106,7 @@ __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength, sentinel
 	if (((ptrsIn || ptrsOut) && !(data = preparePtrs(ptrsIn, ptrsOut, cmd, data, dataEnd, offset, transListOut))) ||
 		(msg->prepare && !msg->prepare(msg, data, dataEnd, offset)))
 		panic("msg too long");
+	cmd->length = msgLength;
 	memcpy(cmd->data, msg, msgLength);
 	//printf("msg: %d[%d]'", msg->op, msgLength); for (int i = 0; i < msgLength; i++) printf("%02x", ((char *)msg)[i] & 0xff); printf("'\n");
 	*unknown = 0; *control = SENTINELCONTROL_DEVICERDY;
@@ -114,6 +115,7 @@ __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength, sentinel
 	if (msg->flow & SENTINELFLOW_WAIT) {
 		DEVICE_SPINLOCK(SENTINELCONTROL_DEVICE, SENTINELCONTROL_HOSTRDY);
 		executeTrans(cmd, 0, nullptr, transListOut, offset);
+		cmd->length = msgLength;
 		memcpy(msg, cmd->data, msgLength);
 		if ((ptrsOut && !postfixPtrs(ptrsOut, cmd, offset)) ||
 			(msg->postfix && !msg->postfix(msg, offset)))
@@ -123,7 +125,7 @@ __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength, sentinel
 	*control = SENTINELCONTROL_NORMAL;
 }
 
-static __device__ char *executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset) {
+static __device__ void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset) {
 	unsigned int s_;
 	int *unknown = &cmd->unknown; volatile long *control = (volatile long *)&cmd->control;
 	char *data = cmd->data;

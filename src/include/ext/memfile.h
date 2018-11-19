@@ -29,7 +29,7 @@ THE SOFTWARE.
 #ifdef  __cplusplus
 extern "C" {
 #endif
-	/* Read data from the in-memory journal file.  This is the implementation of the sqlite3_vfs.xRead method. */
+	/* Read data from the file. */
 	extern __host_device__ int memfileRead(vsysfile *p, void *buf, int amount, int64_t offset);
 	/* Write data to the file. */
 	extern __host_device__ int memfileWrite(vsysfile *p, const void *buf, int amount, int64_t offset);
@@ -47,9 +47,9 @@ extern "C" {
 #if defined(ENABLE_ATOMIC_WRITE) || defined(ENABLE_BATCH_ATOMIC_WRITE)
 	extern __host_device__ int memfileCreate(vsysfile *p); //: sqlite3JournalCreate
 #endif
-	/* The file-handle passed as the only argument is open on a journal file. Return true if this "journal file" is currently stored in heap memory, or false otherwise. */
+	/* Return true if this "journal file" is currently stored in heap memory, or false otherwise. */
 	extern __host_device__ int memfileIsInMemory(vsysfile *p); //: sqlite3JournalIsInMemory
-	/* Return the number of bytes required to store a JournalFile that uses vfs pVfs to create the underlying on-disk files. */
+	/* Return the number of bytes required to store a JournalFile that uses vsystem to create the underlying on-disk files. */
 	extern __host_device__ int memfileSize(vsystem *p); //: sqlite3JournalSize
 #ifdef  __cplusplus
 }

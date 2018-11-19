@@ -53,16 +53,6 @@ extern "C" {
 #define SENTINEL_MSGCOUNT 5
 #define SENTINEL_CHUNK 4096
 
-#define SENTINELCONTROL_TRANSFER -1
-#define SENTINELCONTROL_NORMAL 0
-#define SENTINELCONTROL_DEVICE 1
-#define SENTINELCONTROL_DEVICERDY 2
-#define SENTINELCONTROL_HOST 3
-#define SENTINELCONTROL_HOSTRDY 4
-
-#define SENTINELFLOW_NONE 0
-#define SENTINELFLOW_WAIT 1
-
 	typedef struct sentinelInPtr {
 		void *field;
 		int size;
@@ -73,14 +63,17 @@ extern "C" {
 		void *field;
 		void *buf;
 		int size;
-		void *sizeField = nullptr;
+		void *sizeField;
 		void *unknown;
 	} sentinelOutPtr;
+
+#define SENTINELFLOW_NONE 0
+#define SENTINELFLOW_WAIT 1
 
 	typedef struct sentinelMessage {
 		unsigned short op;
 		unsigned char flow;
-		unsigned char unknown;
+		//unsigned char unknown;
 		int size;
 		char *(*prepare)(void*, char*, char*, intptr_t);
 		bool(*postfix)(void*, intptr_t);
@@ -128,10 +121,10 @@ extern "C" {
 		sentinelExecutor *deviceList;
 	} sentinelContext;
 
-	//#if HAS_HOSTSENTINEL
-	//	extern sentinelMap *_sentinelHostMap;
-	//	extern intptr_t _sentinelHostMapOffset;
-	//#endif
+//#if HAS_HOSTSENTINEL // not-required
+//	extern sentinelMap *_sentinelHostMap;
+//	extern intptr_t _sentinelHostMapOffset;
+//#endif
 #if HAS_DEVICESENTINEL
 	extern __constant__ const sentinelMap *_sentinelDeviceMap[SENTINEL_DEVICEMAPS];
 #endif
@@ -155,6 +148,12 @@ extern "C" {
 
 	// file-utils
 	extern void sentinelRegisterFileUtils();
+
+#define SENTINELCONTROL_NORMAL 0
+#define SENTINELCONTROL_DEVICE 1
+#define SENTINELCONTROL_DEVICERDY 2
+#define SENTINELCONTROL_HOST 3
+#define SENTINELCONTROL_HOSTRDY 4
 
 #ifdef  __cplusplus
 }

@@ -314,7 +314,7 @@ __global__ void g_dls(pipelineRedir redir, char *name, int flags, bool endSlash)
 	d_dls_rc = 0;
 }
 int dls(pipelineRedir redir, char *str, int flags, bool endSlash) {
-	redir.Open();
+	pipelineOpen(redir);
 	char *d_str;
 	if (str) {
 		size_t strLength = strlen(str) + 1;
@@ -324,6 +324,6 @@ int dls(pipelineRedir redir, char *str, int flags, bool endSlash) {
 	else d_str = 0;
 	g_dls<<<1, 1>>>(redir, d_str, flags, endSlash);
 	if (d_str) cudaFree(d_str);
-	redir.Close();
+	pipelineClose(redir);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dls_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

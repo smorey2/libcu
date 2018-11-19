@@ -22,7 +22,7 @@ __constant__ const struct dirent _dirpFakes[2] = {
 
 /* Open a directory stream on NAME. Return a DIR stream on the directory, or NULL if it could not be opened. */
 __device__ DIR *opendir_(const char *name) {
-	if (ISHOSTPATH(name)) { dirent_opendir msg(name); return newhostptr<DIR>(msg.RC); }
+	if (ISHOSTPATH(name)) { dirent_opendir msg(name); return newhostptr<DIR>(msg.rc); }
 	dirEnt_t *ent = fsystemOpendir(name);
 	if (!ent) return nullptr;
 	cuDIR *dirp = (cuDIR *)malloc(sizeof(cuDIR));
@@ -35,7 +35,7 @@ __device__ DIR *opendir_(const char *name) {
 
 /* Close the directory stream DIRP. Return 0 if successful, -1 if not.  */
 __device__ int closedir_(DIR *dirp) {
-	if (ISHOSTPTR(dirp)) { dirent_closedir msg(hostptr<DIR>(dirp)); freehostptr<DIR>(dirp); return msg.RC; }
+	if (ISHOSTPTR(dirp)) { dirent_closedir msg(hostptr<DIR>(dirp)); freehostptr<DIR>(dirp); return msg.rc; }
 	if (!dirp) return -1;
 	free(dirp);
 	return 0;
@@ -46,7 +46,7 @@ storage returned may be overwritten by a later readdir call on the same DIR stre
 
 If the Large File Support API is selected we have to use the appropriate interface.  */
 __device__ struct dirent *readdir_(DIR *dirp) {
-	if (ISHOSTPTR(dirp)) { dirent_readdir msg(hostptr<DIR>(dirp), false); return msg.RC; }
+	if (ISHOSTPTR(dirp)) { dirent_readdir msg(hostptr<DIR>(dirp), false); return msg.rc; }
 	cuDIR *p = (cuDIR *)dirp;
 	if (!p || !p->listIdx) return nullptr;
 	if (p->fakeIdx)
@@ -58,7 +58,7 @@ __device__ struct dirent *readdir_(DIR *dirp) {
 
 #ifdef __USE_LARGEFILE64
 __device__ struct dirent64 *readdir64_(DIR *dirp) {
-	if (ISHOSTPTR(dirp)) { dirent_readdir msg(hostptr<DIR>(dirp), true); return msg.RC64; }
+	if (ISHOSTPTR(dirp)) { dirent_readdir msg(hostptr<DIR>(dirp), true); return msg.rc64; }
 	cuDIR *p = (cuDIR *)dirp;
 	if (!p || !p->listIdx) return nullptr;
 	if (p->fakeIdx)

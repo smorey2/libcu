@@ -29,8 +29,8 @@ static PIDTYPE __WaitPid(PIDTYPE pid, int *status, int nohang) {
 	GetExitCodeProcess(pid, &ret); *status = ret; CloseHandle(pid); return pid;
 }
 static FDTYPE __Dup(PIDTYPE infd) { FDTYPE dupfd; PIDTYPE pid = GetCurrentProcess(); return (DuplicateHandle(pid, infd, pid, &dupfd, 0, TRUE, DUPLICATE_SAME_ACCESS) ? dupfd : __BAD_FD); }
-static FILE *__Fdopen_r(FDTYPE fd) { return _fdopen(_open_osfhandle((int)fd, _O_RDONLY | _O_TEXT), "r"); }
-static FILE *__Fdopen_w(FDTYPE fd) { return _fdopen(_open_osfhandle((int)fd, _O_TEXT), "w"); }
+static FILE *__Fdopen_r(FDTYPE fd) { return _fdopen(_open_osfhandle((intptr_t)fd, _O_RDONLY | _O_TEXT), "r"); }
+static FILE *__Fdopen_w(FDTYPE fd) { return _fdopen(_open_osfhandle((intptr_t)fd, _O_TEXT), "w"); }
 static FDTYPE __Open_r(const char *filename) { return CreateFile(filename, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, WinStdSecAttrs(), OPEN_EXISTING, 0, NULL); }
 static FDTYPE __Open_w(const char *filename, int append) { return CreateFile(filename, append ? FILE_APPEND_DATA : GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, WinStdSecAttrs(), append ? OPEN_ALWAYS : CREATE_ALWAYS, 0, (HANDLE)NULL); }
 //static int __Rewind(FDTYPE fd) { return SetFilePointer(fd, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER ? -1 : 0; }
@@ -179,28 +179,28 @@ static int __StartRedir(FDTYPE process, pipelineRedir *redir, FDTYPE inputId, FD
 	// be inheritable, so the child process can use them.
 	if (inputId == __BAD_FD) {
 		HANDLE h;
-		if (CreatePipe(&redir->Input, &h, WinStdSecAttrs(), 0) != FALSE) CloseHandle(h);
+		if (CreatePipe(&redir->input, &h, WinStdSecAttrs(), 0) != FALSE) CloseHandle(h);
 	}
-	else DuplicateHandle(hProcess, inputId, process, &redir->Input, 0, TRUE, DUPLICATE_SAME_ACCESS);
-	if (redir->Input == __BAD_FD) goto end;
+	else DuplicateHandle(hProcess, inputId, process, &redir->input, 0, TRUE, DUPLICATE_SAME_ACCESS);
+	if (redir->input == __BAD_FD) goto end;
 	if (outputId == __BAD_FD) {
-		redir->Output = CreateFile("NUL:", GENERIC_WRITE, 0, WinStdSecAttrs(), OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		redir->output = CreateFile("NUL:", GENERIC_WRITE, 0, WinStdSecAttrs(), OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	}
-	else DuplicateHandle(hProcess, outputId, process, &redir->Output, 0, TRUE, DUPLICATE_SAME_ACCESS);
-	if (redir->Output == __BAD_FD) goto end;
+	else DuplicateHandle(hProcess, outputId, process, &redir->output, 0, TRUE, DUPLICATE_SAME_ACCESS);
+	if (redir->output == __BAD_FD) goto end;
 	if (errorId == __BAD_FD) { // If handle was not set, errors should be sent to an infinitely deep sink.
-		redir->Error = CreateFile("NUL:", GENERIC_WRITE, 0, WinStdSecAttrs(), OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		redir->error = CreateFile("NUL:", GENERIC_WRITE, 0, WinStdSecAttrs(), OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	}
-	else DuplicateHandle(hProcess, errorId, process, &redir->Error, 0, TRUE, DUPLICATE_SAME_ACCESS);
-	if (redir->Error == __BAD_FD) goto end;
+	else DuplicateHandle(hProcess, errorId, process, &redir->error, 0, TRUE, DUPLICATE_SAME_ACCESS);
+	if (redir->error == __BAD_FD) goto end;
 	redir->in = NULL;
 	redir->out = NULL;
 	redir->err = NULL;
 	return 0;
 end:
-	if (redir->Input != __BAD_FD) CloseHandle(redir->Input);
-	if (redir->Output != __BAD_FD) CloseHandle(redir->Output);
-	if (redir->Error != __BAD_FD) CloseHandle(redir->Error);
+	if (redir->input != __BAD_FD) CloseHandle(redir->input);
+	if (redir->output != __BAD_FD) CloseHandle(redir->output);
+	if (redir->error != __BAD_FD) CloseHandle(redir->error);
 	return -1;
 }
 
@@ -395,7 +395,7 @@ static void DetachPids(int numPids, const PIDTYPE *pids) {
 }
 
 /* Cleanup Children */
-int CleanupChildren(int numPids, PIDTYPE *pids, int child_siginfo) {
+int pipelineCleanup(int numPids, PIDTYPE *pids, int child_siginfo) {
 	int result = 0;
 	for (int i = 0; i < numPids; i++) {
 		int waitStatus = 0;
@@ -464,7 +464,7 @@ static FILE *GetAioFilehandle(const char *input) {
 #define FILE_TEXT   3           /* input only:   input is actual text */
 
 /* Create Pipeline */
-int CreatePipeline(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, FDTYPE *outPipePtr, FDTYPE *errFilePtr, FDTYPE process, pipelineRedir *redirs) {
+int pipelineCreate(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, FDTYPE *outPipePtr, FDTYPE *errFilePtr, FDTYPE process, pipelineRedir *redirs) {
 	FDTYPE pipeIds[2] = { __BAD_FD, __BAD_FD }; // File ids for pipe that's being created.
 	FDTYPE inputId = __BAD_FD;			// Readable file id input to current command in pipeline (could be file or pipe).  __BAD_FD means use stdin.
 	FDTYPE outputId = __BAD_FD;			// Writable file id for output from current command in pipeline (could be file or pipe). __BAD_FD means use stdout.
@@ -681,29 +681,29 @@ error:
 	goto cleanup;
 }
 
-void pipelineRedir::Open() {
-	if (!in) in = __Fdopen_r(Input);
-	if (!out) out = __Fdopen_w(Output);
-	if (!err) err = __Fdopen_w(Error);
+void pipelineOpen(pipelineRedir &redir) {
+	if (!redir.in) redir.in = __Fdopen_r(redir.input);
+	if (!redir.out) redir.out = __Fdopen_w(redir.output);
+	if (!redir.err) redir.err = __Fdopen_w(redir.error);
 }
 
-static char AckBuf[] = { 0, 1, 0 };
-void pipelineRedir::Close() {
-	fflush(out);
-	fwrite(AckBuf, sizeof(AckBuf), 1, out);
-	fflush(out);
+static char __ackBuf[] = { 0, 1, 0 };
+void pipelineClose(pipelineRedir &redir) {
+	fflush(redir.out);
+	fwrite(__ackBuf, sizeof(__ackBuf), 1, redir.out);
+	fflush(redir.out);
 }
 
-void pipelineRedir::Read() {
+void pipelineRead(pipelineRedir &redir) {
 #if __OS_WIN
 	DWORD read, written;
 	CHAR buf[4096];
 	HANDLE stdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
 	bool foundAck = false;
 	for (;;) {
-		BOOL success = ReadFile(Output, buf, sizeof(buf), &read, NULL);
+		BOOL success = ReadFile(redir.output, buf, sizeof(buf), &read, NULL);
 		if (!success || read == 0) break;
-		if (read >= sizeof(AckBuf) && !memcmp(buf + read - sizeof(AckBuf), AckBuf, sizeof(AckBuf))) { read -= sizeof(AckBuf); foundAck = true; } //: Ack
+		if (read >= sizeof(__ackBuf) && !memcmp(buf + read - sizeof(__ackBuf), __ackBuf, sizeof(__ackBuf))) { read -= sizeof(__ackBuf); foundAck = true; } //: Ack
 		success = WriteFile(stdOutput, buf, read, &written, NULL);
 		if (foundAck || !success) break;
 	}

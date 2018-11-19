@@ -24,7 +24,7 @@ __global__ void g_dmv(pipelineRedir redir, char *srcName, char *destName) {
 	d_dmv_rc = 1;
 }
 int dmv(pipelineRedir redir, char *str, char *str2) {
-	redir.Open();
+	pipelineOpen(redir);
 	char *d_str;
 	char *d_str2;
 	if (str) {
@@ -42,6 +42,6 @@ int dmv(pipelineRedir redir, char *str, char *str2) {
 	g_dmv<<<1, 1>>>(redir, d_str, d_str2);
 	if (d_str) cudaFree(d_str);
 	if (d_str2) cudaFree(d_str2);
-	redir.Close();
+	pipelineClose(redir);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dmv_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

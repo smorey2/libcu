@@ -6,10 +6,10 @@
 __device__ int d_drm_rc;
 __global__ void g_drm(pipelineRedir redir, char *str) {
 	struct stat sbuf;
-	d_drm_rc = (!LSTAT(str, &sbuf) && unlink(str));
+	d_drm_rc = !LSTAT(str, &sbuf) && unlink(str);
 }
 int drm(pipelineRedir redir, char *str) {
-	redir.Open();
+	pipelineOpen(redir);
 	char *d_str;
 	if (str) {
 		size_t strLength = strlen(str) + 1;
@@ -19,6 +19,6 @@ int drm(pipelineRedir redir, char *str) {
 	else d_str = 0;
 	g_drm<<<1, 1>>>(redir, d_str);
 	if (d_str) cudaFree(d_str);
-	redir.Close();
+	pipelineClose(redir);
 	int rc; cudaMemcpyFromSymbol(&rc, d_drm_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

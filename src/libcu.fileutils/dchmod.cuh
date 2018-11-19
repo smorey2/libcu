@@ -6,7 +6,7 @@ __global__ void g_dchmod(pipelineRedir redir, char *str, mode_t mode) {
 	d_dchmod_rc = (chmod(str, mode) < 0);
 }
 int dchmod(pipelineRedir redir, char *str, int mode) {
-	redir.Open();
+	pipelineOpen(redir);
 	char *d_str;
 	if (str) {
 		size_t strLength = strlen(str) + 1;
@@ -16,6 +16,6 @@ int dchmod(pipelineRedir redir, char *str, int mode) {
 	else d_str = 0;
 	g_dchmod<<<1, 1>>>(redir, d_str, mode);
 	if (d_str) cudaFree(d_str);
-	redir.Close();
+	pipelineClose(redir);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dchmod_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }

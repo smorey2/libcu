@@ -8,7 +8,7 @@ __global__ void g_dchgrp(pipelineRedir redir, char *str, int gid) {
 	d_dchgrp_rc = (stat(str, &statbuf) < 0 || chown(str, statbuf.st_uid, gid) < 0);
 }
 int dchgrp(pipelineRedir redir, char *str, int gid) {
-	redir.Open();
+	pipelineOpen(redir);
 	char *d_str;
 	if (str) {
 		size_t strLength = strlen(str) + 1;
@@ -18,6 +18,6 @@ int dchgrp(pipelineRedir redir, char *str, int gid) {
 	else d_str = 0;
 	g_dchgrp<<<1, 1>>>(redir, d_str, gid);
 	if (d_str) cudaFree(d_str);
-	redir.Close();
+	pipelineClose(redir);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dchgrp_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
 }
