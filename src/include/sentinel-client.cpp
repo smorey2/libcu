@@ -17,49 +17,34 @@
 #if HAS_HOSTSENTINEL
 
 static void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset);
-static char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, sentinelCommand *cmd, char *data, char *dataEnd, intptr_t offset, sentinelOutPtr *&transListOut) {
+static char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, sentinelCommand *cmd, char *data, char *dataEnd, intptr_t offset, sentinelOutPtr *&listOut) {
 	char *ptr = data, *next;
+
+	// PREPARE & TRANSFER
 	int transSize = 0;
 	sentinelInPtr *listIn = nullptr;
-	sentinelOutPtr *listOut = nullptr;
-
-	// PREPARE
 	if (ptrsIn)
 		for (sentinelInPtr *p = ptrsIn; p->field; p++) {
 			char **field = (char **)p->field;
 			int size = p->size != -1 ? p->size : (p->size = *field ? (int)strlen(*field) + 1 : 0);
 			next = ptr + size;
-			if (!size)
-				p->unknown = nullptr;
-			else if (next <= dataEnd) {
-				p->unknown = ptr;
-				ptr = next;
-			}
-			else {
-				p->unknown = listIn; listIn = p;
-				transSize += size;
-			}
+			if (!size) p->unknown = nullptr;
+			else if (next <= dataEnd) { p->unknown = ptr; ptr = next; }
+			else { p->unknown = listIn; listIn = p; transSize += size; }
 		}
 	if (ptrsOut) {
+		sentinelOutPtr *listOut_ = nullptr;
 		ptr = ptrsOut[0].field == (char *)-1 ? ptr : data;
 		for (sentinelOutPtr *p = ptrsOut; p->field; p++) {
 			char **field = (char **)p->field;
 			int size = p->size != -1 ? p->size : (int)(dataEnd - ptr);
 			next = ptr + size;
 			if (!size) {}
-			else if (next <= dataEnd) {
-				*field = ptr + offset;
-				ptr = next;
-			}
-			else {
-				p->unknown = listOut; listOut = p;
-				transSize += size;
-			}
+			else if (next <= dataEnd) { *field = ptr + offset; ptr = next; }
+			else { p->unknown = listOut_; listOut_ = p; transSize += size; }
 		}
-		transListOut = listOut;
+		listOut = listOut_;
 	}
-
-	// TRANSFER IN
 	if (transSize)
 		executeTrans(cmd, transSize, listIn, nullptr, offset);
 
@@ -113,27 +98,24 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrs
 	HOST_SPINLOCK(SENTINELCONTROL_DEVICE, SENTINELCONTROL_NORMAL);
 
 	// PREPARE
-	cmd->length = msgLength;
 	char *data = cmd->data + ROUND8_(msgLength), *dataEnd = data + msg->size;
-	sentinelOutPtr *transListOut = nullptr;
-	if (((ptrsIn || ptrsOut) && !(data = preparePtrs(ptrsIn, ptrsOut, cmd, data, dataEnd, offset, transListOut))) ||
+	sentinelOutPtr *listOut = nullptr;
+	if (((ptrsIn || ptrsOut) && !(data = preparePtrs(ptrsIn, ptrsOut, cmd, data, dataEnd, offset, listOut))) ||
 		(msg->prepare && !msg->prepare(msg, data, dataEnd, offset)))
 		panic("msg too long");
-	cmd->length = msgLength;
-	memcpy(cmd->data, msg, msgLength);
+	cmd->length = msgLength; memcpy(cmd->data, msg, msgLength);
 	//printf("msg: %d[%d]'", msg->op, msgLength); for (int i = 0; i < msgLength; i++) printf("%02x", ((char *)msg)[i] & 0xff); printf("'\n");
 	*unknown = 0; *control = SENTINELCONTROL_DEVICERDY;
 
 	// FLOW-WAIT
 	if (msg->flow & SENTINELFLOW_WAIT) {
 		HOST_SPINLOCK(SENTINELCONTROL_DEVICE, SENTINELCONTROL_HOSTRDY);
-		executeTrans(cmd, 0, nullptr, transListOut, offset);
-		cmd->length = msgLength;
-		memcpy(msg, cmd->data, msgLength);
+		if (listOut)
+			executeTrans(cmd, 0, nullptr, listOut, offset);
+		cmd->length = msgLength; memcpy(msg, cmd->data, msgLength);
 		if ((ptrsOut && !postfixPtrs(ptrsOut, cmd, offset)) ||
 			(msg->postfix && !msg->postfix(msg, offset)))
 			panic("postfix error");
-		*unknown = 0; *control = SENTINELCONTROL_DEVICERDY;
 	}
 	*control = SENTINELCONTROL_NORMAL;
 #endif
@@ -210,7 +192,7 @@ void sentinelClientInitialize(char *mapHostName) {
 	_clientMap = mmap(NULL, sizeof(sentinelMap) + MEMORY_ALIGNMENT, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, fd, 0);
 	if (!_clientMap) {
 		printf("Could not connect to Sentinel host. Please ensure host application is running.\n"); exit(1);
-}
+	}
 	if (close(fd) == -1) { perror("close"); exit(1); }
 	_sentinelClientMap = (sentinelMap *)ROUNDN_(_clientMap, MEMORY_ALIGNMENT);
 	_sentinelClientMapOffset = 0;
