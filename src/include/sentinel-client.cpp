@@ -17,6 +17,7 @@
 #if HAS_HOSTSENTINEL
 
 static void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset);
+
 static char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, sentinelCommand *cmd, char *data, char *dataEnd, intptr_t offset, sentinelOutPtr *&listOut) {
 	char *ptr = data, *next;
 
@@ -45,8 +46,7 @@ static char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, sentine
 		}
 		listOut = listOut_;
 	}
-	if (transSize)
-		executeTrans(cmd, transSize, listIn, nullptr, offset);
+	if (transSize) executeTrans(cmd, transSize, listIn, nullptr, offset);
 
 	// PACK
 	for (sentinelInPtr *p = ptrsIn; p->field; p++) {
@@ -109,15 +109,14 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrs
 
 	// FLOW-WAIT
 	if (msg->flow & SENTINELFLOW_WAIT) {
-		HOST_SPINLOCK(SENTINELCONTROL_DEVICE, SENTINELCONTROL_HOSTRDY);
-		if (listOut)
-			executeTrans(cmd, 0, nullptr, listOut, offset);
+		HOST_SPINLOCK(SENTINELCONTROL_DEVICEWAIT, SENTINELCONTROL_HOSTRDY);
+		if (listOut) executeTrans(cmd, 0, nullptr, listOut, offset);
 		cmd->length = msgLength; memcpy(msg, cmd->data, msgLength);
 		if ((ptrsOut && !postfixPtrs(ptrsOut, cmd, offset)) ||
 			(msg->postfix && !msg->postfix(msg, offset)))
 			panic("postfix error");
+		*control = SENTINELCONTROL_DEVICEDONE;
 	}
-	*control = SENTINELCONTROL_NORMAL;
 #endif
 }
 

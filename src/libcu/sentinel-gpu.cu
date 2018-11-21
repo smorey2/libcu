@@ -1,15 +1,17 @@
 #include <crtdefscu.h>
 #include <stdiocu.h>
 #include <stdlibcu.h>
+#include <unistdcu.h>
 #include <sentinel.h>
 
-#define DEVICE_SPINLOCK(SET, WHEN) do { s_ = *control; /*printf("%d ", s_);*/ __syncthreads(); } while (s_ != WHEN); *control = SET; __syncthreads();
+#define DEVICE_SPINLOCK(DELAY, SET, WHEN, C) while ((s_ = atomicCAS((unsigned int *)control, SET, WHEN)) != WHEN) { printf(C, s_); sleep(DELAY); }
 
 __BEGIN_DECLS;
 
 #if HAS_DEVICESENTINEL
 
 static __device__ void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset);
+
 static __device__ char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, sentinelCommand *cmd, char *data, char *dataEnd, intptr_t offset, sentinelOutPtr *&listOut) {
 	char *ptr = data, *next;
 
@@ -38,8 +40,7 @@ static __device__ char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsO
 		}
 		listOut = listOut_;
 	}
-	if (transSize)
-		executeTrans(cmd, transSize, listIn, nullptr, offset);
+	if (transSize) executeTrans(cmd, transSize, listIn, nullptr, offset);
 
 	// PACK
 	for (sentinelInPtr *p = ptrsIn; p->field; p++) {
@@ -82,7 +83,7 @@ __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength, sentinel
 	if (cmd->magic != SENTINEL_MAGIC)
 		panic("bad sentinel magic");
 	int *unknown = &cmd->unknown; volatile long *control = (volatile long *)&cmd->control; intptr_t offset = map->offset;
-	DEVICE_SPINLOCK(SENTINELCONTROL_DEVICE, SENTINELCONTROL_NORMAL);
+	DEVICE_SPINLOCK(50, SENTINELCONTROL_DEVICE, SENTINELCONTROL_NORMAL, "#");
 
 	// PREPARE
 	char *data = cmd->data + ROUND8_(msgLength), *dataEnd = data + msg->size;
@@ -96,18 +97,18 @@ __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength, sentinel
 
 	// FLOW-WAIT
 	if (msg->flow & SENTINELFLOW_WAIT) {
-		DEVICE_SPINLOCK(SENTINELCONTROL_DEVICE, SENTINELCONTROL_HOSTRDY);
-		if (listOut)
-			executeTrans(cmd, 0, nullptr, listOut, offset);
+		DEVICE_SPINLOCK(50, SENTINELCONTROL_DEVICEWAIT, SENTINELCONTROL_HOSTRDY, "%d");
+		if (listOut) executeTrans(cmd, 0, nullptr, listOut, offset);
 		cmd->length = msgLength; memcpy(msg, cmd->data, msgLength);
 		if ((ptrsOut && !postfixPtrs(ptrsOut, cmd, offset)) ||
 			(msg->postfix && !msg->postfix(msg, offset)))
 			panic("postfix error");
+		*control = SENTINELCONTROL_DEVICEDONE;
 	}
-	*control = SENTINELCONTROL_NORMAL;
 }
 
 static __device__ void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset) {
+	panic("executeTrans");
 	unsigned int s_;
 	int *unknown = &cmd->unknown; volatile long *control = (volatile long *)&cmd->control;
 	char *data = cmd->data;
@@ -115,7 +116,7 @@ static __device__ void executeTrans(sentinelCommand *cmd, int size, sentinelInPt
 	if (size) {
 		*(int *)data = size;
 		*unknown = 1; *control = SENTINELCONTROL_DEVICERDY;
-		DEVICE_SPINLOCK(SENTINELCONTROL_DEVICE, SENTINELCONTROL_HOSTRDY);
+		DEVICE_SPINLOCK(5, SENTINELCONTROL_DEVICE, SENTINELCONTROL_HOSTRDY, "t");
 	}
 	char *ptr = *(char **)data;
 	// transfer
@@ -127,7 +128,7 @@ static __device__ void executeTrans(sentinelCommand *cmd, int size, sentinelInPt
 				length = cmd->length = size > SENTINEL_MSGSIZE ? SENTINEL_MSGSIZE : size;
 				memcpy(data, (void *)v, length); size -= length; v += length;
 				*unknown = 2; *control = SENTINELCONTROL_DEVICERDY;
-				DEVICE_SPINLOCK(SENTINELCONTROL_DEVICE, SENTINELCONTROL_HOSTRDY);
+				DEVICE_SPINLOCK(5, SENTINELCONTROL_DEVICE, SENTINELCONTROL_HOSTRDY, "t");
 			}
 			*field = ptr; ptr += size;
 			p->unknown = nullptr;
@@ -142,7 +143,7 @@ static __device__ void executeTrans(sentinelCommand *cmd, int size, sentinelInPt
 				length = cmd->length = size > SENTINEL_MSGSIZE ? SENTINEL_MSGSIZE : size;
 				memcpy((void *)v, data, length); size -= length; v += length;
 				*unknown = 3; *control = SENTINELCONTROL_DEVICERDY;
-				DEVICE_SPINLOCK(SENTINELCONTROL_DEVICE, SENTINELCONTROL_HOSTRDY);
+				DEVICE_SPINLOCK(5, SENTINELCONTROL_DEVICE, SENTINELCONTROL_HOSTRDY, "t");
 			}
 			*field = ptr; ptr += size;
 			p->unknown = nullptr;
