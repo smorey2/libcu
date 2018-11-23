@@ -2,7 +2,7 @@
 #include <sentinel-hostmsg.h>
 #if __OS_WIN
 #include <windows.h>
-#define HOST_SPINLOCK(SET, WHEN) while (InterlockedCompareExchange((long *)control, SET, WHEN) != WHEN) {}
+#define HOST_SPINLOCK(DELAY, CMP, SET) while (_InterlockedCompareExchange(control, SET, CMP) != CMP) { Sleep(DELAY); }
 #elif __OS_UNIX
 #include <stdlib.h>
 #include <string.h>
@@ -10,15 +10,15 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
-#define HOST_SPINLOCK(SET, WHEN) while (__sync_val_compare_and_swap((long *)control, SET, WHEN) != WHEN) {}
+#define HOST_SPINLOCK(DELAY, CMP, SET) while (__sync_val_compare_and_swap((volatile long *)control, SET, CMP) != CMP) { sleep(DELAY); }
 #endif
 #include <stdio.h>
 
 #if HAS_HOSTSENTINEL
 
-static void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset);
+static void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset, char *&trans);
 
-static char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, sentinelCommand *cmd, char *data, char *dataEnd, intptr_t offset, sentinelOutPtr *&listOut) {
+static char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, sentinelCommand *cmd, char *data, char *dataEnd, intptr_t offset, sentinelOutPtr *&listOut, char *&trans) {
 	char *ptr = data, *next;
 
 	// PREPARE & TRANSFER
@@ -46,7 +46,7 @@ static char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, sentine
 		}
 		listOut = listOut_;
 	}
-	if (transSize) executeTrans(cmd, transSize, listIn, nullptr, offset);
+	if (transSize) executeTrans(cmd, transSize, listIn, nullptr, offset, trans);
 
 	// PACK
 	for (sentinelInPtr *p = ptrsIn; p->field; p++) {
@@ -87,30 +87,30 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrs
 
 	// ATTACH
 #if __OS_WIN
-	long id = InterlockedAdd((long *)&map->setId, SENTINEL_MSGSIZE) - SENTINEL_MSGSIZE;
+	long id = _InterlockedAdd(&map->setId, SENTINEL_MSGSIZE) - SENTINEL_MSGSIZE;
 #elif __OS_UNIX
-	long id = __sync_fetch_and_add((long *)&map->setId, SENTINEL_MSGSIZE) - SENTINEL_MSGSIZE;
+	long id = __sync_fetch_and_add((volatile long *)&map->setId, SENTINEL_MSGSIZE) - SENTINEL_MSGSIZE;
 #endif
 	sentinelCommand *cmd = (sentinelCommand *)&map->data[id % sizeof(map->data)];
 	if (cmd->magic != SENTINEL_MAGIC)
 		panic("bad sentinel magic");
-	int *unknown = &cmd->unknown; volatile long *control = (volatile long *)&cmd->control; intptr_t offset = _sentinelClientMapOffset;
-	HOST_SPINLOCK(SENTINELCONTROL_DEVICE, SENTINELCONTROL_NORMAL);
+	volatile long *control = &cmd->control; char *trans = nullptr; intptr_t offset = _sentinelClientMapOffset;
+	HOST_SPINLOCK(25, SENTINELCONTROL_NORMAL, SENTINELCONTROL_DEVICE);
 
 	// PREPARE
 	char *data = cmd->data + ROUND8_(msgLength), *dataEnd = data + msg->size;
 	sentinelOutPtr *listOut = nullptr;
-	if (((ptrsIn || ptrsOut) && !(data = preparePtrs(ptrsIn, ptrsOut, cmd, data, dataEnd, offset, listOut))) ||
+	if (((ptrsIn || ptrsOut) && !(data = preparePtrs(ptrsIn, ptrsOut, cmd, data, dataEnd, offset, listOut, trans))) ||
 		(msg->prepare && !msg->prepare(msg, data, dataEnd, offset)))
 		panic("msg too long");
 	cmd->length = msgLength; memcpy(cmd->data, msg, msgLength);
 	//printf("msg: %d[%d]'", msg->op, msgLength); for (int i = 0; i < msgLength; i++) printf("%02x", ((char *)msg)[i] & 0xff); printf("'\n");
-	*unknown = 0; *control = SENTINELCONTROL_DEVICERDY;
+	*control = SENTINELCONTROL_DEVICERDY;
 
 	// FLOW-WAIT
 	if (msg->flow & SENTINELFLOW_WAIT) {
-		HOST_SPINLOCK(SENTINELCONTROL_DEVICEWAIT, SENTINELCONTROL_HOSTRDY);
-		if (listOut) executeTrans(cmd, 0, nullptr, listOut, offset);
+		HOST_SPINLOCK(25, SENTINELCONTROL_HOSTRDY, SENTINELCONTROL_DEVICEWAIT);
+		if (listOut) executeTrans(cmd, 0, nullptr, listOut, offset, trans);
 		cmd->length = msgLength; memcpy(msg, cmd->data, msgLength);
 		if ((ptrsOut && !postfixPtrs(ptrsOut, cmd, offset)) ||
 			(msg->postfix && !msg->postfix(msg, offset)))
@@ -120,41 +120,40 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrs
 #endif
 }
 
-static void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset) {
-	int *unknown = &cmd->unknown; volatile long *control = (volatile long *)&cmd->control;
-	char *data = cmd->data;
+static void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset, char *&trans) {
+	volatile long *control = &cmd->control;
+	char *data = cmd->data, *ptr = trans;
 	// create memory
 	if (size) {
 		*(int *)data = size;
-		*unknown = 1; *control = SENTINELCONTROL_DEVICERDY;
-		HOST_SPINLOCK(SENTINELCONTROL_DEVICE, SENTINELCONTROL_HOSTRDY);
+		*control = SENTINELCONTROL_TRANSSIZE;
+		HOST_SPINLOCK(25, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
+		ptr = trans = *(char **)data;
 	}
-	char *ptr = *(char **)data;
 	// transfer
 	if (listIn) {
 		for (sentinelInPtr *p = listIn; p; p = (sentinelInPtr *)p->unknown) {
 			char **field = (char **)p->field;
-			int size = p->size, length = 0; const char *v = (const char *)*field;
-			while (size > 0) {
-				length = cmd->length = size > SENTINEL_MSGSIZE ? SENTINEL_MSGSIZE : size;
-				memcpy(data, (void *)v, length); size -= length; v += length;
-				*unknown = 2; *control = SENTINELCONTROL_DEVICERDY;
-				HOST_SPINLOCK(SENTINELCONTROL_DEVICE, SENTINELCONTROL_HOSTRDY);
+			const char *v = (const char *)*field; int size = p->size, remain = size, length = 0;
+			while (remain > 0) {
+				length = cmd->length = remain > SENTINEL_MSGSIZE ? SENTINEL_MSGSIZE : remain;
+				memcpy(data, (void *)v, length); remain -= length; v += length;
+				*control = SENTINELCONTROL_TRANSIN;
+				HOST_SPINLOCK(25, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
 			}
 			*field = ptr; ptr += size;
 			p->unknown = nullptr;
 		}
-		*unknown = 0; *control = SENTINELCONTROL_DEVICERDY;
 	}
 	if (listOut) {
 		for (sentinelInPtr *p = listIn; p; p = (sentinelInPtr *)p->unknown) {
 			char **field = (char **)p->field;
-			int size = p->size, length = 0; const char *v = (const char *)*field;
-			while (size > 0) {
-				length = cmd->length = size > SENTINEL_MSGSIZE ? SENTINEL_MSGSIZE : size;
-				memcpy(data, (void *)v, length); size -= length; v += length;
-				*unknown = 3; *control = SENTINELCONTROL_DEVICERDY;
-				HOST_SPINLOCK(SENTINELCONTROL_DEVICE, SENTINELCONTROL_HOSTRDY);
+			const char *v = (const char *)*field; int size = p->size, remain = size, length = 0;
+			while (remain > 0) {
+				length = cmd->length = remain > SENTINEL_MSGSIZE ? SENTINEL_MSGSIZE : remain;
+				memcpy(data, (void *)v, length); remain -= length; v += length;
+				*control = SENTINELCONTROL_TRANSOUT;
+				HOST_SPINLOCK(25, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
 			}
 			*field = ptr; ptr += size;
 			p->unknown = nullptr;

@@ -5,8 +5,8 @@
 #include <io.h>
 #define THREADHANDLE HANDLE
 #define THREADCALL unsigned int __stdcall
-#define HOST_SPINLOCK(DELAY, SET, WHEN, C) while (_threadHostHandle && (s_ = InterlockedCompareExchange((long *)control, SET, WHEN)) != WHEN) { /*printf("(%d)", s_);*/ Sleep(DELAY); }
-#define DEVICE_SPINLOCK(DELAY, SET, WHEN, C) while (_threadDeviceHandle[threadId] && (s_ = InterlockedCompareExchange((long *)control, SET, WHEN)) != WHEN) { printf(C, s_); Sleep(DELAY); }
+#define HOST_SPINLOCK(DELAY, CMP, SET, MASK, FUNC, C) while (_threadHostHandle && (s_ = _InterlockedCompareExchange(control, CMP, SET)) != CMP) { printf(C"", s_); if (s_ & MASK) { FUNC; continue; } Sleep(DELAY); }
+#define DEVICE_SPINLOCK(DELAY, CMP, SET, MASK, FUNC, C) while (_threadDeviceHandle[threadId] && (s_ = _InterlockedCompareExchange(control, CMP, SET)) != CMP) { printf(C"", s_); if (s_ & MASK) { FUNC; continue; } Sleep(DELAY); }
 #elif __OS_UNIX
 #include <stdlib.h>
 #include <string.h>
@@ -17,8 +17,8 @@
 #include <pthread.h>
 #define THREADHANDLE pthread_t
 #define THREADCALL void *
-#define HOST_SPINLOCK(DELAY, SET, WHEN, C) while (_threadHostHandle && (s_ = __sync_val_compare_and_swap((long *)control, SET, WHEN)) != WHEN) { /*printf("(%d)", s_);*/ sleep(DELAY); }
-#define DEVICE_SPINLOCK(DELAY, SET, WHEN, C) while (_threadDeviceHandle[threadId] && (s_ = __sync_val_compare_and_swap((long *)control, SET, WHEN)) != WHEN) { /*printf("(%d)", s_);*/ sleep(DELAY); }
+#define HOST_SPINLOCK(DELAY, CMP, SET, TRANS, FUNC, C) while (_threadHostHandle && (s_ = __sync_val_compare_and_swap((long *)control, CMP, SET)) != CMP) { printf(C"", s_); if (s_ & MASK) { FUNC; continue; } sleep(DELAY); }
+#define DEVICE_SPINLOCK(DELAY, CMP, SET, TRANS, FUNC, C) while (_threadDeviceHandle[threadId] && (s_ = __sync_val_compare_and_swap((long *)control, CMP, SET)) != CMP) { printf(C"", s_); if (s_ & MASK) { FUNC; continue; } sleep(DELAY); }
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,7 +41,7 @@ static sentinelContext _ctx;
 static sentinelExecutor _baseHostExecutor = { nullptr, "base", sentinelDefaultHostExecutor, nullptr };
 static sentinelExecutor _baseDeviceExecutor = { nullptr, "base", sentinelDefaultDeviceExecutor, nullptr };
 
-static char *executeTrans(sentinelCommand *cmd, char *trans, int threadId);
+static void executeTrans(sentinelCommand *cmd, int threadId, char *&trans);
 
 // HOSTSENTINEL
 #if HAS_HOSTSENTINEL
@@ -56,10 +56,9 @@ static THREADCALL sentinelHostThread(void *data) {
 		if (cmd->magic != SENTINEL_MAGIC) {
 			printf("bad sentinel magic"); exit(1);
 		}
-		int *unknown = &cmd->unknown; volatile long *control = (volatile long *)&cmd->control;
-		HOST_SPINLOCK(50, SENTINELCONTROL_HOST, SENTINELCONTROL_DEVICERDY, "");
+		volatile long *control = &cmd->control; char *trans = nullptr;
+		HOST_SPINLOCK(50, SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOST, SENTINELCONTROL_TRANSMASK, executeTrans(cmd, -1, trans), );
 		if (!_threadHostHandle) return 0;
-		char *trans = *unknown ? executeTrans(cmd, nullptr, -1) : nullptr;
 		sentinelMessage *msg = (sentinelMessage *)cmd->data;
 		//map->dump();
 		//cmd->dump();
@@ -71,12 +70,11 @@ static THREADCALL sentinelHostThread(void *data) {
 		// FLOW-WAIT
 		if (msg->flow & SENTINELFLOW_WAIT) {
 			*control = SENTINELCONTROL_HOSTRDY;
-			HOST_SPINLOCK(50, SENTINELCONTROL_HOST, SENTINELCONTROL_DEVICERDY, "#");
-			if (*unknown) executeTrans(cmd, trans, -1);
+			HOST_SPINLOCK(50, SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOSTWAIT, SENTINELCONTROL_TRANSMASK, executeTrans(cmd, -1, trans), );
 		}
+		*control = SENTINELCONTROL_NORMAL;
 		if (trans) free(trans);
 		map->getId += SENTINEL_MSGSIZE;
-		*control = SENTINELCONTROL_NORMAL;
 	}
 	return 0;
 }
@@ -97,13 +95,12 @@ static THREADCALL sentinelDeviceThread(void *data) {
 		if (cmd->magic != SENTINEL_MAGIC) {
 			printf("bad sentinel magic"); exit(1);
 		}
-		int *unknown = &cmd->unknown; volatile long *control = (volatile long *)&cmd->control;
-		DEVICE_SPINLOCK(50, SENTINELCONTROL_HOST, SENTINELCONTROL_DEVICERDY, "%d");
+		volatile long *control = &cmd->control; char *trans = nullptr;
+		DEVICE_SPINLOCK(25, SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOST, SENTINELCONTROL_TRANSMASK, executeTrans(cmd, threadId, trans), ); printf("\nHOST[0] %x", *control);
 		if (!_threadDeviceHandle[threadId]) return 0;
-		char *trans = *unknown ? executeTrans(cmd, nullptr, threadId) : nullptr;
 		sentinelMessage *msg = (sentinelMessage *)&cmd->data;
 		//map->dump();
-		cmd->dump();
+		//cmd->dump();
 
 		// EXECUTE
 		char *(*hostPrepare)(void*, char*, char*, intptr_t) = nullptr;
@@ -117,36 +114,38 @@ static THREADCALL sentinelDeviceThread(void *data) {
 
 		// FLOW-WAIT
 		if (msg->flow & SENTINELFLOW_WAIT) {
-			*control = SENTINELCONTROL_HOSTRDY;
-			DEVICE_SPINLOCK(50, SENTINELCONTROL_HOSTWAIT, SENTINELCONTROL_DEVICEDONE, "");
-			if (*unknown) executeTrans(cmd, trans, threadId);
+			*control = SENTINELCONTROL_HOSTRDY; printf("\nHOSTRDY %x", *control);
+			DEVICE_SPINLOCK(25, SENTINELCONTROL_DEVICEDONE, SENTINELCONTROL_HOSTWAIT, SENTINELCONTROL_TRANSMASK, executeTrans(cmd, threadId, trans), ); printf("\nHOSTWAIT[Wait] %x", *control);
 		}
+		*control = SENTINELCONTROL_NORMAL; printf("\nNORMAL %x", *control);
 		if (trans) free(trans);
 		map->getId += SENTINEL_MSGSIZE;
-		*control = SENTINELCONTROL_NORMAL;
 	}
 	return 0;
 }
 #endif
 
 // EXECUTETRANS
-static char *executeTrans(sentinelCommand *cmd, char *trans, int threadId) {
-	printf("executeTrans"); exit(1);
+static void executeTrans(sentinelCommand *cmd, int threadId, char *&trans) {
 	unsigned int s_;
-	int *unknown = &cmd->unknown; volatile long *control = (volatile long *)&cmd->control;
+	volatile long *control = &cmd->control;
 	char *data = cmd->data, *ptr = trans;
-	while (*unknown != 0) {
+	while (*control & SENTINELCONTROL_TRANSMASK) {
 		int length = cmd->length;
-		switch (*unknown) {
-		case 1: ptr = trans = *(char **)data = (char *)malloc(*(int *)data); break;
-		case 2: memcpy(ptr, data, length); ptr += length; break;
-		case 3: memcpy(data, ptr, length); ptr += length; break;
+		switch (*control) {
+		case SENTINELCONTROL_TRANSSIZE: printf("\n*_TRANSSIZE %x", *control); ptr = trans = *(char **)data = (char *)malloc(*(int *)data); break;
+		case SENTINELCONTROL_TRANSIN: printf("\n*_TRANSIN %x", *control); memcpy(ptr, data, length); ptr += length; break;
+		case SENTINELCONTROL_TRANSOUT: printf("\n*_TRANSOUT %x", *control); memcpy(data, ptr, length); ptr += length; break;
+#if __OS_WIN
+		default: printf("%x", s_); Sleep(50); continue;
+#elif __OS_UNIX
+		default: printf("%x", s_); sleep(50); continue;
+#endif
 		}
-		*control = SENTINELCONTROL_HOSTRDY;
-		if (threadId == -1) { HOST_SPINLOCK(50, SENTINELCONTROL_HOST, SENTINELCONTROL_DEVICERDY, "T"); }
-		else { DEVICE_SPINLOCK(50, SENTINELCONTROL_HOST, SENTINELCONTROL_DEVICERDY, "T"); }
+		*control = SENTINELCONTROL_TRANRDY; printf("\nTRANRDY %x", *control);
+		if (threadId == -1) { HOST_SPINLOCK(25, SENTINELCONTROL_TRANDONE, SENTINELCONTROL_TRAN, 0, , ); printf("\nTRAN[0] %x", *control); }
+		else { DEVICE_SPINLOCK(25, SENTINELCONTROL_TRANDONE, SENTINELCONTROL_TRAN, 0, , ); printf("\nTRAN[0] %x", *control); }
 	}
-	return trans;
 }
 
 #if HAS_HOSTSENTINEL

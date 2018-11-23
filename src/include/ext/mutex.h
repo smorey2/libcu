@@ -29,9 +29,11 @@ THE SOFTWARE.
 extern "C" {
 #endif
 	/* Mutex with exponential back-off. */
-	extern __device__ void mutex_lock(unsigned int *mutex);
+	extern __device__ void mutexLock(unsigned int *mutex);
 	/* Mutex unlock. */
-	extern __device__ void mutex_unlock(unsigned int *mutex);
+	extern __device__ void mutexUnlock(unsigned int *mutex);
+	/* Mutex held. */
+	extern __device__ int mutexHeld(unsigned int *mutex);
 
 #ifdef  __cplusplus
 }

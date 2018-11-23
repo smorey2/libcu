@@ -34,7 +34,7 @@ cudaError_t unistd_test1();
 #endif
 
 int main(int argc, char **argv) {
-	int testId = argv[1] ? atoi(argv[1]) : 3;
+	int testId = argv[1] ? atoi(argv[1]) : 11;
 
 	// Choose which GPU to run on, change this on a multi-GPU system.
 	cudaError_t cudaStatus = cudaSetDevice(gpuGetMaxGflopsDevice());

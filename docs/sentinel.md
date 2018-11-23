@@ -196,8 +196,8 @@ struct module_string {
 
 ### Message - Custom
 Message asset(s) referenced outside of the message payload, like string values, must be coalesced into the message payload. refered values offset(s) must be adjusted to align memory maps.
-* `Base` must be first
-* `Base` constructor parameters of `size` and `prepare` are required
+* `base` must be first
+* `base` constructor parameters of `size` and `prepare` are required
 * `size` should contain enough space to hold the message with it's embeded values, and must be remain under the `SENTINEL_MSGSIZE` plus the `sentinelCommand` overhead size.
 * `prepare` must embed referenced values, replacing the original pointers with the emeded one and apply the offset to align memory maps.
 ```

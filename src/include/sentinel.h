@@ -92,8 +92,10 @@ extern "C" {
 
 	typedef struct __align__(8) {
 		unsigned short magic;
-		volatile long control;
 		int unknown;
+		volatile long control;
+		//#ifndef _WIN64
+		//#endif
 		int length;
 		char data[1];
 		void dump();
@@ -121,10 +123,10 @@ extern "C" {
 		sentinelExecutor *deviceList;
 	} sentinelContext;
 
-//#if HAS_HOSTSENTINEL // not-required
-//	extern sentinelMap *_sentinelHostMap;
-//	extern intptr_t _sentinelHostMapOffset;
-//#endif
+	//#if HAS_HOSTSENTINEL // not-required
+	//	extern sentinelMap *_sentinelHostMap;
+	//	extern intptr_t _sentinelHostMapOffset;
+	//#endif
 #if HAS_DEVICESENTINEL
 	extern __constant__ const sentinelMap *_sentinelDeviceMap[SENTINEL_DEVICEMAPS];
 #endif
@@ -149,14 +151,22 @@ extern "C" {
 	// file-utils
 	extern void sentinelRegisterFileUtils();
 
-#define SENTINELCONTROL_NORMAL 0
-#define SENTINELCONTROL_DEVICE 1
-#define SENTINELCONTROL_DEVICERDY 2
-#define SENTINELCONTROL_DEVICEWAIT 3
-#define SENTINELCONTROL_DEVICEDONE 4
-#define SENTINELCONTROL_HOST 5
-#define SENTINELCONTROL_HOSTRDY 6
-#define SENTINELCONTROL_HOSTWAIT 7
+#define SENTINELCONTROL_NORMAL 0x0
+#define SENTINELCONTROL_DEVICE 0x1
+#define SENTINELCONTROL_DEVICERDY 0x2
+#define SENTINELCONTROL_DEVICEWAIT 0x3
+#define SENTINELCONTROL_DEVICEDONE 0x4
+#define SENTINELCONTROL_HOST 0x5
+#define SENTINELCONTROL_HOSTRDY 0x6
+#define SENTINELCONTROL_HOSTWAIT 0x7
+
+#define SENTINELCONTROL_TRANSMASK 0xF0
+#define SENTINELCONTROL_TRAN 0x10
+#define SENTINELCONTROL_TRANRDY 0x11
+#define SENTINELCONTROL_TRANDONE 0x12
+#define SENTINELCONTROL_TRANSSIZE 0x13
+#define SENTINELCONTROL_TRANSIN 0x14
+#define SENTINELCONTROL_TRANSOUT 0x15
 
 #ifdef  __cplusplus
 }
