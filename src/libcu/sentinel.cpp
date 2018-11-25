@@ -38,7 +38,7 @@ static sentinelContext _ctx;
 static sentinelExecutor _baseHostExecutor = { nullptr, "base", sentinelDefaultHostExecutor, nullptr };
 static sentinelExecutor _baseDeviceExecutor = { nullptr, "base", sentinelDefaultDeviceExecutor, nullptr };
 
-static void executeTrans(void **tag);
+static bool executeTrans(void **tag);
 
 // HOSTSENTINEL
 #if HAS_HOSTSENTINEL
@@ -68,9 +68,9 @@ static THREADCALL sentinelHostThread(void *data) {
 		// FLOW-WAIT
 		if (msg->flow & SENTINELFLOW_WAIT) {
 			mutexSet(control, SENTINELCONTROL_HOSTRDY);
-			mutexSpinLock(&_threadHostHandle, control, SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOSTWAIT, SENTINELCONTROL_TRANSMASK, executeTrans, funcTag);
+			//mutexSpinLock(&_threadHostHandle, control, SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOSTWAIT, SENTINELCONTROL_TRANSMASK, executeTrans, funcTag);
 		}
-		mutexSet(control, SENTINELCONTROL_NORMAL);
+		else mutexSet(control, SENTINELCONTROL_NORMAL);
 		if (funcTag[2]) free(funcTag[2]);
 	}
 	return 0;
@@ -98,7 +98,7 @@ static THREADCALL sentinelDeviceThread(void *data) {
 		if (!_threadDeviceHandle[threadId]) return 0;
 		sentinelMessage *msg = (sentinelMessage *)&cmd->data;
 		//map->dump();
-		cmd->dump();
+		//cmd->dump();
 
 		// EXECUTE
 		char *(*hostPrepare)(void*, char*, char*, intptr_t) = nullptr;
@@ -123,7 +123,8 @@ static THREADCALL sentinelDeviceThread(void *data) {
 #endif
 
 // EXECUTETRANS
-static void executeTrans(void **tag) {
+static bool executeTransExit(void **tag) { return false; }
+static bool executeTrans(void **tag) {
 	int threadId = (int)tag[0];
 	sentinelCommand *cmd = (sentinelCommand *)tag[1];
 	volatile long *control = &cmd->control;
@@ -140,9 +141,10 @@ static void executeTrans(void **tag) {
 		default: sleep(25); continue;
 #endif
 		}
-		mutexSet(control, SENTINELCONTROL_TRANRDY, 50);
-		mutexSpinLock(threadId != -1 ? &_threadDeviceHandle[threadId] : &_threadHostHandle, control, SENTINELCONTROL_TRANDONE, SENTINELCONTROL_TRAN, 0, nullptr, nullptr, 50);
+		mutexSet(control, SENTINELCONTROL_TRANRDY);
+		mutexSpinLock(threadId != -1 ? &_threadDeviceHandle[threadId] : &_threadHostHandle, control, SENTINELCONTROL_TRANDONE, SENTINELCONTROL_TRAN, 0xF, executeTransExit);
 	}
+	return true;
 }
 
 #if HAS_HOSTSENTINEL

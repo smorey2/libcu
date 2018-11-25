@@ -2,11 +2,11 @@
 #include <ext/mutex.h>
 
 /* Mutex with exponential back-off. */
-__host_device__ void mutexSpinLock(void **cancelToken, volatile long *mutex, long cmp, long val, long mask, void(*func)(void **), void **funcTag, unsigned int msmin, unsigned int msmax) {
+__host_device__ void mutexSpinLock(void **cancelToken, volatile long *mutex, long cmp, long val, long mask, bool(*func)(void **), void **funcTag, unsigned int msmin, unsigned int msmax) {
 	long v; unsigned int ms = msmin;
 #if __CUDA_ARCH__
 	while ((!cancelToken || *cancelToken) && (v = atomicCAS((int *)mutex, cmp, val)) != cmp) {
-		if (v & mask) { func(funcTag); continue; }
+		if (v & mask) { if (!func(funcTag)) return; continue; }
 #if __CUDA_ARCH__ >= 700
 		__nanosleep(ms * 1000);
 #else
@@ -14,11 +14,11 @@ __host_device__ void mutexSpinLock(void **cancelToken, volatile long *mutex, lon
 #endif
 #elif __OS_WIN
 	while ((!cancelToken || *cancelToken) && (v = _InterlockedCompareExchange((volatile long *)mutex, cmp, val)) != cmp) {
-		if (v & mask) { func(funcTag); continue; }
+		if (v & mask) { if (!func(funcTag)) return; continue; }
 		Sleep(ms);
 #elif __OS_UNIX
 	while ((!cancelToken || *cancelToken) && (v = __sync_val_compare_and_swap((long *)mutex, cmp, val)) != cmp) {
-		if (v & mask) { func(funcTag); continue; }
+		if (v & mask) { if (!func(funcTag)) return; continue; }
 		sleep(ms);
 #endif
 		if (ms < msmax) ms *= 2;

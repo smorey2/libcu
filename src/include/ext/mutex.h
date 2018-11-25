@@ -29,7 +29,7 @@ THE SOFTWARE.
 extern "C" {
 #endif
 	/* Mutex with exponential back-off. */
-	extern __host_device__ void mutexSpinLock(void **cancelToken, volatile long *mutex, long cmp = 0, long val = 1, long mask = 0, void(*func)(void **) = nullptr, void **funcTag = nullptr, unsigned int msmin = 8, unsigned int msmax = 50); //256
+	extern __host_device__ void mutexSpinLock(void **cancelToken, volatile long *mutex, long cmp = 0, long val = 1, long mask = 0, bool(*func)(void **) = nullptr, void **funcTag = nullptr, unsigned int msmin = 8, unsigned int msmax = 50); //256
 
 	/* Mutex set. */
 	extern __host_device__ void mutexSet(volatile long *mutex, long val = 0, unsigned int mspause = 0);

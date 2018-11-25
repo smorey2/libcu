@@ -92,7 +92,7 @@ extern "C" {
 
 	typedef struct __align__(8) {
 		unsigned short magic;
-		int unknown;
+		volatile int unknown;
 		volatile long control;
 		//#ifndef _WIN64
 		//#endif
