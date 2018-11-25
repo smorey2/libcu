@@ -5,10 +5,6 @@
 #include <io.h>
 #define THREADHANDLE HANDLE
 #define THREADCALL unsigned int __stdcall
-//#define HOST_SET(SET) printf("\nSET[%x]", SET); _InterlockedExchange(control, SET); 
-//#define DEVICE_SET(SET) printf("\nSET[%x]", SET); _InterlockedExchange(control, SET); 
-//#define HOST_SPINLOCK(DELAY, CMP, SET, MASK, FUNC, C) printf("\nLOCK[%x %x]: ", CMP, SET); while (_threadHostHandle && (s_ = _InterlockedCompareExchange(control, CMP, SET)) != CMP) { printf(C"", s_); if (s_ & MASK) { FUNC; continue; } Sleep(DELAY); }
-//#define DEVICE_SPINLOCK(DELAY, CMP, SET, MASK, FUNC, C) printf("\nLOCK[%x %x]: ", CMP, SET); while (_threadDeviceHandle[threadId] && (s_ = _InterlockedCompareExchange(control, CMP, SET)) != CMP) { printf(C"", s_); if (s_ & MASK) { FUNC; continue; } Sleep(DELAY); }
 #elif __OS_UNIX
 #include <stdlib.h>
 #include <string.h>
@@ -19,10 +15,6 @@
 #include <pthread.h>
 #define THREADHANDLE pthread_t
 #define THREADCALL void *
-//#define HOST_SET(SET) __sync_lock_test_and_set((long *)control, SET); printf("\nSET[%x]", SET);
-//#define DEVICE_SET(SET) __sync_lock_test_and_set((long *)control, SET); printf("\nSET[%x]", SET);
-//#define HOST_SPINLOCK(DELAY, CMP, SET, TRANS, FUNC, C) while (_threadHostHandle && (s_ = __sync_val_compare_and_swap((long *)control, CMP, SET)) != CMP) { printf(C"", s_); if (s_ & MASK) { FUNC; continue; } sleep(HOST_DELAY); } printf("\nLOCK[%x %x]", SET, s_);
-//#define DEVICE_SPINLOCK(DELAY, CMP, SET, TRANS, FUNC, C) while (_threadDeviceHandle[threadId] && (s_ = __sync_val_compare_and_swap((long *)control, CMP, SET)) != CMP) { printf(C"", s_); if (s_ & MASK) { FUNC; continue; } sleep(DEVICE_DELAY); } printf("\nLOCK[%x %x]", SET, s_);
 #endif
 #include <stdio.h>
 #include <stdlib.h>

@@ -2,7 +2,6 @@
 #include <sentinel-hostmsg.h>
 #if __OS_WIN
 #include <windows.h>
-#define HOST_SPINLOCK(DELAY, CMP, SET) while (_InterlockedCompareExchange(control, SET, CMP) != CMP) { Sleep(DELAY); }
 #elif __OS_UNIX
 #include <stdlib.h>
 #include <string.h>
@@ -10,9 +9,9 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
-#define HOST_SPINLOCK(DELAY, CMP, SET) while (__sync_val_compare_and_swap((volatile long *)control, SET, CMP) != CMP) { sleep(DELAY); }
 #endif
 #include <stdio.h>
+#include <ext\mutex.h>
 
 #if HAS_HOSTSENTINEL
 
@@ -94,8 +93,8 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrs
 	sentinelCommand *cmd = (sentinelCommand *)&map->data[id % sizeof(map->data)];
 	if (cmd->magic != SENTINEL_MAGIC)
 		panic("bad sentinel magic");
-	volatile long *control = &cmd->control; char *trans = nullptr; intptr_t offset = _sentinelClientMapOffset;
-	HOST_SPINLOCK(25, SENTINELCONTROL_NORMAL, SENTINELCONTROL_DEVICE);
+	volatile long *control = &cmd->control; intptr_t offset = _sentinelClientMapOffset; char *trans = nullptr;
+	mutexSpinLock(nullptr, control, SENTINELCONTROL_NORMAL, SENTINELCONTROL_DEVICE);
 
 	// PREPARE
 	char *data = cmd->data + ROUND8_(msgLength), *dataEnd = data + msg->size;
@@ -105,17 +104,17 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrs
 		panic("msg too long");
 	cmd->length = msgLength; memcpy(cmd->data, msg, msgLength);
 	//printf("msg: %d[%d]'", msg->op, msgLength); for (int i = 0; i < msgLength; i++) printf("%02x", ((char *)msg)[i] & 0xff); printf("'\n");
-	*control = SENTINELCONTROL_DEVICERDY;
+	mutexSet(control, SENTINELCONTROL_DEVICERDY);
 
 	// FLOW-WAIT
 	if (msg->flow & SENTINELFLOW_WAIT) {
-		HOST_SPINLOCK(25, SENTINELCONTROL_HOSTRDY, SENTINELCONTROL_DEVICEWAIT);
-		if (listOut) executeTrans(cmd, 0, nullptr, listOut, offset, trans);
+		mutexSpinLock(nullptr, control, SENTINELCONTROL_HOSTRDY, SENTINELCONTROL_DEVICEWAIT);
+		//if (listOut) executeTrans(cmd, 0, nullptr, listOut, offset, trans);
 		cmd->length = msgLength; memcpy(msg, cmd->data, msgLength);
 		if ((ptrsOut && !postfixPtrs(ptrsOut, cmd, offset)) ||
 			(msg->postfix && !msg->postfix(msg, offset)))
 			panic("postfix error");
-		*control = SENTINELCONTROL_NORMAL;
+		mutexSet(control, SENTINELCONTROL_NORMAL);
 	}
 #endif
 }
@@ -123,14 +122,12 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrs
 static void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset, char *&trans) {
 	volatile long *control = &cmd->control;
 	char *data = cmd->data, *ptr = trans;
-	// create memory
 	if (size) {
 		*(int *)data = size;
-		*control = SENTINELCONTROL_TRANSSIZE;
-		HOST_SPINLOCK(25, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
+		mutexSet(control, SENTINELCONTROL_TRANSSIZE, 50);
+		mutexSpinLock(nullptr, control, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
 		ptr = trans = *(char **)data;
 	}
-	// transfer
 	if (listIn) {
 		for (sentinelInPtr *p = listIn; p; p = (sentinelInPtr *)p->unknown) {
 			char **field = (char **)p->field;
@@ -138,8 +135,8 @@ static void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, 
 			while (remain > 0) {
 				length = cmd->length = remain > SENTINEL_MSGSIZE ? SENTINEL_MSGSIZE : remain;
 				memcpy(data, (void *)v, length); remain -= length; v += length;
-				*control = SENTINELCONTROL_TRANSIN;
-				HOST_SPINLOCK(25, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
+				mutexSet(control, SENTINELCONTROL_TRANSIN, 50);
+				mutexSpinLock(nullptr, control, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
 			}
 			*field = ptr; ptr += size;
 			p->unknown = nullptr;
@@ -152,8 +149,8 @@ static void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, 
 			while (remain > 0) {
 				length = cmd->length = remain > SENTINEL_MSGSIZE ? SENTINEL_MSGSIZE : remain;
 				memcpy(data, (void *)v, length); remain -= length; v += length;
-				*control = SENTINELCONTROL_TRANSOUT;
-				HOST_SPINLOCK(25, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
+				mutexSet(control, SENTINELCONTROL_TRANSOUT, 50);
+				mutexSpinLock(nullptr, control, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
 			}
 			*field = ptr; ptr += size;
 			p->unknown = nullptr;

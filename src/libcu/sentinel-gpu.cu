@@ -5,9 +5,6 @@
 #include <sentinel.h>
 #include <ext\mutex.h>
 
-//#define DEVICE_SET(SET) printf("\nset[%x]", SET); atomicExch((int *)control, SET); 
-//#define DEVICE_SPINLOCK(DELAY, CMP, SET, C) printf("\nlock[%x %x]: ", CMP, SET); while ((s_ = atomicCAS((int *)control, CMP, SET)) != CMP) { printf(C"%x:%x ", CMP, s_); sleep(DELAY); }
-
 __BEGIN_DECLS;
 
 #if HAS_DEVICESENTINEL
@@ -111,14 +108,12 @@ __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength, sentinel
 static __device__ void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset, char *&trans) {
 	volatile long *control = &cmd->control;
 	char *data = cmd->data, *ptr = trans;
-	// create memory
 	if (size) {
 		*(int *)data = size;
 		mutexSet(control, SENTINELCONTROL_TRANSSIZE, 50);
 		mutexSpinLock(nullptr, control, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
 		ptr = trans = *(char **)data;
 	}
-	// transfer
 	if (listIn) {
 		for (sentinelInPtr *p = listIn; p; p = (sentinelInPtr *)p->unknown) {
 			char **field = (char **)p->field;
