@@ -132,9 +132,9 @@ static bool executeTrans(void **tag) {
 	while (*control & SENTINELCONTROL_TRANSMASK) {
 		int length = cmd->length;
 		switch (*control) {
-		case SENTINELCONTROL_TRANSSIZE: printf("\nTRANSSIZE"); tag[2] = ptr = *(char **)data = (char *)malloc(*(int *)data); break;
-		case SENTINELCONTROL_TRANSIN: printf("\nTRANSIN"); memcpy(ptr, data, length); ptr += length; break;
-		case SENTINELCONTROL_TRANSOUT: printf("\nTRANSOUT"); memcpy(data, ptr, length); ptr += length; break;
+		case SENTINELCONTROL_TRANSSIZE: tag[2] = ptr = *(char **)data = (char *)malloc(*(int *)data); break;
+		case SENTINELCONTROL_TRANSIN: memcpy(ptr, data, length); ptr += length; break;
+		case SENTINELCONTROL_TRANSOUT: memcpy(data, ptr, length); ptr += length; break;
 #if __OS_WIN
 		default: Sleep(25); continue;
 #elif __OS_UNIX
