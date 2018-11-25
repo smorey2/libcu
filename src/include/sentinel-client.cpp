@@ -115,7 +115,7 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrs
 		if ((ptrsOut && !postfixPtrs(ptrsOut, cmd, offset)) ||
 			(msg->postfix && !msg->postfix(msg, offset)))
 			panic("postfix error");
-		*control = SENTINELCONTROL_DEVICEDONE;
+		*control = SENTINELCONTROL_NORMAL;
 	}
 #endif
 }

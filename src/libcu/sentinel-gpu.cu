@@ -3,8 +3,10 @@
 #include <stdlibcu.h>
 #include <unistdcu.h>
 #include <sentinel.h>
+#include <ext\mutex.h>
 
-#define DEVICE_SPINLOCK(DELAY, CMP, SET, C) while ((s_ = atomicCAS((int *)control, CMP, SET)) != CMP) { printf(C"", s_); sleep(DELAY); }
+//#define DEVICE_SET(SET) printf("\nset[%x]", SET); atomicExch((int *)control, SET); 
+//#define DEVICE_SPINLOCK(DELAY, CMP, SET, C) printf("\nlock[%x %x]: ", CMP, SET); while ((s_ = atomicCAS((int *)control, CMP, SET)) != CMP) { printf(C"%x:%x ", CMP, s_); sleep(DELAY); }
 
 __BEGIN_DECLS;
 
@@ -72,8 +74,6 @@ static __device__ bool postfixPtrs(sentinelOutPtr *ptrsOut, sentinelCommand *cmd
 __device__ volatile unsigned int _sentinelMapId;
 __constant__ const sentinelMap *_sentinelDeviceMap[SENTINEL_DEVICEMAPS];
 __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut) {
-	//printf("\nD:FUNC\n");
-	unsigned int s_;
 	const sentinelMap *map = _sentinelDeviceMap[_sentinelMapId++ % SENTINEL_DEVICEMAPS];
 	if (!map)
 		panic("sentinel: device map not defined. did you start sentinel?\n");
@@ -83,8 +83,8 @@ __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength, sentinel
 	sentinelCommand *cmd = (sentinelCommand *)&map->data[id % sizeof(map->data)];
 	if (cmd->magic != SENTINEL_MAGIC)
 		panic("bad sentinel magic");
-	volatile long *control = &cmd->control; char *trans = nullptr; intptr_t offset = map->offset;
-	DEVICE_SPINLOCK(25, SENTINELCONTROL_NORMAL, SENTINELCONTROL_DEVICE, ); printf("\nDEVICE[0] %x", *control);
+	volatile long *control = &cmd->control; intptr_t offset = map->offset; char *trans = nullptr;
+	mutexSpinLock(nullptr, control, SENTINELCONTROL_NORMAL, SENTINELCONTROL_DEVICE);
 
 	// PREPARE
 	char *data = cmd->data + ROUND8_(msgLength), *dataEnd = data + msg->size;
@@ -94,29 +94,28 @@ __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength, sentinel
 		panic("msg too long");
 	cmd->length = msgLength; memcpy(cmd->data, msg, msgLength);
 	//printf("msg: %d[%d]'", msg->op, msgLength); for (int i = 0; i < msgLength; i++) printf("%02x", ((char *)msg)[i] & 0xff); printf("'\n");
-	*control = SENTINELCONTROL_DEVICERDY; printf("\nDEVICERDY %x", *control);
+	mutexSet(control, SENTINELCONTROL_DEVICERDY);
 
 	// FLOW-WAIT
 	if (msg->flow & SENTINELFLOW_WAIT) {
-		DEVICE_SPINLOCK(25, SENTINELCONTROL_HOSTRDY, SENTINELCONTROL_DEVICEWAIT, ); printf("\nDEVICEWAIT[Wait] %x", *control);
-		if (listOut) executeTrans(cmd, 0, nullptr, listOut, offset, trans);
+		mutexSpinLock(nullptr, control, SENTINELCONTROL_HOSTRDY, SENTINELCONTROL_DEVICEWAIT);
+		//if (listOut) executeTrans(cmd, 0, nullptr, listOut, offset, trans);
 		cmd->length = msgLength; memcpy(msg, cmd->data, msgLength);
 		if ((ptrsOut && !postfixPtrs(ptrsOut, cmd, offset)) ||
 			(msg->postfix && !msg->postfix(msg, offset)))
 			panic("postfix error");
-		*control = SENTINELCONTROL_DEVICEDONE; printf("\nDEVICEDONE %x", *control);
+		mutexSet(control, SENTINELCONTROL_NORMAL);
 	}
 }
 
 static __device__ void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset, char *&trans) {
-	unsigned int s_;
 	volatile long *control = &cmd->control;
 	char *data = cmd->data, *ptr = trans;
 	// create memory
 	if (size) {
 		*(int *)data = size;
-		*control = SENTINELCONTROL_TRANSSIZE; printf("\n_TRANSSIZE %x", *control);
-		DEVICE_SPINLOCK(25, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE, ); printf("\nTRANDONE[_TRANSSIZE] %x", *control);
+		mutexSet(control, SENTINELCONTROL_TRANSSIZE, 50);
+		mutexSpinLock(nullptr, control, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
 		ptr = trans = *(char **)data;
 	}
 	// transfer
@@ -127,8 +126,8 @@ static __device__ void executeTrans(sentinelCommand *cmd, int size, sentinelInPt
 			while (remain > 0) {
 				length = cmd->length = remain > SENTINEL_MSGSIZE ? SENTINEL_MSGSIZE : remain;
 				memcpy(data, (void *)v, length); remain -= length; v += length;
-				*control = SENTINELCONTROL_TRANSIN; printf("\n_TRANSIN %x", *control);
-				DEVICE_SPINLOCK(25, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE, ); printf("\nTRANDONE[_TRANSIN] %x", *control);
+				mutexSet(control, SENTINELCONTROL_TRANSIN, 50);
+				mutexSpinLock(nullptr, control, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
 			}
 			*field = ptr; ptr += size;
 			p->unknown = nullptr;
@@ -141,8 +140,8 @@ static __device__ void executeTrans(sentinelCommand *cmd, int size, sentinelInPt
 			while (remain > 0) {
 				length = cmd->length = remain > SENTINEL_MSGSIZE ? SENTINEL_MSGSIZE : remain;
 				memcpy((void *)v, data, length); remain -= length; v += length;
-				*control = SENTINELCONTROL_TRANSOUT; printf("\n_TRANSOUT %x", *control);
-				DEVICE_SPINLOCK(25, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE, ); printf("\nTRANDONE[_TRANSOUT] %x", *control);
+				mutexSet(control, SENTINELCONTROL_TRANSOUT, 50);
+				mutexSpinLock(nullptr, control, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
 			}
 			*field = ptr; ptr += size;
 			p->unknown = nullptr;

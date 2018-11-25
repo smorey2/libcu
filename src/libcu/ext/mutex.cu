@@ -2,25 +2,44 @@
 #include <ext/mutex.h>
 
 /* Mutex with exponential back-off. */
-__device__ void mutexLock(unsigned int *mutex) {
+__host_device__ void mutexSpinLock(void **cancelToken, volatile long *mutex, long cmp, long val, long mask, void(*func)(void **), void **funcTag, unsigned int msmin, unsigned int msmax) {
+	long v; unsigned int ms = msmin;
+#if __CUDA_ARCH__
+	while ((!cancelToken || *cancelToken) && (v = atomicCAS((int *)mutex, cmp, val)) != cmp) {
+		if (v & mask) { func(funcTag); continue; }
 #if __CUDA_ARCH__ >= 700
-	unsigned int ns = 8;
+		__nanosleep(ms * 1000);
+#else
+		usleep(ms * 1000);
 #endif
-	while (atomicCAS(mutex, 0, 1) == 1) {
-#if __CUDA_ARCH__ >= 700
-		__nanosleep(ns);
-		if (ns < 256)
-			ns *= 2;
+#elif __OS_WIN
+	while ((!cancelToken || *cancelToken) && (v = _InterlockedCompareExchange((volatile long *)mutex, cmp, val)) != cmp) {
+		if (v & mask) { func(funcTag); continue; }
+		Sleep(ms);
+#elif __OS_UNIX
+	while ((!cancelToken || *cancelToken) && (v = __sync_val_compare_and_swap((long *)mutex, cmp, val)) != cmp) {
+		if (v & mask) { func(funcTag); continue; }
+		sleep(ms);
 #endif
+		if (ms < msmax) ms *= 2;
 	}
 }
 
-/* Mutex unlock */
-__device__ void mutexUnlock(unsigned int *mutex) {
-	atomicExch(mutex, 0);
-}
-
-/* Mutex held */
-__device__ int mutexHeld(unsigned int *mutex) {
-	return *mutex == 1;
+/* Mutex set. */
+__host_device__ void mutexSet(volatile long *mutex, long val, unsigned int mspause) {
+	unsigned int ms = mspause;
+#if __CUDA_ARCH__
+	atomicExch((int *)mutex, val);
+#if __CUDA_ARCH__ >= 700
+	if (ms) __nanosleep(ms * 1000);
+#else
+	if (ms) usleep(ms * 1000);
+#endif
+#elif __OS_WIN
+	_InterlockedExchange((volatile long *)mutex, val);
+	if (ms) Sleep(ms);
+#elif __OS_UNIX
+	__sync_lock_test_and_set((long *)control, val);
+	if (ms) sleep(ms);
+#endif
 }
