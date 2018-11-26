@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include <crtdefscu.h>
 
 #include <time.h>
-#if defined(__CUDA_ARCH__)
+#ifdef __CUDA_ARCH__
 __BEGIN_DECLS;
 
 //#ifndef _WIN64

@@ -38,7 +38,7 @@ typedef struct {
 #define __off_t off_t
 // #define __off64_t off64_t
 #endif
-#if defined(__CUDA_ARCH__)
+#ifdef __CUDA_ARCH__
 #include <stdarg.h>
 
 __BEGIN_DECLS;

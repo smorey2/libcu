@@ -26,6 +26,7 @@ static __device__ char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsO
 		}
 	if (ptrsOut) {
 		sentinelOutPtr *listOut_ = nullptr;
+		// if field == -1, append from previous ptr
 		ptr = ptrsOut[0].field == (char *)-1 ? ptr : data;
 		for (sentinelOutPtr *p = ptrsOut; p->field; p++) {
 			char **field = (char **)p->field;
@@ -54,18 +55,20 @@ static __device__ char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsO
 
 static __device__ bool postfixPtrs(sentinelOutPtr *ptrsOut, sentinelCommand *cmd, intptr_t offset) {
 	// UNPACK
-	for (sentinelOutPtr *p = ptrsOut; p->field; p++) {
-		if (p->field == (char *)-1)
-			continue;
-		char **buf = (char **)p->buf;
-		if (!*buf)
-			continue;
-		char **field = (char **)p->field;
-		char *ptr = *field - offset;
-		int *sizeField = (int *)p->sizeField;
-		int size = !sizeField ? p->size : *sizeField;
-		if (size > 0) memcpy(*buf, ptr, size);
-	}
+	if (ptrsOut)
+		for (sentinelOutPtr *p = ptrsOut; p->field; p++) {
+			// if field == -1, continue
+			if (p->field == (char *)-1)
+				continue;
+			char **buf = (char **)p->buf;
+			if (!*buf)
+				continue;
+			char **field = (char **)p->field;
+			char *ptr = *field - offset;
+			int *sizeField = (int *)p->sizeField;
+			int size = !sizeField ? p->size : *sizeField;
+			if (size > 0) memcpy(*buf, ptr, size);
+		}
 	return true;
 }
 

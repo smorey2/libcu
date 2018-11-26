@@ -33,7 +33,7 @@ THE SOFTWARE.
 #elif __OS_UNIX
 #include <dirent.h>
 #endif
-#if defined(__CUDA_ARCH__)
+#ifdef __CUDA_ARCH__
 __BEGIN_DECLS;
 
 /* Open a directory stream on NAME. Return a DIR stream on the directory, or NULL if it could not be opened. */

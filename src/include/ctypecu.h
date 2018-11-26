@@ -35,7 +35,7 @@ THE SOFTWARE.
 #define _HEX            0x08    /* hexadecimal digit */
 #endif
 
-#if defined(__CUDA_ARCH__)
+#ifdef __CUDA_ARCH__
 __BEGIN_DECLS;
 
 extern __constant__ const unsigned char __curtUpperToLower[256];

@@ -77,7 +77,7 @@ struct unistd_read {
 	size_t rc;
 	void *ptr;
 	sentinelOutPtr ptrsOut[2] = {
-		{ &ptr, &buf, 0 },
+		{ &ptr, &buf, 0, &rc },
 		{ nullptr }
 	};
 };
@@ -116,12 +116,17 @@ struct unistd_chdir {
 };
 
 struct unistd_getcwd {
+	static __forceinline__ __device__ bool postfix(unistd_getcwd *t, intptr_t offset) {
+		t->rc = t->rc ? t->buf : nullptr;
+		return true;
+	}
 	sentinelMessage base;
-	char *ptr; size_t size;
-	__device__ unistd_getcwd(char *buf, size_t size) : base(UNISTD_GETCWD, SENTINELFLOW_WAIT, SENTINEL_CHUNK), ptr(buf), size(size) { sentinelDeviceSend(&base, sizeof(unistd_getcwd), nullptr, ptrsOut); }
+	char *buf; size_t size;
+	__device__ unistd_getcwd(char *buf, size_t size) : base(UNISTD_GETCWD, SENTINELFLOW_WAIT, SENTINEL_CHUNK, nullptr, SENTINELPOSTFIX(postfix)), buf(buf), size(size) { ptrsOut[0].size = size; sentinelDeviceSend(&base, sizeof(unistd_getcwd), nullptr, ptrsOut); }
 	char *rc;
+	char *ptr;
 	sentinelOutPtr ptrsOut[2] = {
-		{ &ptr, nullptr, -1 },
+		{ &ptr, &buf, 0 },
 		{ nullptr }
 	};
 };

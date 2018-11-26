@@ -158,6 +158,7 @@ The following is an example of creating a custom message, and using it.
 enum {
 	MODULE_SIMPLE = 500,
 	MODULE_STRING,
+	MODULE_RETURN,
 	MODULE_CUSTOM,
 };
 ```
@@ -178,9 +179,9 @@ struct module_simple {
 ### Message - String
 Message asset(s) referenced outside of the message payload, like string values, must be coalesced into the message payload. refered values offset(s) must be adjusted to align memory maps.
 * `base` must be first
-* `base` constructor parameters of `size` are required
+* `base` constructor parameters of `flow` and `size` are required
 * `size` should contain enough space to hold the message with it's embeded values, and must be remain under the `SENTINEL_MSGSIZE` plus the `sentinelCommand` overhead size, or sentinel paging will occur.
-* `ptrsIn` defines references, replacing the original pointers with the emeded one and apply the offset to align memory maps.
+* `ptrsIn` defines in-references, replacing the original pointers with the emeded one and apply the offset to align memory maps.
 ```
 struct module_string {
 	sentinelMessage base;
@@ -194,6 +195,26 @@ struct module_string {
 };
 ```
 
+### Message - Return
+Message asset(s) referenced outside of the message payload, like string values, must be coalesced into the message payload. refered values offset(s) must be adjusted to align memory maps.
+* `base` must be first
+* `base` constructor parameters of `flow` and `size` are required
+* `size` should contain enough space to hold the message with it's embeded values, and must be remain under the `SENTINEL_MSGSIZE` plus the `sentinelCommand` overhead size, or sentinel paging will occur.
+* `ptrsOut` defines out-references, replacing the original pointers with the emeded one and apply the offset to align memory maps.
+```
+struct module_return {
+	sentinelMessage base;
+	const char *buf; size_t size;
+	__device__ module_return(const char *buf, size_t size) : base(MODULE_RETURN, SENTINELFLOW_WAIT, SENTINEL_CHUNK), buf(buf), size(size) { ptrsOut[0].size = size; sentinelDeviceSend(&base, sizeof(module_return), nullptr, ptrsOut); }
+	size_t rc;
+	void *ptr;
+	sentinelOutPtr ptrsOut[2] = {
+		{ &ptr, &buf, 0 },
+		{ nullptr }
+	};
+};
+```
+
 ### Message - Custom
 Message asset(s) referenced outside of the message payload, like string values, must be coalesced into the message payload. refered values offset(s) must be adjusted to align memory maps.
 * `base` must be first
@@ -202,19 +223,26 @@ Message asset(s) referenced outside of the message payload, like string values, 
 * `prepare` must embed referenced values, replacing the original pointers with the emeded one and apply the offset to align memory maps.
 ```
 struct module_custom {
-	static __forceinline __device__ char *prepare(module_string *t, char *data, char *dataEnd, intptr_t offset) {
+	static __forceinline __device__ char *prepare(module_custom *t, char *data, char *dataEnd, intptr_t offset) {
 		int strLength = t->str ? (int)strlen(t->str) + 1 : 0;
 		char *str = data;
 		char *end = data += strLength;
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->str, strLength);
 		t->str = str + offset;
+		t->ptr = str + offset;
 		return end;
 	}
+	static __forceinline__ __device__ bool postfix(module_custom *t, intptr_t offset) {
+		char *ptr = (char *)t->ptr - offset;
+		//if (t->rc > 0) memcpy(t->buf, ptr, t->rc);
+		return true;
+	}
 	sentinelMessage base;
-	const char *str;
-	__device__ module_string(const char *str) : base(MODULE_CUSTOM, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(prepare)), str(str) { sentinelDeviceSend(&base, sizeof(module_custom)); }
+	const char *str; char *buf;
+	__device__ module_custom(const char *str, char *buf) : base(MODULE_CUSTOM, FLOW_WAIT, SENTINEL_CHUNK, SENTINELPREPARE(prepare), SENTINELPOSTFIX(postfix)), str(str), buf(buf) { sentinelDeviceSend(&base, sizeof(module_custom)); }
 	int rc;
+	void *ptr;
 };
 ```
 
@@ -224,6 +252,7 @@ bool sentinelExecutor(void *tag, sentinelMessage *data, int length, char *(**hos
 	switch (data->op) {
 	case MODULE_SIMPLE: { module_simple *msg = (module_simple *)data; msg->rc = msg->value; return true; }
 	case MODULE_STRING: { module_string *msg = (module_string *)data; msg->rc = strlen(msg->str); return true; }
+	case MODULE_RETURN: { module_return *msg = (module_return *)data; msg->rc = 5; strcpy((char *)msg->ptr, "test"); return true; }
 	case MODULE_CUSTOM: { module_custom *msg = (module_custom *)data; msg->rc = strlen(msg->str); return true; }
 	}
 	return false;
@@ -245,6 +274,14 @@ int rc = msg.rc;
 
 to call:
 ```
-module_custom msg("123");
+char buf[100];
+module_return msg(buf, sizeof(buf));
+int rc = msg.rc;
+```
+
+to call:
+```
+char buf[100];
+module_custom msg("123", buf);
 int rc = msg.rc;
 ```

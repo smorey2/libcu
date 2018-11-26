@@ -50,12 +50,19 @@ struct module_custom {
 		if (end > dataEnd) return nullptr;
 		memcpy(str, t->str, strLength);
 		t->str = str + offset;
+		t->ptr = str + offset;
 		return end;
 	}
+	static __forceinline__ __device__ bool postfix(module_custom *t, intptr_t offset) {
+		char *ptr = (char *)t->ptr - offset;
+		//if (t->rc > 0) memcpy(t->buf, ptr, t->rc);
+		return true;
+	}
 	sentinelMessage base;
-	const char *str;
-	__device__ module_custom(bool wait, const char *str) : base(MODULE_CUSTOM, wait ? SENTINELFLOW_WAIT : SENTINELFLOW_NONE, SENTINEL_CHUNK, SENTINELPREPARE(prepare)), str(str) { sentinelDeviceSend(&base, sizeof(module_custom)); }
+	const char *str; char *buf;
+	__device__ module_custom(bool wait, const char *str) : base(MODULE_CUSTOM, wait ? SENTINELFLOW_WAIT : SENTINELFLOW_NONE, SENTINEL_CHUNK, SENTINELPREPARE(prepare), SENTINELPOSTFIX(postfix)), str(str), buf(buf) { sentinelDeviceSend(&base, sizeof(module_custom)); }
 	int rc;
+	void *ptr;
 };
 
 struct module_complex {

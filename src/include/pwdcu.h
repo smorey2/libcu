@@ -43,7 +43,7 @@ struct passwd {
 #include <pwd.h>
 #endif
 
-#if defined(__CUDA_ARCH__)
+#ifdef __CUDA_ARCH__
 __BEGIN_DECLS;
 
 /* search user database for a user ID */

@@ -26,7 +26,7 @@ THE SOFTWARE.
 #ifndef _CRTDEFSCU_H
 #define _CRTDEFSCU_H
 
-#define LIBCU_LEAN_AND_MEAN
+//#define LIBCU_LEAN_AND_MEAN
 
 //////////////////////
 // OS
@@ -403,7 +403,7 @@ __BEGIN_DECLS;
 ** can insure that all cases are evaluated.
 */
 #ifdef _COVERAGE_TEST
-#if defined(__CUDA_ARCH__)
+#ifdef __CUDA_ARCH__
 __device__ void __coverage(int line);
 #else
 void __coverage(int line);

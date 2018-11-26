@@ -30,7 +30,7 @@ THE SOFTWARE.
 
 #include <string.h>
 #include <stdarg.h>
-#if defined(__CUDA_ARCH__)
+#ifdef __CUDA_ARCH__
 __BEGIN_DECLS;
 
 __BEGIN_NAMESPACE_STD;

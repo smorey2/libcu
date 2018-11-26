@@ -33,7 +33,7 @@ THE SOFTWARE.
 #if __OS_WIN
 #include <io.h>
 #endif
-#if defined(__CUDA_ARCH__)
+#ifdef __CUDA_ARCH__
 #include <stdarg.h>
 __BEGIN_DECLS;
 

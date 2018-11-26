@@ -39,7 +39,7 @@ struct group {
 #include <grp.h>
 #endif
 
-#if defined(__CUDA_ARCH__)
+#ifdef __CUDA_ARCH__
 __BEGIN_DECLS;
 
 /* get group database entry for a group ID */

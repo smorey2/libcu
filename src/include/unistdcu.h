@@ -38,7 +38,7 @@ typedef short uid_t;
 #include <unistd.h>
 #endif
 
-#if defined(__CUDA_ARCH__)
+#ifdef __CUDA_ARCH__
 __BEGIN_DECLS;
 
 #undef access

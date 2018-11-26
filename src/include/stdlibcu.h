@@ -38,7 +38,7 @@ typedef int(*__compar_fn_t)(const void *, const void *);
 #if __OS_UNIX
 #include <unistd.h>
 #endif
-#if defined(__CUDA_ARCH__)
+#ifdef __CUDA_ARCH__
 __BEGIN_DECLS;
 
 extern __device__ unsigned long __strtol(register const char *__restrict str, char **__restrict endptr, int base, int sflag);
