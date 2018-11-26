@@ -1,3 +1,4 @@
+#ifndef LIBCU_LEAN_AND_MEAN
 #include <stddefcu.h>
 #include <errnocu.h>
 #include <wchar.h>
@@ -137,3 +138,4 @@ __device__ int _UTF8_init(struct __xlocalecu_ctype *xl) {
 	xl->__mb_sb_limit = 128;
 	return 0;
 }
+#endif

@@ -11,7 +11,7 @@
 #include <sys/mman.h>
 #endif
 #include <stdio.h>
-#include <ext\mutex.h>
+#include <ext/mutex.h>
 
 #if HAS_HOSTSENTINEL
 

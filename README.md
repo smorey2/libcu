@@ -3,7 +3,7 @@ The CU standard library or libcu is the standard library for the C programming l
 
 ## Quick Start
 
-Sentinel needs to be started, and shutdown for any host to device access, but is not required. An error will throw telling you to start sentinel if access is attempted.
+Optionally, Sentinel needs to be initialized and shutdown before any host-to-device access. An error will tell you to start Sentinel if such access is attempted prior to initialization.
 
 A simple project startup looks like the following:
 ```
@@ -15,17 +15,40 @@ cudaErrorCheck(cudaSetDevice(gpuGetMaxGflopsDevice()));
 cudaErrorCheck(cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 5));
 // main body
 sentinelServerInitialize();
+// sentinelRegisterFileUtils(); // Optional if using #file-utilities
 ...
 code
 ...
 sentinelServerShutdown();
 ```
 
+Standard libraries are included with the original name prefixed by cu.
+
+Example:
+```
+#include <stdlibcu.h>
+...
+int val = atoi("123");
+```
+
+Mulple compute targets are compiled, linking libcu to the proper compute target can enhance functionality and reduce startup times. On windows systems NuGet packages are provided instead of manual binding, see NuGet below.
+
+Example with compute: 3.5.
+```
+libcu.35.a
+libcu.fileutils.35.a - if using #file-utilities
+note: .a is .lib on windows operating systems
+```
+
+### NuGet
+
+On windows systems NuGet packages can simplify libary integration.
+
 ## Documents
 
 This project follows the stardard libc interface.
-* Learn by Reference documentation can be found in [docs](https://github.com/libcu/libcu/tree/master/docs).
-* Learn by Tests can be found in [libcu.tests](https://github.com/libcu/libcu/tree/master/src/libcu.tests).
+* Learning by reference: documentation can be found in [docs](https://github.com/libcu/libcu/tree/master/docs).
+* Learning by tests: tests can be found in [libcu.tests](https://github.com/libcu/libcu/tree/master/src/libcu.tests).
 
 ## Contributing
 

@@ -200,6 +200,8 @@
     <None Include="..\include\ext\pipeline.cpp">
       <Filter>include\ext</Filter>
     </None>
-    <None Include="ext\mutex.cu" />
+    <None Include="ext\mutex.cu">
+      <Filter>ext</Filter>
+    </None>
   </ItemGroup>
 </Project>

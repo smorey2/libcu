@@ -137,9 +137,11 @@ static __device__ dirEnt_t *createEnt(dirEnt_t *parentEnt, const char *path, con
 	struct stat *stat = &ent->stat;
 	memset(stat, 0, sizeof(struct stat));
 	stat->st_mode = type;
+#ifndef LIBCU_LEAN_AND_MEAN
 	time(&stat->st_ctime);
 	memcpy(&stat->st_atime, &stat->st_ctime, sizeof(time_t));
 	memcpy(&stat->st_mtime, &stat->st_ctime, sizeof(time_t));
+#endif
 	// add to directory
 	ent->next = parentEnt->u.list; parentEnt->u.list = ent;
 	return ent;

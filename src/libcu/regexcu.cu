@@ -1,3 +1,4 @@
+#ifndef LIBCU_LEAN_AND_MEAN
 #include <stdiocu.h>
 #include <stdlibcu.h>
 #include <stringcu.h>
@@ -1246,3 +1247,4 @@ __device__ void regfree_(regex_t *preg) {
 #undef OP
 #undef NEXT
 #undef OPERAND
+#endif

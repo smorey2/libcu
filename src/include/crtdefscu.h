@@ -26,6 +26,8 @@ THE SOFTWARE.
 #ifndef _CRTDEFSCU_H
 #define _CRTDEFSCU_H
 
+//#define LIBCU_LEAN_AND_MEAN
+
 //////////////////////
 // OS
 #pragma region OS
@@ -81,6 +83,63 @@ typedef unsigned int _uintptr_t;
 # endif
 #endif
 
+#ifdef __CUDA_ARCH__
+#if __OS_WIN
+#define panic(fmt, ...) { printf(fmt"\n", __VA_ARGS__); asm("trap;"); }
+#elif __OS_UNIX
+#define panic(fmt, ...) { printf(fmt"\n"); asm("trap;"); }
+#endif
+#else
+//__forceinline__ void Coverage(int line) { }
+#if __OS_WIN
+#define panic(fmt, ...) { printf(fmt"\n", __VA_ARGS__); exit(1); }
+#elif __OS_UNIX
+#define panic(fmt, ...) { printf(fmt"\n"); exit(1); }
+#endif
+#endif /* __CUDA_ARCH__ */
+
+#pragma endregion
+
+#include <cuda_runtime.h>
+#include <stdint.h>
+#if __OS_WIN
+#define uint unsigned int
+#else
+#include <sys/types.h>
+#endif
+#define __LIBCU__
+
+//////////////////////
+// LIMITS
+#pragma region LIMITS
+
+/* These are defined by the user (or the compiler) to specify the desired environment:
+_LARGEFILE_SOURCE	Some more functions for correct standard I/O.
+_LARGEFILE64_SOURCE	Additional functionality from LFS for large files.
+_FILE_OFFSET_BITS=N	Select default filesystem interface.
+
+All macros listed above as possibly being defined by this file are explicitly undefined if they are not explicitly defined. */
+
+#ifdef _LARGEFILE_SOURCE
+#define __USE_LARGEFILE 1
+#endif
+
+#ifdef _LARGEFILE64_SOURCE
+#define __USE_LARGEFILE64 1
+#endif
+
+#if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
+#define __USE_FILE_OFFSET64	1
+#endif
+
+#ifndef LIBCU_MAXFILESTREAM
+#define LIBCU_MAXFILESTREAM 10
+#endif
+
+#ifndef LIBCU_MAXHOSTPTR
+#define LIBCU_MAXHOSTPTR 10
+#endif
+
 #pragma endregion
 
 //////////////////////
@@ -115,68 +174,8 @@ typedef unsigned int _uintptr_t;
 extern __host_constant__ const int __libcuone;
 #define LIBCU_BIGENDIAN (*(char *)(&__libcuone)==0)
 #define LIBCU_LITTLEENDIAN (*(char *)(&__libcuone)==1)
-#define LIBCU_UTF16NATIVE (SQLITE_BIGENDIAN?TEXTENCODE_UTF16BE:TEXTENCODE_UTF16LE)
+#define LIBCU_UTF16NATIVE (LIBCU_BIGENDIAN?TEXTENCODE_UTF16BE:TEXTENCODE_UTF16LE)
 #endif
-
-#pragma endregion
-
-#include <cuda_runtime.h>
-#include <stdint.h>
-#if __OS_WIN
-#define uint unsigned int
-#else
-#include <sys/types.h>
-#endif
-#define __LIBCU__
-
-#define HAS_STDIO_BUFSIZ_NONE__
-//#define _LARGEFILE64_SOURCE
-
-/* These are defined by the user (or the compiler) to specify the desired environment:
-_LARGEFILE_SOURCE	Some more functions for correct standard I/O.
-_LARGEFILE64_SOURCE	Additional functionality from LFS for large files.
-_FILE_OFFSET_BITS=N	Select default filesystem interface.
-
-All macros listed above as possibly being defined by this file are explicitly undefined if they are not explicitly defined. */
-
-#ifdef _LARGEFILE_SOURCE
-#define __USE_LARGEFILE 1
-#endif
-
-#ifdef _LARGEFILE64_SOURCE
-#define __USE_LARGEFILE64 1
-#endif
-
-#if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
-#define __USE_FILE_OFFSET64	1
-#endif
-
-#ifndef LIBCU_MAXFILESTREAM
-#define LIBCU_MAXFILESTREAM 10
-#endif
-
-#ifndef LIBCU_MAXHOSTPTR
-#define LIBCU_MAXHOSTPTR 10
-#endif
-
-#if defined(__CUDA_ARCH__)
-#if __OS_WIN
-#define panic(fmt, ...) { printf(fmt"\n", __VA_ARGS__); asm("trap;"); }
-#elif __OS_UNIX
-#define panic(fmt, ...) { printf(fmt"\n"); asm("trap;"); }
-#endif
-#else
-//__forceinline__ void Coverage(int line) { }
-#if __OS_WIN
-#define panic(fmt, ...) { printf(fmt"\n", __VA_ARGS__); exit(1); }
-#elif __OS_UNIX
-#define panic(fmt, ...) { printf(fmt"\n"); exit(1); }
-#endif
-#endif  /* __CUDA_ARCH__ */
-
-//////////////////////
-// LIMITS
-#pragma region LIMITS
 
 #pragma endregion
 
@@ -370,7 +369,7 @@ extern __device__ void __hostptrFree(hostptr_t *p);
 extern __device__ void libcuReset();
 
 __END_DECLS;
-#ifdef	__cplusplus
+#ifdef __cplusplus
 template <typename T> __forceinline__ __device__ T *newhostptr(T *p) { return (T *)(p ? __hostptrGet(p) : nullptr); }
 template <typename T> __forceinline__ __device__ void freehostptr(T *p) { if (p) __hostptrFree((hostptr_t *)p); }
 template <typename T> __forceinline__ __device__ T *hostptr(T *p) { return (T *)(p ? ((hostptr_t *)p)->host : nullptr); }
@@ -461,6 +460,7 @@ __END_DECLS;
 //////////////////////
 // WSD
 #pragma region WSD
+#ifdef LIBCU_WSD
 __BEGIN_DECLS;
 
 // When NO_WSD is defined, it means that the target platform does not support Writable Static Data (WSD) such as global and static variables.
@@ -481,6 +481,7 @@ void *__wsdfind(void *k, int l);
 #endif
 
 __END_DECLS;
+#endif
 #pragma endregion
 
 //////////////////////

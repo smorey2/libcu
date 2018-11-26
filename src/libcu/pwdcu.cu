@@ -1,3 +1,4 @@
+#ifndef LIBCU_LEAN_AND_MEAN
 #include <stringcu.h>
 #include <pwdcu.h>
 
@@ -52,3 +53,4 @@ __device__ void endpwent_() {
 }
 
 __END_DECLS;
+#endif

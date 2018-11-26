@@ -1,3 +1,4 @@
+#ifndef LIBCU_LEAN_AND_MEAN
 #include <stddefcu.h>
 #include "xlocale_private.h"
 #include "mblocal.h"
@@ -17,3 +18,4 @@ static __device__ struct __xlocalecu_ctype _DefaultXLocaleCType = {
 	_none_wcsnrtombs
 };
 __device__ const struct _xlocalecu __cu_locale = C_LOCALE_INITIALIZER;
+#endif

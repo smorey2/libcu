@@ -1,3 +1,4 @@
+#ifndef LIBCU_LEAN_AND_MEAN
 #include <stdiocu.h>
 #include <setjmpcu.h>
 
@@ -15,3 +16,4 @@ __device__ void longjmp_(jmp_buf env, int val) {
 }
 
 __END_DECLS;
+#endif

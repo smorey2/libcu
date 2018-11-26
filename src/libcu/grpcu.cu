@@ -1,3 +1,4 @@
+#ifndef LIBCU_LEAN_AND_MEAN
 #include <stringcu.h>
 #include <grpcu.h>
 
@@ -52,3 +53,4 @@ __device__ void endgrent_() {
 }
 
 __END_DECLS;
+#endif

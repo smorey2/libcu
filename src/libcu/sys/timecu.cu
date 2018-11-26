@@ -1,3 +1,4 @@
+#ifndef LIBCU_LEAN_AND_MEAN
 #include <timecu.h>
 #include <sys/timecu.h>
 
@@ -29,3 +30,4 @@ int gettimeofday(struct timeval *tv, void *unused) {
 #endif
 #endif
 __END_DECLS;
+#endif

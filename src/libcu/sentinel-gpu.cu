@@ -3,7 +3,7 @@
 #include <stdlibcu.h>
 #include <unistdcu.h>
 #include <sentinel.h>
-#include <ext\mutex.h>
+#include <ext/mutex.h>
 
 __BEGIN_DECLS;
 

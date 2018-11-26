@@ -1,3 +1,4 @@
+#ifndef LIBCU_LEAN_AND_MEAN
 #include <timecu.h>
 #include <sentinel-timemsg.h>
 #include <stdiocu.h>
@@ -130,3 +131,4 @@ static __device__ tm *_t2tm(const time_t *__restrict timer, int offset, struct t
 #pragma endregion
 
 __END_DECLS;
+#endif

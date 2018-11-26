@@ -8,13 +8,7 @@
 #include <fcntlcu.h>
 #include <errnocu.h>
 
-#define LIBCU_MAXLENGTH 1000000000
-
-//#if __OS_UNIX
-//#define _base _IO_buf_base
-//#define _flag _flags
-//#define _file _fileno
-//#endif
+#define LIBCU_MAXLENGTH (4096*10)
 
 __BEGIN_DECLS;
 

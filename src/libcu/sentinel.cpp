@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <cuda_runtimecu.h>
-#include <ext\mutex.h>
+#include <ext/mutex.h>
 
 void sentinelCommand::dump() {
 	register unsigned char *b = (unsigned char *)&data;
@@ -55,7 +55,7 @@ static THREADCALL sentinelHostThread(void *data) {
 		}
 		funcTag[1] = cmd;
 		volatile long *control = &cmd->control;
-		mutexSpinLock(&_threadHostHandle, control, SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOST, MUTEXPRED_AND, SENTINELCONTROL_TRANSMASK, executeTrans, funcTag);
+		mutexSpinLock((void **)&_threadHostHandle, control, SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOST, MUTEXPRED_AND, SENTINELCONTROL_TRANSMASK, executeTrans, funcTag);
 		if (!_threadHostHandle) return 0;
 		sentinelMessage *msg = (sentinelMessage *)cmd->data;
 		//map->dump();
@@ -68,7 +68,7 @@ static THREADCALL sentinelHostThread(void *data) {
 		// FLOW-WAIT
 		if (msg->flow & SENTINELFLOW_WAIT) {
 			mutexSet(control, SENTINELCONTROL_HOSTRDY);
-			//mutexSpinLock(&_threadHostHandle, control, SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOSTWAIT, MUTEXPRED_AND, SENTINELCONTROL_TRANSMASK, executeTrans, funcTag);
+			//mutexSpinLock((void **)&_threadHostHandle, control, SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOSTWAIT, MUTEXPRED_AND, SENTINELCONTROL_TRANSMASK, executeTrans, funcTag);
 		}
 		else mutexSet(control, SENTINELCONTROL_NORMAL);
 		if (funcTag[2]) free(funcTag[2]);
@@ -83,7 +83,7 @@ static THREADCALL sentinelHostThread(void *data) {
 static THREADHANDLE _threadDeviceHandle[SENTINEL_DEVICEMAPS];
 static THREADCALL sentinelDeviceThread(void *data) {
 	int threadId = (int)(intptr_t)data;
-	void *funcTag[3]{ (void *)threadId, nullptr, nullptr };
+	void *funcTag[3]{ reinterpret_cast<void *>(threadId), nullptr, nullptr };
 	sentinelContext *ctx = &_ctx;
 	sentinelMap *map = ctx->deviceMap[threadId];
 	while (map) {
@@ -94,7 +94,7 @@ static THREADCALL sentinelDeviceThread(void *data) {
 		}
 		funcTag[1] = cmd;
 		volatile long *control = &cmd->control;
-		mutexSpinLock(&_threadDeviceHandle[threadId], control, SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOST, MUTEXPRED_AND, SENTINELCONTROL_TRANSMASK, executeTrans, funcTag);
+		mutexSpinLock((void **)&_threadDeviceHandle[threadId], control, SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOST, MUTEXPRED_AND, SENTINELCONTROL_TRANSMASK, executeTrans, funcTag);
 		if (!_threadDeviceHandle[threadId]) return 0;
 		sentinelMessage *msg = (sentinelMessage *)&cmd->data;
 		//map->dump();
@@ -113,7 +113,7 @@ static THREADCALL sentinelDeviceThread(void *data) {
 		// FLOW-WAIT
 		if (msg->flow & SENTINELFLOW_WAIT) {
 			mutexSet(control, SENTINELCONTROL_HOSTRDY);
-			//mutexSpinLock(&_threadDeviceHandle[threadId], control, SENTINELCONTROL_DEVICEDONE, SENTINELCONTROL_HOSTWAIT, MUTEXPRED_AND, SENTINELCONTROL_TRANSMASK, executeTrans, funcTag);
+			//mutexSpinLock((void **)&_threadDeviceHandle[threadId], control, SENTINELCONTROL_DEVICEDONE, SENTINELCONTROL_HOSTWAIT, MUTEXPRED_AND, SENTINELCONTROL_TRANSMASK, executeTrans, funcTag);
 		}
 		else mutexSet(control, SENTINELCONTROL_NORMAL);
 		if (funcTag[2]) free(funcTag[2]);
@@ -124,10 +124,10 @@ static THREADCALL sentinelDeviceThread(void *data) {
 
 // EXECUTETRANS
 static bool executeTrans(void **tag) {
-	int threadId = (int)tag[0];
+	int threadId = static_cast<int>((intptr_t)tag[0]);
 	sentinelCommand *cmd = (sentinelCommand *)tag[1];
 	volatile long *control = &cmd->control;
-	char *data = cmd->data, *ptr = (char *)tag[2];
+	char *data = cmd->data, *ptr = static_cast<char *>(tag[2]);
 	while (*control & SENTINELCONTROL_TRANSMASK) {
 		int length = cmd->length;
 		switch (*control) {
@@ -141,7 +141,7 @@ static bool executeTrans(void **tag) {
 #endif
 		}
 		mutexSet(control, SENTINELCONTROL_TRANRDY);
-		mutexSpinLock(threadId != -1 ? &_threadDeviceHandle[threadId] : &_threadHostHandle, control, SENTINELCONTROL_TRANDONE, SENTINELCONTROL_TRAN, MUTEXPRED_LTE, SENTINELCONTROL_TRANSMASK);
+		mutexSpinLock(threadId != -1 ? (void **)&_threadDeviceHandle[threadId] : (void **)&_threadHostHandle, control, SENTINELCONTROL_TRANDONE, SENTINELCONTROL_TRAN, MUTEXPRED_LTE, SENTINELCONTROL_TRANSMASK);
 	}
 	return true;
 }

@@ -43,7 +43,7 @@ __host_device__ void mutexSet(volatile long *mutex, long val, unsigned int mspau
 #elif __OS_WIN
 	_InterlockedExchange((volatile long *)mutex, val);
 #elif __OS_UNIX
-	__sync_lock_test_and_set((long *)control, val);
+	__sync_lock_test_and_set((long *)mutex, val);
 #endif
 	if (ms) SLEEP(ms);
 }
