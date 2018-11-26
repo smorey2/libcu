@@ -11,9 +11,46 @@
 #include <sys/mman.h>
 #endif
 #include <stdio.h>
-#include <ext/mutex.h>
 
 #if HAS_HOSTSENTINEL
+
+//////////////////////
+// MUTEX
+#pragma region MUTEX
+#if 0
+#include <ext/mutex.h>
+#else
+#if __OS_WIN
+#define SLEEP(MS) Sleep(MS)
+#elif __OS_UNIX
+#define SLEEP(MS) sleep(MS)
+#endif
+
+/* Mutex with exponential back-off. */
+static void mutexSpinLock(void **cancelToken, volatile long *mutex, long cmp = 0, long val = 1, unsigned int msmin = 8, unsigned int msmax = 256) {
+	long v; unsigned int ms = msmin;
+#if __OS_WIN
+	while ((!cancelToken || *cancelToken) && (v = _InterlockedCompareExchange((volatile long *)mutex, cmp, val)) != cmp) {
+#elif __OS_UNIX
+	while ((!cancelToken || *cancelToken) && (v = __sync_val_compare_and_swap((long *)mutex, cmp, val)) != cmp) {
+#endif
+		SLEEP(ms);
+		if (ms < msmax) ms *= 1.5;
+	}
+}
+
+/* Mutex set. */
+static void mutexSet(volatile long *mutex, long val = 0, unsigned int mspause = 0) {
+#if __OS_WIN
+	_InterlockedExchange((volatile long *)mutex, val);
+#elif __OS_UNIX
+	__sync_lock_test_and_set((long *)mutex, val);
+#endif
+	if (mspause) SLEEP(mspause);
+}
+
+#endif
+#pragma endregion
 
 static void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset, char *&trans);
 
@@ -86,7 +123,7 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrs
 
 	// ATTACH
 #if __OS_WIN
-	long id = _InterlockedAdd(&map->setId, SENTINEL_MSGSIZE) - SENTINEL_MSGSIZE;
+	long id = InterlockedAdd(&map->setId, SENTINEL_MSGSIZE) - SENTINEL_MSGSIZE;
 #elif __OS_UNIX
 	long id = __sync_fetch_and_add((volatile long *)&map->setId, SENTINEL_MSGSIZE) - SENTINEL_MSGSIZE;
 #endif
@@ -124,7 +161,7 @@ static void executeTrans(sentinelCommand *cmd, int size, sentinelInPtr *listIn, 
 	char *data = cmd->data, *ptr = trans;
 	if (size) {
 		*(int *)data = size;
-		mutexSet(control, SENTINELCONTROL_TRANSSIZE, 50);
+		mutexSet(control, SENTINELCONTROL_TRANSSIZE);
 		mutexSpinLock(nullptr, control, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
 		ptr = trans = *(char **)data;
 	}

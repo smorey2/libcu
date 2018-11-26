@@ -1,7 +1,5 @@
 #include <crtdefscu.h>
-#include <stdiocu.h>
-#include <stdlibcu.h>
-#include <unistdcu.h>
+#include <stringcu.h>
 #include <sentinel.h>
 #include <ext/mutex.h>
 

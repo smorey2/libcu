@@ -37,7 +37,6 @@ __host_device__ void mutexSpinLock(void **cancelToken, volatile long *mutex, lon
 
 /* Mutex set. */
 __host_device__ void mutexSet(volatile long *mutex, long val, unsigned int mspause) {
-	unsigned int ms = mspause;
 #if __CUDA_ARCH__
 	atomicExch((int *)mutex, val);
 #elif __OS_WIN
@@ -45,5 +44,5 @@ __host_device__ void mutexSet(volatile long *mutex, long val, unsigned int mspau
 #elif __OS_UNIX
 	__sync_lock_test_and_set((long *)mutex, val);
 #endif
-	if (ms) SLEEP(ms);
+	if (mspause) SLEEP(mspause);
 }

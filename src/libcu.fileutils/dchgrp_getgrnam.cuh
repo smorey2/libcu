@@ -1,3 +1,4 @@
+#ifndef LIBCU_LEAN_AND_MEAN
 #include <ext/pipeline.h>
 #include <string.h>
 #include <grpcu.h>
@@ -20,3 +21,5 @@ struct group *dchgrp_getgrnam(pipelineRedir redir, char *str) {
 	pipelineClose(redir);
 	return m_getgrnam_rc;
 }
+
+#endif

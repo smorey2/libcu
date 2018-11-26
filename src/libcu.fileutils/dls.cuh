@@ -69,6 +69,7 @@ __device__ char *modeString(int mode) {
 // The string is returned from a static buffer, and so is overwritten for each call.
 static __device__ char _timeString_buf[26];
 __device__ char *timeString(time_t t) {
+#ifndef LIBCU_LEAN_AND_MEAN
 	time_t now = time(nullptr);
 	char *str = ctime(&t);
 	strcpy(_timeString_buf, &str[4]);
@@ -78,13 +79,18 @@ __device__ char *timeString(time_t t) {
 		_timeString_buf[11] = '\0';
 	}
 	return _timeString_buf;
+#else
+	return (char *)"time";
+#endif
 }
 
 // Do an LS of a particular file name according to the flags.
 static __device__ void lsFile(pipelineRedir *redir, char *fullName, char *name, struct stat *statbuf, int flags) {
 	char *cp;
+#ifndef LIBCU_LEAN_AND_MEAN
 	struct passwd *pwd;
 	struct group *grp;
+#endif
 	char buf[PATHLEN];
 	static char userName[12];
 	static int userId;
@@ -110,11 +116,15 @@ static __device__ void lsFile(pipelineRedir *redir, char *fullName, char *name, 
 		cp += strlen(cp);
 
 		if (!userIdKnown || (statbuf->st_uid != userId)) {
+#ifndef LIBCU_LEAN_AND_MEAN
 			pwd = (struct passwd *)getpwuid(statbuf->st_uid);
 			if (pwd)
 				strcpy(userName, pwd->pw_name);
 			else
 				sprintf(userName, "%d", statbuf->st_uid);
+#else
+			strcpy(userName, "pwd");
+#endif
 			userId = statbuf->st_uid;
 			userIdKnown = true;
 		}
@@ -123,11 +133,15 @@ static __device__ void lsFile(pipelineRedir *redir, char *fullName, char *name, 
 		cp += strlen(cp);
 
 		if (!groupIdKnown || statbuf->st_gid != groupId) {
+#ifndef LIBCU_LEAN_AND_MEAN
 			grp = (struct group *)getgrgid(statbuf->st_gid);
 			if (grp)
 				strcpy(groupName, grp->gr_name);
 			else
 				sprintf(groupName, "%d", statbuf->st_gid);
+#else
+			strcpy(userName, "grp");
+#endif
 			groupId = statbuf->st_gid;
 			groupIdKnown = true;
 		}
@@ -322,7 +336,7 @@ int dls(pipelineRedir redir, char *str, int flags, bool endSlash) {
 		cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
 	}
 	else d_str = 0;
-	g_dls<<<1, 1>>>(redir, d_str, flags, endSlash);
+	g_dls << <1, 1 >> > (redir, d_str, flags, endSlash);
 	if (d_str) cudaFree(d_str);
 	pipelineClose(redir);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dls_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;

@@ -1,3 +1,4 @@
+#ifndef LIBCU_LEAN_AND_MEAN
 #include <ext/pipeline.h>
 #include <string.h>
 #include <pwdcu.h>
@@ -20,3 +21,5 @@ struct passwd *dchown_getpwnam_(pipelineRedir redir, char *str) {
 	pipelineClose(redir);
 	return m_getpwnam_rc;
 }
+
+#endif

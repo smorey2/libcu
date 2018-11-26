@@ -9,7 +9,9 @@
 #include <errnocu.h>
 #include <fcntlcu.h>
 #include <assert.h>
+#ifndef LIBCU_LEAN_AND_MEAN
 #include "locale/xlocale_private.h"
+#endif
 
 __BEGIN_DECLS;
 
@@ -921,6 +923,8 @@ __device__ lldiv_t lldiv_(long long int numer, long long int denom) {
 }
 #endif
 
+#ifndef LIBCU_LEAN_AND_MEAN
+
 /* Return the length of the multibyte character in S, which is no longer than N.  */
 __device__ int mblen_l_(const char *s, size_t n, localecu_t loc) {
 	static const mbstate_t initial = {};
@@ -985,6 +989,8 @@ __device__ size_t wcstombs_l_(char *__restrict s, const wchar_t *__restrict pwcs
 	return loc->__ctype->__wcsnrtombs(s, &pwcsp, SIZE_MAX, n, &mbs, loc);
 }
 __device__ size_t wcstombs_(char *__restrict s, const wchar_t *__restrict pwcs, size_t n) { return wcstombs_l_(s, pwcs, n, __current_locale()); }
+
+#endif
 
 #if defined(__GNUC__)
 __device__ uint16_t __builtin_bswap16_(uint16_t x) { char *p = (char *)x; return (uint16_t)p[0] << 8 | (uint16_t)p[1]; }

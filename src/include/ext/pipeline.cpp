@@ -465,6 +465,7 @@ static FILE *GetAioFilehandle(const char *input) {
 
 /* Create Pipeline */
 int pipelineCreate(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, FDTYPE *outPipePtr, FDTYPE *errFilePtr, FDTYPE process, pipelineRedir *redirs) {
+	PIDTYPE *pids = nullptr;
 	FDTYPE pipeIds[2] = { __BAD_FD, __BAD_FD }; // File ids for pipe that's being created.
 	FDTYPE inputId = __BAD_FD;			// Readable file id input to current command in pipeline (could be file or pipe).  __BAD_FD means use stdin.
 	FDTYPE outputId = __BAD_FD;			// Writable file id for output from current command in pipeline (could be file or pipe). __BAD_FD means use stdout.
@@ -615,7 +616,7 @@ int pipelineCreate(int argc, char **argv, PIDTYPE **pidsPtr, FDTYPE *inPipePtr, 
 
 	// Scan through the argc array, forking off a process for each group of arguments between "|" arguments.
 	int numPids; numPids = 0; // Actual number of processes that exist at *pids right now.
-	PIDTYPE *pids; pids = (PIDTYPE *)malloc(cmdCount * sizeof(PIDTYPE)); // Points to malloc-ed array holding all the pids of child processes.
+	pids = (PIDTYPE *)malloc(cmdCount * sizeof(PIDTYPE)); // Points to malloc-ed array holding all the pids of child processes.
 	for (int i = 0; i < cmdCount; i++)
 		pids[i] = __BAD_PID;
 	int firstArg, lastArg; // Indexes of first and last arguments in current command.

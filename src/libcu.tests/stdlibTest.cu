@@ -127,6 +127,7 @@ static __global__ void g_stdlib_test1() {
 	lldiv_t l2a = lldiv(1, 2); assert(l2a.quot == 0 && l2a.rem == 1);
 
 	//// MBLEN, MBTOWC, WCTOMB, MBSTOWSCS, WCSTOMBS ////
+#ifndef LIBCU_LEAN_AND_MEAN
 	//extern __device__ int mblen_(const char *s, size_t n);
 	//extern __device__ int mbtowc_(wchar_t *__restrict __pwc, const char *__restrict s, size_t n);
 	//extern __device__ int wctomb_(char *s, wchar_t wchar);
@@ -138,6 +139,7 @@ static __global__ void g_stdlib_test1() {
 	int m2b = wctomb(buf, (wchar_t)'t'); assert(m2b == 1 && buf[0] == 't');
 	size_t m3a = mbstowcs(wstr, "test", 5); assert(m3a);
 	size_t m4a = wcstombs(buf, L"test", sizeof(buf)); assert(m4a);
+#endif
 
 	//// STRTOQ, STRTOUQ ////
 	//__forceinline__ __device__ quad_t strtoq_(const char *__restrict nptr, char **__restrict endptr, int base);

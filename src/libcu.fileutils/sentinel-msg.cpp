@@ -25,10 +25,14 @@ extern "C" bool sentinelFileUtilsExecutor(void *tag, sentinelMessage *data, int 
 	switch (data->op) {
 	case FILEUTILS_DCAT: { fileutils_dcat *msg = (fileutils_dcat *)data; msg->rc = dcat(msg->base.redir, msg->str); return true; }
 	case FILEUTILS_DCHGRP: { fileutils_dchgrp *msg = (fileutils_dchgrp *)data; msg->rc = dchgrp(msg->base.redir, msg->str, msg->gid); return true; }
+#ifndef LIBCU_LEAN_AND_MEAN
 	case FILEUTILS_GETGRNAM: { fileutils_getgrnam *msg = (fileutils_getgrnam *)data; msg->rc = dchgrp_getgrnam(msg->base.redir, msg->str); return true; }
+#endif
 	case FILEUTILS_DCHMOD: { fileutils_dchmod *msg = (fileutils_dchmod *)data; msg->rc = dchmod(msg->base.redir, msg->str, msg->mode); return true; }
 	case FILEUTILS_DCHOWN: { fileutils_dchown *msg = (fileutils_dchown *)data; msg->rc = dchown(msg->base.redir, msg->str, msg->uid); return true; }
+#ifndef LIBCU_LEAN_AND_MEAN
 	case FILEUTILS_GETPWNAM: { fileutils_getpwnam *msg = (fileutils_getpwnam *)data; msg->rc = dchown_getpwnam_(msg->base.redir, msg->str); return true; }
+#endif
 	case FILEUTILS_DCMP: { fileutils_dcmp *msg = (fileutils_dcmp *)data; msg->rc = dcmp(msg->base.redir, msg->str, msg->str2); return true; }
 	case FILEUTILS_DCP: { fileutils_dcp *msg = (fileutils_dcp *)data; msg->rc = dcp(msg->base.redir, msg->str, msg->str2, msg->setModes); return true; }
 	case FILEUTILS_ISADIR: { fileutils_isadir *msg = (fileutils_isadir *)data; msg->rc = dcp_isadir_(msg->base.redir, msg->str); return true; }
