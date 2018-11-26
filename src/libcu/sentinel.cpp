@@ -55,7 +55,7 @@ static THREADCALL sentinelHostThread(void *data) {
 		}
 		funcTag[1] = cmd;
 		volatile long *control = &cmd->control;
-		mutexSpinLock(&_threadHostHandle, control, SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOST, SENTINELCONTROL_TRANSMASK, executeTrans, funcTag);
+		mutexSpinLock(&_threadHostHandle, control, SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOST, MUTEXPRED_AND, SENTINELCONTROL_TRANSMASK, executeTrans, funcTag);
 		if (!_threadHostHandle) return 0;
 		sentinelMessage *msg = (sentinelMessage *)cmd->data;
 		//map->dump();
@@ -68,7 +68,7 @@ static THREADCALL sentinelHostThread(void *data) {
 		// FLOW-WAIT
 		if (msg->flow & SENTINELFLOW_WAIT) {
 			mutexSet(control, SENTINELCONTROL_HOSTRDY);
-			//mutexSpinLock(&_threadHostHandle, control, SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOSTWAIT, SENTINELCONTROL_TRANSMASK, executeTrans, funcTag);
+			//mutexSpinLock(&_threadHostHandle, control, SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOSTWAIT, MUTEXPRED_AND, SENTINELCONTROL_TRANSMASK, executeTrans, funcTag);
 		}
 		else mutexSet(control, SENTINELCONTROL_NORMAL);
 		if (funcTag[2]) free(funcTag[2]);
@@ -94,7 +94,7 @@ static THREADCALL sentinelDeviceThread(void *data) {
 		}
 		funcTag[1] = cmd;
 		volatile long *control = &cmd->control;
-		mutexSpinLock(&_threadDeviceHandle[threadId], control, SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOST, SENTINELCONTROL_TRANSMASK, executeTrans, funcTag);
+		mutexSpinLock(&_threadDeviceHandle[threadId], control, SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOST, MUTEXPRED_AND, SENTINELCONTROL_TRANSMASK, executeTrans, funcTag);
 		if (!_threadDeviceHandle[threadId]) return 0;
 		sentinelMessage *msg = (sentinelMessage *)&cmd->data;
 		//map->dump();
@@ -113,7 +113,7 @@ static THREADCALL sentinelDeviceThread(void *data) {
 		// FLOW-WAIT
 		if (msg->flow & SENTINELFLOW_WAIT) {
 			mutexSet(control, SENTINELCONTROL_HOSTRDY);
-			//mutexSpinLock(&_threadDeviceHandle[threadId], control, SENTINELCONTROL_DEVICEDONE, SENTINELCONTROL_HOSTWAIT, SENTINELCONTROL_TRANSMASK, executeTrans, funcTag);
+			//mutexSpinLock(&_threadDeviceHandle[threadId], control, SENTINELCONTROL_DEVICEDONE, SENTINELCONTROL_HOSTWAIT, MUTEXPRED_AND, SENTINELCONTROL_TRANSMASK, executeTrans, funcTag);
 		}
 		else mutexSet(control, SENTINELCONTROL_NORMAL);
 		if (funcTag[2]) free(funcTag[2]);
@@ -123,7 +123,6 @@ static THREADCALL sentinelDeviceThread(void *data) {
 #endif
 
 // EXECUTETRANS
-static bool executeTransExit(void **tag) { return false; }
 static bool executeTrans(void **tag) {
 	int threadId = (int)tag[0];
 	sentinelCommand *cmd = (sentinelCommand *)tag[1];
@@ -142,7 +141,7 @@ static bool executeTrans(void **tag) {
 #endif
 		}
 		mutexSet(control, SENTINELCONTROL_TRANRDY);
-		mutexSpinLock(threadId != -1 ? &_threadDeviceHandle[threadId] : &_threadHostHandle, control, SENTINELCONTROL_TRANDONE, SENTINELCONTROL_TRAN, 0xF, executeTransExit);
+		mutexSpinLock(threadId != -1 ? &_threadDeviceHandle[threadId] : &_threadHostHandle, control, SENTINELCONTROL_TRANDONE, SENTINELCONTROL_TRAN, MUTEXPRED_LTE, SENTINELCONTROL_TRANSMASK);
 	}
 	return true;
 }

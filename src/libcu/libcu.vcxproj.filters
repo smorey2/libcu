@@ -116,9 +116,6 @@
     <CudaCompile Include="program.cu" />
     <CudaCompile Include="libcu.stdlib.cu" />
     <CudaCompile Include="stringcu.cu" />
-    <CudaCompile Include="ext\mutex.cu">
-      <Filter>ext</Filter>
-    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="_content">
@@ -203,5 +200,6 @@
     <None Include="..\include\ext\pipeline.cpp">
       <Filter>include\ext</Filter>
     </None>
+    <None Include="ext\mutex.cu" />
   </ItemGroup>
 </Project>

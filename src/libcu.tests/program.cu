@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
 	case 8: cudaStatus = host_test1(); break;
 	case 9: cudaStatus = pwd_test1(); break;
 	case 10: cudaStatus = regex_test1(); break;
-	case 11: cudaStatus = sentinel_test1(); break;
+	case 11: cudaStatus = sentinel_test1(); break; //fail
 	case 12: cudaStatus = setjmp_test1(); break;
 	case 13: cudaStatus = stddef_test1(); break;
 	case 14: cudaStatus = stdio_test1(); break; // assert
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
 	case 20: cudaStatus = stdlib_strtoq(); break;
 	case 21: cudaStatus = string_test1(); break;
 	case 22: cudaStatus = time_test1(); break;
-	case 23: cudaStatus = unistd_test1(); break; // missing device, throws on fast run
+	case 23: cudaStatus = unistd_test1(); break; //failed --missing device, throws on fast run
 		// default
 	default: cudaStatus = crtdefs_test1(); break;
 	}

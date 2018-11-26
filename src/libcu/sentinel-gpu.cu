@@ -42,27 +42,30 @@ static __device__ char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsO
 	if (transSize) executeTrans(cmd, transSize, listIn, nullptr, offset, trans);
 
 	// PACK
-	for (sentinelInPtr *p = ptrsIn; p->field; p++) {
-		char **field = (char **)p->field;
-		char *ptr = (char *)p->unknown;
-		if (!ptr || !*field)
-			continue;
-		memcpy(ptr, *field, p->size);
-		*field = ptr + offset;
-	}
+	if (ptrsIn)
+		for (sentinelInPtr *p = ptrsIn; p->field; p++) {
+			char **field = (char **)p->field;
+			char *ptr = (char *)p->unknown;
+			if (!ptr || !*field)
+				continue;
+			memcpy(ptr, *field, p->size);
+			*field = ptr + offset;
+		}
 	return data;
 }
 
 static __device__ bool postfixPtrs(sentinelOutPtr *ptrsOut, sentinelCommand *cmd, intptr_t offset) {
 	// UNPACK
 	for (sentinelOutPtr *p = ptrsOut; p->field; p++) {
+		if (p->field == (char *)-1)
+			continue;
 		char **buf = (char **)p->buf;
 		if (!*buf)
 			continue;
 		char **field = (char **)p->field;
 		char *ptr = *field - offset;
 		int *sizeField = (int *)p->sizeField;
-		int size = !*sizeField ? p->size : *sizeField;
+		int size = !sizeField ? p->size : *sizeField;
 		if (size > 0) memcpy(*buf, ptr, size);
 	}
 	return true;
@@ -114,7 +117,7 @@ static __device__ void executeTrans(sentinelCommand *cmd, int size, sentinelInPt
 		mutexSpinLock(nullptr, control, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
 		ptr = trans = *(char **)data;
 	}
-	if (listIn) {
+	if (listIn)
 		for (sentinelInPtr *p = listIn; p; p = (sentinelInPtr *)p->unknown) {
 			char **field = (char **)p->field;
 			const char *v = (const char *)*field; int size = p->size, remain = size, length = 0;
@@ -127,8 +130,7 @@ static __device__ void executeTrans(sentinelCommand *cmd, int size, sentinelInPt
 			*field = ptr; ptr += size;
 			p->unknown = nullptr;
 		}
-	}
-	if (listOut) {
+	if (listOut)
 		for (sentinelOutPtr *p = listOut; p; p = (sentinelOutPtr *)p->unknown) {
 			char **field = (char **)p->field;
 			const char *v = (const char *)*field; int size = p->size, remain = size, length = 0;
@@ -141,7 +143,6 @@ static __device__ void executeTrans(sentinelCommand *cmd, int size, sentinelInPt
 			*field = ptr; ptr += size;
 			p->unknown = nullptr;
 		}
-	}
 }
 
 #endif

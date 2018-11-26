@@ -6,6 +6,7 @@
 enum {
 	MODULE_SIMPLE = 500,
 	MODULE_STRING,
+	MODULE_RETURN,
 	MODULE_CUSTOM,
 	MODULE_COMPLEX,
 	MODULE_JUMBOOUT,
@@ -25,6 +26,18 @@ struct module_string {
 	int rc;
 	sentinelInPtr ptrsIn[2] = {
 		{ &str, -1 },
+		{ nullptr }
+	};
+};
+
+struct module_return {
+	sentinelMessage base;
+	const char *buf; size_t size;
+	__device__ module_return(const char *buf, size_t size) : base(MODULE_RETURN, SENTINELFLOW_WAIT, SENTINEL_CHUNK), buf(buf), size(size) { ptrsOut[0].size = size; sentinelDeviceSend(&base, sizeof(module_return), nullptr, ptrsOut); }
+	size_t rc;
+	void *ptr;
+	sentinelOutPtr ptrsOut[2] = {
+		{ &ptr, &buf, 0 },
 		{ nullptr }
 	};
 };
@@ -49,7 +62,7 @@ struct module_complex {
 	sentinelMessage base;
 	const char *str;
 	__device__ module_complex(bool wait, const char *str, char *ptr, size_t size) : base(MODULE_COMPLEX, wait ? SENTINELFLOW_WAIT : SENTINELFLOW_NONE, SENTINEL_CHUNK), str(str), ptr(ptr) { ptrsIn[1].size = size; sentinelDeviceSend(&base, sizeof(module_complex), ptrsIn); }
-	int rc;
+	int rc; int rc2;
 	void *ptr;
 	sentinelInPtr ptrsIn[3] = {
 		{ &str, -1 },
@@ -74,9 +87,10 @@ bool sentinelModuleExecutor(void *tag, sentinelMessage *data, int length, char *
 	switch (data->op) {
 	case MODULE_SIMPLE: { module_simple *msg = (module_simple *)data; msg->rc = msg->value; return true; }
 	case MODULE_STRING: { module_string *msg = (module_string *)data; msg->rc = (int)strlen(msg->str); return true; }
+	case MODULE_RETURN: { module_return *msg = (module_return *)data; msg->rc = 5; strcpy((char *)msg->ptr, "test"); return true; }
 	case MODULE_CUSTOM: { module_custom *msg = (module_custom *)data; msg->rc = (int)strlen(msg->str); return true; }
-	case MODULE_COMPLEX: { module_complex *msg = (module_complex *)data; msg->rc = (int)strlen(msg->str); return true; }
-	//case MODULE_JUMBOOUT: { module_jumboout *msg = (module_jumboout *)data; msg->rc = 0; return true; }
+	case MODULE_COMPLEX: { module_complex *msg = (module_complex *)data; msg->rc = (int)strlen(msg->str); msg->rc2 = (int)strlen((char *)msg->ptr); return true; }
+						 //case MODULE_JUMBOOUT: { module_jumboout *msg = (module_jumboout *)data; msg->rc = 0; return true; }
 	}
 	return false;
 }
@@ -87,22 +101,22 @@ static __global__ void g_sentinel_test1() {
 
 	//// SENTINELDEVICESEND ////
 	//	extern __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength);
+	char buf[100];
+	module_simple a0(true, 1); int a0a = a0.rc; assert(a0a == 1);
+	module_string a1(true, "test"); int a1a = a1.rc; assert(a1a == 4);
+	module_return a2(buf, sizeof(buf)); int a2a = a2.rc; assert(a2a == 5 && !strcmp(buf, "test"));
+	module_custom a3(true, "test"); int a3a = a3.rc; assert(a3a == 4);
 	char complex[2048]; memset(complex, 1, sizeof(complex));
-	//module_simple a0(true, 1); int a0a = a0.RC; assert(a0a == 1);
-	//module_string a1(true, "test"); int a1a = a1.RC; assert(a1a == 4);
-	//module_custom a2(true, "test"); int a2a = a2.RC; assert(a2a == 4);
-	//module_complex a3(true, "test", complex, sizeof(complex)); int a3a = a3.RC; assert(a3a == 4);
+	module_complex a4(true, "test", complex, sizeof(complex)); int a4a = a4.rc; assert(a4a == 4);
 
 	// JUMBO
-	char jumbo[9046]; memset(jumbo, 2, sizeof(jumbo));
-	module_complex b0(true, "test", jumbo, sizeof(jumbo));
-	//int b1a = b0.RC; //assert(b1a == 4);
-
+	char jumbo[9046]; memset(jumbo, 2, sizeof(jumbo)); jumbo[9045] = 0;
+	//module_complex b0(true, "test", jumbo, sizeof(jumbo)); int b1a = b0.rc; printf("jumbo %d\n", b1a); //assert(b1a == 4);
 }
 
 cudaError_t sentinel_test1() {
 	sentinelRegisterExecutor(&_moduleExecutor);
-	g_sentinel_test1<<<1, 1>>>(); return cudaDeviceSynchronize();
+	g_sentinel_test1 << <1, 1 >> > (); return cudaDeviceSynchronize();
 }
 
 //// SENTINELDEFAULTEXECUTOR ////
