@@ -69,6 +69,7 @@ extern "C" {
 
 #define SENTINELFLOW_NONE 0
 #define SENTINELFLOW_WAIT 1
+#define SENTINELFLOW_TRAN 2
 
 	typedef struct sentinelMessage {
 		unsigned short op;
@@ -160,7 +161,6 @@ extern "C" {
 #define SENTINELCONTROL_HOSTRDY 0x6
 #define SENTINELCONTROL_HOSTWAIT 0x7
 
-#define SENTINELCONTROL_TRANSMASK 0xF0
 #define SENTINELCONTROL_TRAN 0x10
 #define SENTINELCONTROL_TRANRDY 0x11
 #define SENTINELCONTROL_TRANDONE 0x12

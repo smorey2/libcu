@@ -25,7 +25,8 @@ __host_device__ void mutexSpinLock(void **cancelToken, volatile long *mutex, lon
 #endif
 		bool condition = false;
 		switch (pred) {
-		case MUTEXPRED_AND: condition = (v & predVal) == predVal; break;
+		case MUTEXPRED_AND: condition = v & predVal; break;
+		case MUTEXPRED_ANE: condition = (v & predVal) == predVal; break;
 		case MUTEXPRED_LTE: condition = v <= predVal; break;
 		case MUTEXPRED_GTE: condition = v >= predVal; break;
 		}
