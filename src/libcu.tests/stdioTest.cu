@@ -150,6 +150,7 @@ static __global__ void g_stdio_test1() {
 	int o1a = sprintf(buf, "%d", 1); bool o1b = !strcmp(buf, "1"); assert(o1a && o1b);
 
 	//// FSCANF, SCANF, SSCANF ////
+#ifndef LIBCU_LEAN_AND_MEAN
 	//moved: extern __device__ int fscanf(FILE *__restrict stream, const char *__restrict format, ...); //extern __device__ int vfscanf_(FILE *__restrict s, const char *__restrict format, va_list va, bool wait = true);
 	//moved: extern __device__ int scanf(const char *__restrict format, ...); //__forceinline__ __device__ int vscanf_(const char *__restrict format, va_list va);
 	//moved: extern __device__ int sscanf(const char *__restrict s, const char *__restrict format, ...); //extern __device__ int vsscanf_(const char *__restrict s, const char *__restrict format, va_list va);
@@ -157,6 +158,7 @@ static __global__ void g_stdio_test1() {
 	FILE *p1a = fopen(DeviceDir"test.txt", "r"); int p1b = fscanf(p1a, "%s", buf); int p1c = fclose(p1a); bool p1d = !strcmp(buf, "1"); assert(p1a && p1b && p1c && p1d);
 	//skipped: scanf("%s", buf);
 	int p2a = sscanf("test", "%s", buf); bool p2b = !strcmp(buf, "1"); assert(p2a && p2b);
+#endif
 
 	//// FGETC, GETCHAR, GETC, FPUTC, PUTCHAR, PUTC, UNGETC ////
 	//extern __device__ int fgetc_(FILE *stream); #sentinel-branch

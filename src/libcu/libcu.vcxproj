@@ -32,6 +32,7 @@
     <ClInclude Include="..\include\ext\memfile.h" />
     <ClInclude Include="..\include\ext\mutex.h" />
     <ClInclude Include="..\include\ext\pipeline.h" />
+    <ClInclude Include="..\include\ext\station.h" />
     <ClInclude Include="..\include\fcntlcu.h" />
     <ClInclude Include="..\include\grpcu.h" />
     <ClInclude Include="..\include\pwdcu.h" />
@@ -65,6 +66,7 @@
   <ItemGroup>
     <None Include="..\include\sentinel-client.cpp" />
     <None Include="..\include\ext\pipeline.cpp" />
+    <None Include="..\include\ext\station.cpp" />
     <ClCompile Include="sentinel-msg.cpp" />
     <ClCompile Include="sentinel.cpp" />
     <ClCompile Include="cuda_runtime.cpp" />
@@ -82,6 +84,9 @@
     <None Include="locale\utf8.cu" />
     <None Include="locale\xlocale.cu" />
     <None Include="ext\mutex.cu" />
+    <None Include="..\include\ext\station-gpu.cu">
+      <FileType>Document</FileType>
+    </None>
     <CudaCompile Include="program.cu" />
     <CudaCompile Include="libcu.cu" />
     <CudaCompile Include="libcu.stdlib.cu" />

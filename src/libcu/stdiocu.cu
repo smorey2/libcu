@@ -63,6 +63,9 @@ static __device__ void streamFree(cuFILE *s) {
 /* Remove file FILENAME.  */
 __device__ int remove_(const char *filename) {
 	if (ISHOSTPATH(filename)) { stdio_remove msg(filename); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	int saved_errno = errno;
 	int rv = fsystemUnlink(filename, true); //: rmdir(filename);
 	if (rv < 0 && errno == ENOTDIR) {
@@ -70,12 +73,17 @@ __device__ int remove_(const char *filename) {
 		rv = fsystemUnlink(filename, false); //: unlink(filename);
 	}
 	return rv;
+#endif
 }
 
 /* Rename file OLD to NEW.  */
 __device__ int rename_(const char *old, const char *new_) {
 	if (ISHOSTPATH(old)) { stdio_rename msg(old, new_); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	return fsystemRename(old, new_);
+#endif
 }
 
 /* Create a temporary file and open it read/write. */
@@ -83,6 +91,9 @@ __device__ int rename_(const char *old, const char *new_) {
 #define TEMP_DIR ":\\_temp\\"
 #define TEMP_DIRLENGTH sizeof(TEMP_DIR)-1
 __device__ FILE *tmpfile_() {
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	char newPath[50] = TEMP_DIR;
 	dirEnt_t *ent = fsystemOpendir(newPath);
 	int r; if (!ent) fsystemMkdir(newPath, 0666, &r);
@@ -103,12 +114,16 @@ __device__ FILE *tmpfile_() {
 	register cuFILE *s = (cuFILE *)file;
 	fsystemSetFlag(s->_file, DELETE);
 	return file;
+#endif
 }
 #endif
 
 /* Close STREAM. */
 __device__ int fclose_(FILE *stream, bool wait) {
 	if (ISHOSTFILE(stream)) { stdio_fclose msg(wait, stream); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	register cuFILE *s = (cuFILE *)stream;
 	dirEnt_t *f; UNUSED_SYMBOL(f);
 	if (!s || !(f = (dirEnt_t *)s->_base))
@@ -117,17 +132,25 @@ __device__ int fclose_(FILE *stream, bool wait) {
 		close(s->_file);
 	streamFree(s);
 	return 0;
+#endif
 }
 
 /* Flush STREAM, or all streams if STREAM is NULL. */
 __device__ int fflush_(FILE *stream, bool wait) {
 	if (ISHOSTFILE(stream)) { stdio_fflush msg(wait, stream); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	return 0;
+#endif
 }
 
 /* Open a file, replacing an existing stream with it. */
 __device__ FILE *freopen_(const char *__restrict filename, const char *__restrict modes, FILE *__restrict stream) {
 	if (ISHOSTPATH(filename)) { stdio_freopen msg(filename, modes, stream); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	register cuFILE *s = (cuFILE *)stream;
 	if (s)
 		streamFree(s);
@@ -166,6 +189,7 @@ __device__ FILE *freopen_(const char *__restrict filename, const char *__restric
 		return nullptr;
 	}
 	return (FILE *)s;
+#endif
 }
 
 /* Open a file and create a new stream for it. */
@@ -178,6 +202,9 @@ __device__ FILE *fopen_(const char *__restrict filename, const char *__restrict 
 /* Open a file, replacing an existing stream with it. */
 __device__ FILE *freopen64_(const char *__restrict filename, const char *__restrict modes, FILE *__restrict stream) {
 	if (ISHOSTPATH(filename)) { stdio_freopen msg(filename, modes, stream); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	register cuFILE *s = (cuFILE *)stream;
 	if (s)
 		streamFree(s);
@@ -211,6 +238,7 @@ __device__ FILE *freopen64_(const char *__restrict filename, const char *__restr
 	s->_flag = openMode;
 	s->_base = (char *)fsystemOpen(filename, openMode, &s->_file);
 	return (FILE *)s;
+#endif
 }
 
 /* Open a file and create a new stream for it. */
@@ -224,8 +252,12 @@ __device__ FILE *fopen64_(const char *__restrict filename, const char *__restric
 /* Make STREAM use buffering mode MODE. If BUF is not NULL, use N bytes of it for buffering; else allocate an internal buffer N bytes long.  */
 __device__ int setvbuf_(FILE *__restrict stream, char *__restrict buf, int modes, size_t n) {
 	if (ISHOSTFILE(stream)) { stdio_setvbuf msg(stream, buf, modes, n); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 
 /* If BUF is NULL, make STREAM unbuffered. Else make it use buffer BUF, of size BUFSIZ.  */
@@ -275,8 +307,12 @@ __device__ int vfprintf_(FILE *__restrict s, const char *__restrict format, va_l
 /* Read a character from STREAM.  */
 __device__ int fgetc_(FILE *stream) {
 	if (ISHOSTFILE(stream)) { stdio_fgetc msg(stream); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 
 /* Write a character to STREAM.  */
@@ -286,56 +322,57 @@ __device__ int fputc_(int c, FILE *stream, bool wait) {
 		printf("%c", c);
 		return 0;
 	}
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 
 /* Get a newline-terminated string of finite length from STREAM.  */
 __device__ char *fgets_(char *__restrict s, int n, FILE *__restrict stream) {
-	if (ISHOSTFILE(stream)) {
-#ifndef _NOJUMBO
-		stdio_fgets msg(s, n, stream); return msg.rc;
-#endif
-	}
+	if (ISHOSTFILE(stream)) { stdio_fgets msg(s, n, stream); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return nullptr;
+#endif
 }
 
 /* Write a string to STREAM.  */
 __device__ int fputs_(const char *__restrict s, FILE *__restrict stream, bool wait) {
-	if (ISHOSTFILE(stream)) {
-#ifndef _NOJUMBO
-		stdio_fputs msg(wait, s, stream); return msg.rc;
-#endif
-	}
+	if (ISHOSTFILE(stream)) { stdio_fputs msg(wait, s, stream); return msg.rc; }
 	if (stream == stdout || stream == stderr) {
 		printf(s);
 		return 0;
 	}
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 
 /* Push a character back onto the input buffer of STREAM.  */
 __device__ int ungetc_(int c, FILE *stream, bool wait) {
 	if (ISHOSTFILE(stream)) { stdio_ungetc msg(wait, c, stream); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 
 /* Read chunks of generic data from STREAM.  */
 __device__ size_t fread_(void *__restrict ptr, size_t size, size_t n, FILE *__restrict stream, bool wait) {
-	if (ISHOSTFILE(stream)) {
-#ifndef _NOJUMBO
-		stdio_fread msg(wait, ptr, size, n, stream); return msg.rc;
+	if (ISHOSTFILE(stream)) { stdio_fread msg(wait, ptr, size, n, stream); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
 #else
-		size_t rc = 1; size *= n; const char *v = (const char *)ptr;
-		while (size > 0 && rc > 0) {
-			stdio_fread msg(true, (void *)v, 1, size > SENTINEL_CHUNK ? SENTINEL_CHUNK : size, stream); rc = msg.rc; size -= rc; v += rc;
-		}
-		return v - ptr;
-#endif
-	}
 	register cuFILE *s = (cuFILE *)stream;
 	dirEnt_t *f;
 	if (!s || !(f = (dirEnt_t *)s->_base))
@@ -345,21 +382,15 @@ __device__ size_t fread_(void *__restrict ptr, size_t size, size_t n, FILE *__re
 	size *= n;
 	memfileRead(f->u.file, ptr, size, 0);
 	return n;
+#endif
 }
 
 /* Write chunks of generic data to STREAM.  */
 __device__ size_t fwrite_(const void *__restrict ptr, size_t size, size_t n, FILE *__restrict stream, bool wait) {
-	if (ISHOSTFILE(stream)) {
-#ifndef _NOJUMBO
-		stdio_fwrite msg(wait, ptr, size, n, stream); return msg.rc;
+	if (ISHOSTFILE(stream)) { stdio_fwrite msg(wait, ptr, size, n, stream); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
 #else
-		size_t rc = 1; size *= n; const char *v = (const char *)ptr;
-		while (size > 0 && rc > 0) {
-			stdio_fwrite msg(true, (void *)v, 1, size > SENTINEL_CHUNK ? SENTINEL_CHUNK : size, stream); rc = msg.rc; size -= rc; v += rc;
-		}
-		return v - ptr;
-#endif
-	}
 	register cuFILE *s = (cuFILE *)stream;
 	dirEnt_t *f;
 	if (!s || !(f = (dirEnt_t *)s->_base))
@@ -369,27 +400,39 @@ __device__ size_t fwrite_(const void *__restrict ptr, size_t size, size_t n, FIL
 	size *= n;
 	memfileWrite(f->u.file, ptr, size, 0);
 	return n;
+#endif
 }
 
 /* Seek to a certain position on STREAM.  */
 __device__ int fseek_(FILE *stream, long int off, int whence) {
 	if (ISHOSTFILE(stream)) { stdio_fseek msg(true, stream, off, whence); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 
 /* Return the current position of STREAM.  */
 __device__ long int ftell_(FILE *stream) {
 	if (ISHOSTFILE(stream)) { stdio_ftell msg(stream); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 
 /* Rewind to the beginning of STREAM.  */
 __device__ void rewind_(FILE *stream) {
 	if (ISHOSTFILE(stream)) { stdio_rewind msg(stream); return; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem");
+#else
 	panic("Not Implemented");
-	return;
+#endif
 }
 
 #if defined(__USE_LARGEFILE)
@@ -397,15 +440,23 @@ __device__ void rewind_(FILE *stream) {
 /* Seek to a certain position on STREAM.   */
 __device__ int fseeko_(FILE *stream, __off_t off, int whence) {
 	if (ISHOSTFILE(stream)) { stdio_fseeko msg(true, stream, off, 0, whence, false); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 
 /* Return the current position of STREAM.  */
 __device__ __off_t ftello_(FILE *stream) {
 	if (ISHOSTFILE(stream)) { stdio_ftello msg(stream, false); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 #endif
 #endif
@@ -414,15 +465,23 @@ __device__ __off_t ftello_(FILE *stream) {
 /* Get STREAM's position.  */
 __device__ int fgetpos_(FILE *__restrict stream, fpos_t *__restrict pos) {
 	if (ISHOSTFILE(stream)) { stdio_fgetpos msg(stream, pos, nullptr, false); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 
 /* Set STREAM's position.  */
 __device__ int fsetpos_(FILE *stream, const fpos_t *pos) {
 	if (ISHOSTFILE(stream)) { stdio_fsetpos msg(stream, pos, nullptr, false); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 #endif
 
@@ -437,36 +496,56 @@ __device__ int fseeko64_(FILE *stream, __off64_t off, int whence) {
 /* Return the current position of STREAM.  */
 __device__ __off64_t ftello64_(FILE *stream) {
 	if (ISHOSTFILE(stream)) { stdio_ftello msg(stream, true); return msg.rc64; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 
 /* Get STREAM's position.  */
 __device__ int fgetpos64_(FILE *__restrict stream, fpos64_t *__restrict pos) {
 	if (ISHOSTFILE(stream)) { stdio_fgetpos msg(stream, nullptr, pos, true); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 
 /* Set STREAM's position.  */
 __device__ int fsetpos64_(FILE *stream, const fpos64_t *pos) {
 	if (ISHOSTFILE(stream)) { stdio_fsetpos msg(stream, nullptr, pos, true); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 #endif
 
 /* Clear the error and EOF indicators for STREAM.  */
 __device__ void clearerr_(FILE *stream) {
 	if (ISHOSTFILE(stream)) { stdio_clearerr msg(stream); return; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem");
+#else
 	panic("Not Implemented");
+#endif
 }
 
 /* Return the EOF indicator for STREAM.  */
 __device__ int feof_(FILE *stream) {
 	if (ISHOSTFILE(stream)) { stdio_feof msg(stream); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 
 /* Return the error indicator for STREAM.  */
@@ -492,6 +571,7 @@ __device__ int fileno_(FILE *stream) {
 
 // sscanf
 #pragma region sscanf
+#ifndef LIBCU_LEAN_AND_MEAN
 
 #define	BUF		32 	// Maximum length of numeric string.
 
@@ -939,6 +1019,7 @@ match_failure:
 	return nassigned;
 }
 
+#endif
 #pragma endregion
 
 __END_DECLS;

@@ -26,7 +26,8 @@ THE SOFTWARE.
 #ifndef _CRTDEFSCU_H
 #define _CRTDEFSCU_H
 
-//#define LIBCU_LEAN_AND_MEAN
+#define LIBCU_LEAN_AND_MEAN
+#define LIBCU_LEAN_FSYSTEM
 
 //////////////////////
 // OS
@@ -523,6 +524,7 @@ struct vsysfile_methods {
 typedef struct vsystem vsystem;
 
 typedef struct strbld_t strbld_t;
+#ifndef LIBCU_LEAN_EXTSYSTEM
 typedef struct ext_methods ext_methods;
 struct ext_methods {
 	void *(*tagallocRaw)(void *tag, uint64_t size);
@@ -539,6 +541,7 @@ struct ext_methods {
 	int(*vsys_open)(vsystem *, const char *, vsysfile *, int, int *);
 };
 extern __hostb_device__ ext_methods __extsystem;
+#endif
 
 __END_DECLS;
 #pragma endregion	

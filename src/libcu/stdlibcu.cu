@@ -713,6 +713,7 @@ __device__ int unsetenv_(const char *name) {
 	return 0;
 }
 
+#ifndef LIBCU_LEAN_FSYSTEM
 static __device__ int __maketemp(char *template_, register int *fd) {
 	int rnd = rand_();
 	register char *start, *c;
@@ -746,17 +747,26 @@ static __device__ int __maketemp(char *template_, register int *fd) {
 		}
 	}
 }
+#endif
 
 /* Generate a unique temporary file name from TEMPLATE. */
 __device__ char *mktemp_(char *template_) {
 	if (ISHOSTPATH(template_)) { stdlib_mktemp msg(template_); strcpy(template_, msg.rc); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	return __maketemp(template_, nullptr) ? template_ : nullptr;
+#endif
 }
 
 /* Generate a unique temporary file name from TEMPLATE. */
 __device__ int mkstemp_(char *template_) {
 	if (ISHOSTPATH(template_)) { stdlib_mkstemp msg(template_); strcpy(template_, (const char *)msg.ptr); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	int fd; return __maketemp(template_, &fd) ? fd : -1;
+#endif
 }
 
 /* Execute the given line as a shell command.  */

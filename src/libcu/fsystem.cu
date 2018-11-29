@@ -1,3 +1,6 @@
+#ifdef LIBCU_LEAN_FSYSTEM
+__device__ char __cwd[MAX_PATH] = "";
+#else
 #include "fsystem.h"
 #include <stdlibcu.h>
 #include <stdiocu.h>
@@ -423,3 +426,4 @@ __device__ void fsystemSetFlag(int fd, int flag) {
 }
 
 __END_DECLS;
+#endif

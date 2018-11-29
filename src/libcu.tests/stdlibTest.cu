@@ -97,8 +97,8 @@ static __global__ void g_stdlib_test1() {
 
 	//// BSEARCH ////
 	//extern __device__ void *bsearch_(const void *key, const void *base, size_t nmemb, size_t size, __compar_fn_t compar);
-	qsort(_values, 6, sizeof(int), compareints);
-	int i0_in = 4; int i0_out = 41;
+	//TODO:FINISH
+	//bsearch(_values, 6, sizeof(int), compareints); int i0_in = 4; int i0_out = 41;
 	// SKIP
 	//int *i0a = (int *)bsearch(&i0_in, _values, 6, sizeof(int), compareints);
 	//int *i0b = (int *)bsearch(&i0_out, _values, 6, sizeof(int), compareints);
@@ -106,9 +106,7 @@ static __global__ void g_stdlib_test1() {
 
 	//// QSORT ////
 	//extern __device__ void qsort_(void *base, size_t nmemb, size_t size, __compar_fn_t compar);
-	qsort(_values, 6, sizeof(int), compareints);
-	int j0a = (int)_values[0];
-	assert(j0a == 10);
+	qsort(_values, 6, sizeof(int), compareints); int j0a = (int)_values[0]; assert(j0a == 10);
 
 	//// ABS, LABS, LLABS ////
 	//__forceinline__ __device__ int abs_(int x);

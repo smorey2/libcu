@@ -62,7 +62,7 @@ static char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, sentine
 	sentinelInPtr *listIn = nullptr;
 	if (ptrsIn)
 		for (i = ptrsIn, field = (char **)i->field; field; i++, field = (char **)i->field) {
-			if (!field || !*field) { i->unknown = nullptr; continue; }
+			if (!*field) { i->unknown = nullptr; continue; }
 			int size = i->size != -1 ? i->size : (i->size = (int)strlen(*field) + 1);
 			next = ptr + size;
 			if (!size) i->unknown = nullptr;
@@ -72,9 +72,8 @@ static char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, sentine
 	sentinelOutPtr *listOut = nullptr;
 	if (ptrsOut) {
 		if (ptrsOut[0].field != (char *)-1) ptr = data;
-		else ptrsOut[0].field = nullptr; // { -1 } = append
+		else { ptrsOut[0].unknown = nullptr; ptrsOut++; } // { -1 } = append
 		for (o = ptrsOut, field = (char **)o->field; field; o++, field = (char **)o->field) {
-			if (!field) { o->unknown = nullptr; continue; }
 			int size = o->size != -1 ? o->size : (o->size = (int)(dataEnd - ptr));
 			next = ptr + size;
 			if (!size) o->unknown = nullptr;
@@ -88,29 +87,31 @@ static char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, sentine
 	if (transSize) executeTrans(0, cmd, transSize, listIn, listOut, offset, trans); // size & transfer-in
 	if (ptrsIn)
 		for (i = ptrsIn, field = (char **)i->field; field; i++, field = (char **)i->field) {
-			if (!field || !*field || !(ptr = (char *)i->unknown)) continue;
+			if (!*field || !(ptr = (char *)i->unknown)) continue;
 			memcpy(ptr, *field, i->size); // transfer-in
 			*field = ptr + offset;
 		}
 	if (ptrsOut)
 		for (o = ptrsOut, field = (char **)o->field; field; o++, field = (char **)o->field) {
-			if (!field || !(ptr = (char *)o->unknown)) continue;
+			if (!(ptr = (char *)o->unknown)) continue;
 			*field = ptr + offset;
 		}
 	return data;
 }
 
 static bool postfixPtrs(sentinelOutPtr *ptrsOut, sentinelCommand *cmd, intptr_t offset, sentinelOutPtr *listOut, char *&trans) {
-	sentinelOutPtr *o; char **field, char **buf; char *ptr;
+	sentinelOutPtr *o; char **field, **buf; char *ptr;
 	// UNPACK & TRANSFER
-	if (ptrsOut)
+	if (ptrsOut) {
+		if (ptrsOut[0].field == (char *)-1) ptrsOut++; // { -1 } = append
 		for (o = ptrsOut, field = (char **)o->field; field; o++, field = (char **)o->field) {
-			if (!field || !*field || !(buf = (char **)o->buf)) continue;
+			if (!*field || !(buf = (char **)o->buf)) continue;
 			int *sizeField = (int *)o->sizeField;
 			int size = !sizeField ? o->size : *sizeField;
 			ptr = *field - offset;
 			if (size > 0) memcpy(*buf, ptr, size);
 		}
+	}
 	if (listOut) executeTrans(1, cmd, 0, nullptr, listOut, offset, trans);
 	return true;
 }

@@ -17,7 +17,7 @@ static __device__ char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsO
 	sentinelInPtr *listIn = nullptr;
 	if (ptrsIn)
 		for (i = ptrsIn, field = (char **)i->field; field; i++, field = (char **)i->field) {
-			if (!field || !*field) { i->unknown = nullptr; continue; }
+			if (!*field) { i->unknown = nullptr; continue; }
 			int size = i->size != -1 ? i->size : (i->size = (int)strlen(*field) + 1);
 			next = ptr + size;
 			if (!size) i->unknown = nullptr;
@@ -27,9 +27,8 @@ static __device__ char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsO
 	sentinelOutPtr *listOut = nullptr;
 	if (ptrsOut) {
 		if (ptrsOut[0].field != (char *)-1) ptr = data;
-		else ptrsOut[0].field = nullptr; // { -1 } = append
+		else { ptrsOut[0].unknown = nullptr; ptrsOut++; } // { -1 } = append
 		for (o = ptrsOut, field = (char **)o->field; field; o++, field = (char **)o->field) {
-			if (!field) { o->unknown = nullptr; continue; }
 			int size = o->size != -1 ? o->size : (o->size = (int)(dataEnd - ptr));
 			next = ptr + size;
 			if (!size) o->unknown = nullptr;
@@ -43,29 +42,31 @@ static __device__ char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsO
 	if (transSize) executeTrans(0, cmd, transSize, listIn, listOut, offset, trans); // size & transfer-in
 	if (ptrsIn)
 		for (i = ptrsIn, field = (char **)i->field; field; i++, field = (char **)i->field) {
-			if (!field || !*field || !(ptr = (char *)i->unknown)) continue;
+			if (!*field || !(ptr = (char *)i->unknown)) continue;
 			memcpy(ptr, *field, i->size); // transfer-in
 			*field = ptr + offset;
 		}
 	if (ptrsOut)
 		for (o = ptrsOut, field = (char **)o->field; field; o++, field = (char **)o->field) {
-			if (!field || !(ptr = (char *)o->unknown)) continue;
+			if (!(ptr = (char *)o->unknown)) continue;
 			*field = ptr + offset;
 		}
 	return data;
 }
 
 static __device__ bool postfixPtrs(sentinelOutPtr *ptrsOut, sentinelCommand *cmd, intptr_t offset, sentinelOutPtr *listOut, char *&trans) {
-	sentinelOutPtr *o; char **field, char **buf; char *ptr;
+	sentinelOutPtr *o; char **field, **buf; char *ptr;
 	// UNPACK & TRANSFER
-	if (ptrsOut)
+	if (ptrsOut) {
+		if (ptrsOut[0].field == (char *)-1) ptrsOut++; // { -1 } = append
 		for (o = ptrsOut, field = (char **)o->field; field; o++, field = (char **)o->field) {
-			if (!field || !*field || !(buf = (char **)o->buf)) continue;
+			if (!*field || !(buf = (char **)o->buf)) continue;
 			int *sizeField = (int *)o->sizeField;
 			int size = !sizeField ? o->size : *sizeField;
 			ptr = *field - offset;
 			if (size > 0) memcpy(*buf, ptr, size);
 		}
+	}
 	if (listOut) executeTrans(1, cmd, 0, nullptr, listOut, offset, trans);
 	return true;
 }
@@ -100,7 +101,6 @@ __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength, sentinel
 	if (msg->flow & SENTINELFLOW_WAIT) {
 		mutexSpinLock(nullptr, control, SENTINELCONTROL_HOSTRDY, SENTINELCONTROL_DEVICEWAIT);
 		cmd->length = msgLength; memcpy(msg, cmd->data, msgLength);
-		if (msg->flow & SENTINELFLOW_TRAN)
 		if ((ptrsOut && !postfixPtrs(ptrsOut, cmd, offset, listOut, trans)) ||
 			(msg->postfix && !msg->postfix(msg, offset)))
 			panic("postfix error");
@@ -118,7 +118,8 @@ static __device__ void executeTrans(char id, sentinelCommand *cmd, int size, sen
 		mutexSpinLock(nullptr, control, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
 		ptr = trans = *(char **)data;
 		if (listIn)
-			for (i = listIn, field = (char **)i->field; i; i = (sentinelInPtr *)i->unknown, field = (char **)i->field) {
+			for (i = listIn; i; i = (sentinelInPtr *)i->unknown) {
+				field = (char **)i->field;
 				const char *v = (const char *)*field; int remain = i->size, length = 0;
 				while (remain > 0) {
 					length = cmd->length = remain > SENTINEL_MSGSIZE ? SENTINEL_MSGSIZE : remain;
@@ -129,14 +130,19 @@ static __device__ void executeTrans(char id, sentinelCommand *cmd, int size, sen
 				*field = ptr; ptr += i->size;
 				i->unknown = nullptr;
 			}
-		if (listOut)
-			for (o = listOut, field = (char **)o->field; o; o = (sentinelOutPtr *)o->unknown, field = (char **)o->field) {
+		if (listOut) {
+			panic("listOut");
+			for (o = listOut; o; o = (sentinelOutPtr *)o->unknown) {
+				field = (char **)o->field;
 				*field = ptr; ptr += o->size;
+				o->unknown = nullptr;
 			}
+		}
 		break;
 	case 1:
 		if (listOut)
-			for (o = listOut, field = (char **)o->field; o; o = (sentinelOutPtr *)o->unknown, field = (char **)o->field) {
+			for (o = listOut; o; o = (sentinelOutPtr *)o->unknown) {
+				field = (char **)o->field;
 				const char *v = (const char *)*field; int remain = o->size, length = 0;
 				while (remain > 0) {
 					length = cmd->length = remain > SENTINEL_MSGSIZE ? SENTINEL_MSGSIZE : remain;

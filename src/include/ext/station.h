@@ -46,27 +46,26 @@ extern "C" {
 #define STATION_MSGCOUNT 1
 
 	typedef struct __align__(8) {
-		unsigned short Magic;
-		volatile long Control;
-		int Length;
+		unsigned short magic;
+		volatile long control;
+		int length;
 #ifndef _WIN64
-		int Unknown;
+		int unknown;
 #endif
-		char Data[1];
-		void Dump();
+		char data[1];
+		void dump();
 	} stationCommand;
 
 	typedef struct __align__(8) {
-		long GetId;
-		volatile long SetId;
-		intptr_t Offset;
-		char Data[STATION_MSGSIZE*STATION_MSGCOUNT];
-		void Dump();
+		long getId;
+		volatile long setId;
+		intptr_t offset;
+		char data[STATION_MSGSIZE*STATION_MSGCOUNT];
+		void dump();
 	} stationMap;
 
 	typedef struct stationContext {
-		stationMap *DeviceMap[STATION_DEVICEMAPS];
-		stationMap *HostMap;
+		stationMap *deviceMap[STATION_DEVICEMAPS];
 	} stationContext;
 
 #if HAS_DEVICESTATION
@@ -78,6 +77,11 @@ extern "C" {
 #if HAS_DEVICESTATION
 	extern __device__ void stationDeviceSend(void *msg, int msgLength);
 #endif
+
+#define STATIONCONTROL_NORMAL 0x0
+#define STATIONCONTROL_DEVICE 0x1
+#define STATIONCONTROL_HOST 0x5
+#define STATIONCONTROL_HOSTRDY 0x6
 
 #ifdef  __cplusplus
 }

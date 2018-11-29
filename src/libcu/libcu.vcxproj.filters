@@ -110,6 +110,9 @@
     <ClInclude Include="..\include\ext\mutex.h">
       <Filter>include\ext</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\ext\station.h">
+      <Filter>ext</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="libcu.cu" />
@@ -201,6 +204,12 @@
       <Filter>include\ext</Filter>
     </None>
     <None Include="ext\mutex.cu">
+      <Filter>ext</Filter>
+    </None>
+    <None Include="..\include\ext\station-gpu.cu">
+      <Filter>ext</Filter>
+    </None>
+    <None Include="..\include\ext\station.cpp">
       <Filter>ext</Filter>
     </None>
   </ItemGroup>

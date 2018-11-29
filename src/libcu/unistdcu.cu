@@ -8,7 +8,11 @@ __BEGIN_DECLS;
 /* Test for access to NAME using the real UID and real GID.  */
 __device__ int access_(const char *name, int mode) {
 	if (ISHOSTPATH(name)) { unistd_access msg(name, mode); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	int r; fsystemAccess(name, mode, &r); return r;
+#endif
 }
 
 /* Move FD's file position to OFFSET bytes from the beginning of the file (if WHENCE is SEEK_SET),
@@ -16,15 +20,23 @@ the current position (if WHENCE is SEEK_CUR), or the end of the file (if WHENCE 
 Return the new file position.  */
 __device__ off_t lseek_(int fd, off_t offset, int whence) {
 	if (ISHOSTHANDLE(fd)) { unistd_lseek msg(fd, offset, whence, false); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 
 #ifdef __USE_LARGEFILE64
 __device__ off64_t lseek64_(int fd, off64_t offset, int whence) {
 	if (ISHOSTHANDLE(fd)) { unistd_lseek msg(fd, offset, whence, true); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 #endif
 
@@ -33,17 +45,10 @@ __device__ off64_t lseek64_(int fd, off64_t offset, int whence) {
 
 /* Read NBYTES into BUF from FD.  Return the number read, -1 for errors or 0 for EOF.  */
 __device__ size_t read_(int fd, void *buf, size_t nbytes, bool wait) {
-	if (ISHOSTHANDLE(fd)) {
-#ifndef _NOJUMBO
-		unistd_read msg(wait, fd, buf, nbytes); return msg.rc;
+	if (ISHOSTHANDLE(fd)) { unistd_read msg(wait, fd, buf, nbytes); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
 #else
-		size_t rc = 1; const char *v = (const char *)buf;
-		while (nbytes > 0 && rc > 0) {
-			unistd_read msg(true, fd, (void *)v, nbytes > SENTINEL_CHUNK ? SENTINEL_CHUNK : nbytes, stream); rc = msg.rc; nbytes -= rc; v += rc;
-		}
-		return v - buf;
-#endif
-	}
 	register file_t *s = GETFILE(fd);
 	dirEnt_t *f;
 	if (!s || !(f = (dirEnt_t *)s->base))
@@ -51,21 +56,15 @@ __device__ size_t read_(int fd, void *buf, size_t nbytes, bool wait) {
 	if (f->dir.d_type != DIRTYPE_FILE)
 		panic("read: stream !file");
 	return memfileRead(f->u.file, buf, nbytes, 0);
+#endif
 }
 
 /* Write N bytes of BUF to FD.  Return the number written, or -1.  */
 __device__ size_t write_(int fd, const void *buf, size_t nbytes, bool wait) {
-	if (ISHOSTHANDLE(fd)) {
-#ifndef _NOJUMBO
-		unistd_write msg(wait, fd, buf, nbytes); return msg.rc;
+	if (ISHOSTHANDLE(fd)) { unistd_write msg(wait, fd, buf, nbytes); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
 #else
-		size_t rc = 1; const char *v = (const char *)ptr;
-		while (nbytes > 0 && rc > 0) {
-			unistd_write msg(true, fd, (void *)v, nbytes > SENTINEL_CHUNK ? SENTINEL_CHUNK : nbytes, stream); rc = msg.rc; nbytes -= rc; v += rc;
-		}
-		return v - buf;
-#endif
-	}
 	register file_t *s = GETFILE(fd);
 	dirEnt_t *f;
 	if (!s || !(f = (dirEnt_t *)s->base))
@@ -73,6 +72,7 @@ __device__ size_t write_(int fd, const void *buf, size_t nbytes, bool wait) {
 	if (f->dir.d_type != DIRTYPE_FILE)
 		panic("write: stream !file");
 	return memfileWrite(f->u.file, buf, nbytes, 0);
+#endif
 }
 
 /* Make the process sleep for SECONDS seconds, or until a signal arrives and is not ignored.  The function returns the number of seconds less
@@ -98,7 +98,11 @@ __device__ int chown_(const char *file, uid_t owner, gid_t group) {
 /* Change the process's working directory to PATH.  */
 __device__ int chdir_(const char *path) {
 	if (ISHOSTPATH(path)) { __cwd[0] = 0; unistd_chdir msg(path); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	return fsystemChdir(path);
+#endif
 }
 
 /* Get the pathname of the current working directory, and put it in SIZE bytes of BUF.  Returns NULL if the
@@ -115,15 +119,23 @@ __device__ char *getcwd_(char *buf, size_t size) {
 /* dup1:false - Duplicate FD to FD2, closing FD2 and making it open on the same file.  */
 __device__ int dup_(int fd) {
 	if (ISHOSTHANDLE(fd)) { unistd_dup msg(fd, -1, true); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 
 /* Duplicate FD to FD2, closing FD2 and making it open on the same file.  */
 __device__ int dup2_(int fd, int fd2) {
 	if (ISHOSTHANDLE(fd)) { unistd_dup msg(fd, fd2, false); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	panic("Not Implemented");
 	return 0;
+#endif
 }
 
 /* NULL-terminated array of "NAME=VALUE" environment variables.  */
@@ -132,13 +144,21 @@ extern __device__ char **__environ_ = nullptr;
 /* Remove the link NAME.  */
 __device__ int unlink_(const char *filename) {
 	if (ISHOSTPATH(filename)) { unistd_unlink msg(filename); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	return fsystemUnlink(filename, false);
+#endif
 }
 
 /* Remove the directory PATH.  */
 __device__ int rmdir_(const char *path) {
 	if (ISHOSTPATH(path)) { unistd_rmdir msg(path); return msg.rc; }
+#ifdef LIBCU_LEAN_FSYSTEM
+	panic("no fsystem"); return 0;
+#else
 	return fsystemUnlink(path, true);
+#endif
 }
 
 __END_DECLS;

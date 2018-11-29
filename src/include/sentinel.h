@@ -74,7 +74,6 @@ extern "C" {
 	typedef struct sentinelMessage {
 		unsigned short op;
 		unsigned char flow;
-		//unsigned char unknown;
 		int size;
 		char *(*prepare)(void*, char*, char*, intptr_t);
 		bool(*postfix)(void*, intptr_t);
@@ -93,11 +92,9 @@ extern "C" {
 
 	typedef struct __align__(8) {
 		unsigned short magic;
-		volatile int unknown;
 		volatile long control;
-		//#ifndef _WIN64
-		//#endif
 		int length;
+		int unknown;
 		char data[1];
 		void dump();
 	} sentinelCommand;

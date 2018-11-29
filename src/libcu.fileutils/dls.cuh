@@ -336,7 +336,7 @@ int dls(pipelineRedir redir, char *str, int flags, bool endSlash) {
 		cudaMemcpy(d_str, str, strLength, cudaMemcpyHostToDevice);
 	}
 	else d_str = 0;
-	g_dls << <1, 1 >> > (redir, d_str, flags, endSlash);
+	g_dls<<<1, 1>>>(redir, d_str, flags, endSlash);
 	if (d_str) cudaFree(d_str);
 	pipelineClose(redir);
 	int rc; cudaMemcpyFromSymbol(&rc, d_dls_rc, sizeof(rc), 0, cudaMemcpyDeviceToHost); return rc;
