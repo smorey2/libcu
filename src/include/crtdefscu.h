@@ -26,8 +26,8 @@ THE SOFTWARE.
 #ifndef _CRTDEFSCU_H
 #define _CRTDEFSCU_H
 
-//#define LIBCU_LEAN_AND_MEAN
-//#define LIBCU_LEAN_FSYSTEM
+#define LIBCU_LEAN_AND_MEAN
+#define LIBCU_LEAN_FSYSTEM
 
 //////////////////////
 // OS
@@ -368,6 +368,11 @@ extern __device__ void __hostptrFree(hostptr_t *p);
 
 /* Reset library */
 extern __device__ void libcuReset();
+
+/* Panic shared */
+#ifdef LIBCU_LEAN_FSYSTEM
+extern __device__ int panic_no_fsystem();
+#endif
 
 __END_DECLS;
 #ifdef __cplusplus

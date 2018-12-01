@@ -26,7 +26,7 @@ __constant__ const struct dirent _dirpFakes[2] = {
 __device__ DIR *opendir_(const char *name) {
 	if (ISHOSTPATH(name)) { dirent_opendir msg(name); return newhostptr<DIR>(msg.rc); }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return nullptr;
+	panic_no_fsystem(); return nullptr;
 #else
 	dirEnt_t *ent = fsystemOpendir(name);
 	if (!ent) return nullptr;
@@ -43,7 +43,7 @@ __device__ DIR *opendir_(const char *name) {
 __device__ int closedir_(DIR *dirp) {
 	if (ISHOSTPTR(dirp)) { dirent_closedir msg(hostptr<DIR>(dirp)); freehostptr<DIR>(dirp); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	if (!dirp) return -1;
 	free(dirp);
@@ -58,7 +58,7 @@ If the Large File Support API is selected we have to use the appropriate interfa
 __device__ struct dirent *readdir_(DIR *dirp) {
 	if (ISHOSTPTR(dirp)) { dirent_readdir msg(hostptr<DIR>(dirp), false); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return nullptr;
+	panic_no_fsystem(); return nullptr;
 #else
 	cuDIR *p = (cuDIR *)dirp;
 	if (!p || !p->listIdx) return nullptr;
@@ -74,7 +74,7 @@ __device__ struct dirent *readdir_(DIR *dirp) {
 __device__ struct dirent64 *readdir64_(DIR *dirp) {
 	if (ISHOSTPTR(dirp)) { dirent_readdir msg(hostptr<DIR>(dirp), true); return msg.rc64; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return nullptr;
+	panic_no_fsystem(); return nullptr;
 #else
 	cuDIR *p = (cuDIR *)dirp;
 	if (!p || !p->listIdx) return nullptr;
@@ -91,7 +91,7 @@ __device__ struct dirent64 *readdir64_(DIR *dirp) {
 __device__ void rewinddir_(DIR *dirp) {
 	if (ISHOSTPTR(dirp)) { dirent_rewinddir msg(hostptr<DIR>(dirp)); return; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem");
+	panic_no_fsystem();
 #else
 	cuDIR *p = (cuDIR *)dirp;
 	memcpy(p, p->list, sizeof(dirent));

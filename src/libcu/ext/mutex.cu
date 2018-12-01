@@ -32,7 +32,7 @@ __host_device__ void mutexSpinLock(void **cancelToken, volatile long *mutex, lon
 		}
 		if (condition) { if (!func || !func(funcTag)) return; continue; }
 		SLEEP(ms);
-		if (ms < msmax) ms *= 1.5;
+		if (ms < msmax) ms *= 2;
 	}
 }
 

@@ -150,7 +150,7 @@ static bool executeTrans(void **tag) {
 		}
 		mutexSet(control, SENTINELCONTROL_TRANRDY);
 		mutexSpinLock(threadId != -1 ? (void **)&_threadDeviceHandle[threadId] : (void **)&_threadHostHandle, control,
-			SENTINELCONTROL_TRANDONE, SENTINELCONTROL_TRAN, MUTEXPRED_LTE, SENTINELCONTROL_TRAN - 1);
+			SENTINELCONTROL_TRANDONE, SENTINELCONTROL_TRAN, MUTEXPRED_AND, 0xF);
 	}
 	return true;
 }

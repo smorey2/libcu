@@ -753,7 +753,7 @@ static __device__ int __maketemp(char *template_, register int *fd) {
 __device__ char *mktemp_(char *template_) {
 	if (ISHOSTPATH(template_)) { stdlib_mktemp msg(template_); strcpy(template_, msg.rc); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return (char *)panic_no_fsystem();
 #else
 	return __maketemp(template_, nullptr) ? template_ : nullptr;
 #endif
@@ -763,7 +763,7 @@ __device__ char *mktemp_(char *template_) {
 __device__ int mkstemp_(char *template_) {
 	if (ISHOSTPATH(template_)) { stdlib_mkstemp msg(template_); strcpy(template_, (const char *)msg.ptr); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	int fd; return __maketemp(template_, &fd) ? fd : -1;
 #endif

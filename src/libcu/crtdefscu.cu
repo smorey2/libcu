@@ -1,4 +1,5 @@
 #include <crtdefscu.h>
+#include <stdiocu.h>
 
 __BEGIN_DECLS;
 
@@ -56,6 +57,7 @@ static __host_device__ unsigned dummy = 0;
 __host_device__ void __coverage(int x) { dummy += (unsigned)x; }
 #endif
 
+/* Reset library */
 #ifndef LIBCU_LEAN_FSYSTEM
 __device__ void fsystemReset();
 #endif
@@ -64,6 +66,11 @@ __device__ void libcuReset() {
 	fsystemReset();
 #endif
 }
+
+/* Panic shared */
+#ifdef LIBCU_LEAN_FSYSTEM
+__device__ int panic_no_fsystem() { panic("no fsystem"); return 0; }
+#endif
 
 // EXT-METHODS
 #pragma region EXT-METHODS

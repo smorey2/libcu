@@ -73,7 +73,7 @@ struct unistd_close {
 struct unistd_read {
 	sentinelMessage base;
 	int handle; void *buf; size_t size;
-	__device__ unistd_read(bool wait, int fd, void *buf, size_t size) : base(UNISTD_READ, wait ? SENTINELFLOW_WAIT : SENTINELFLOW_NONE, SENTINEL_CHUNK), handle(fd), buf(buf), size(size) { ptrsOut[0].size = size; sentinelDeviceSend(&base, sizeof(unistd_read), nullptr, ptrsOut); }
+	__device__ unistd_read(bool wait, int fd, void *buf, size_t size) : base(UNISTD_READ, wait ? SENTINELFLOW_WAIT : SENTINELFLOW_NONE, SENTINEL_CHUNK), handle(fd), buf(buf), size(size) { ptrsOut[0].size = (int)size; sentinelDeviceSend(&base, sizeof(unistd_read), nullptr, ptrsOut); }
 	size_t rc;
 	void *ptr;
 	sentinelOutPtr ptrsOut[2] = {
@@ -85,7 +85,7 @@ struct unistd_read {
 struct unistd_write {
 	sentinelMessage base;
 	int handle; const void *ptr; size_t size;
-	__device__ unistd_write(bool wait, int fd, const void *ptr, size_t size) : base(UNISTD_WRITE, wait ? SENTINELFLOW_WAIT : SENTINELFLOW_NONE, SENTINEL_CHUNK), handle(fd), ptr(ptr), size(size) { ptrsIn[0].size = size; sentinelDeviceSend(&base, sizeof(unistd_write), ptrsIn); }
+	__device__ unistd_write(bool wait, int fd, const void *ptr, size_t size) : base(UNISTD_WRITE, wait ? SENTINELFLOW_WAIT : SENTINELFLOW_NONE, SENTINEL_CHUNK), handle(fd), ptr(ptr), size(size) { ptrsIn[0].size = (int)size; sentinelDeviceSend(&base, sizeof(unistd_write), ptrsIn); }
 	size_t rc;
 	sentinelInPtr ptrsIn[2] = {
 		{ &ptr, 0 },
@@ -119,7 +119,7 @@ struct unistd_getcwd {
 	static __forceinline__ __device__ bool postfix(unistd_getcwd *t, intptr_t offset) { t->rc = t->rc ? t->buf : nullptr; return true; }
 	sentinelMessage base;
 	char *buf; size_t size;
-	__device__ unistd_getcwd(char *buf, size_t size) : base(UNISTD_GETCWD, SENTINELFLOW_WAIT, SENTINEL_CHUNK, nullptr, SENTINELPOSTFIX(postfix)), buf(buf), size(size) { ptrsOut[0].size = size; sentinelDeviceSend(&base, sizeof(unistd_getcwd), nullptr, ptrsOut); }
+	__device__ unistd_getcwd(char *buf, size_t size) : base(UNISTD_GETCWD, SENTINELFLOW_WAIT, SENTINEL_CHUNK, nullptr, SENTINELPOSTFIX(postfix)), buf(buf), size(size) { ptrsOut[0].size = (int)size; sentinelDeviceSend(&base, sizeof(unistd_getcwd), nullptr, ptrsOut); }
 	char *rc;
 	char *ptr;
 	sentinelOutPtr ptrsOut[2] = {

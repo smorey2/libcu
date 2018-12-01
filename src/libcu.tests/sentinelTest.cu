@@ -78,26 +78,15 @@ struct module_complex {
 	};
 };
 
-//struct module_jumboout {
-//	sentinelMessage base;
-//	void *ptr; size_t size;
-//	__device__ module_jumboout(char *ptr, size_t size) : base(MODULE_JUMBOOUT, SENTINELFLOW_WAIT, SENTINEL_CHUNK) { sentinelDeviceSend(&base, sizeof(module_jumboout)); }
-//	int rc;
-//	sentinelOutPtr ptrsOut[3] = {
-//		{ &Str, -1 },
-//		{ &Ptr, 0 },
-//		nullptr
-//	};
-//};
-
 bool sentinelModuleExecutor(void *tag, sentinelMessage *data, int length, char *(**hostPrepare)(void*, char*, char*, intptr_t)) {
 	switch (data->op) {
 	case MODULE_SIMPLE: { module_simple *msg = (module_simple *)data; msg->rc = msg->value; return true; }
 	case MODULE_STRING: { module_string *msg = (module_string *)data; msg->rc = (int)strlen(msg->str); return true; }
-	case MODULE_RETURN: { module_return *msg = (module_return *)data; msg->rc = 5; strcpy((char *)msg->ptr, "test"); return true; }
+	case MODULE_RETURN: { module_return *msg = (module_return *)data;
+		msg->rc = 5; strcpy((char *)msg->ptr, "test");
+		return true; }
 	case MODULE_CUSTOM: { module_custom *msg = (module_custom *)data; msg->rc = (int)strlen(msg->str); return true; }
 	case MODULE_COMPLEX: { module_complex *msg = (module_complex *)data; msg->rc = (int)strlen(msg->str); msg->rc2 = (int)strlen((char *)msg->ptr); return true; }
-						 //case MODULE_JUMBOOUT: { module_jumboout *msg = (module_jumboout *)data; msg->rc = 0; return true; }
 	}
 	return false;
 }
@@ -119,8 +108,7 @@ static __global__ void g_sentinel_test1() {
 	// JUMBO
 	char jumbo[9046]; memset(jumbo, 2, sizeof(jumbo)); jumbo[9045] = 0;
 	module_complex b0(true, "test", jumbo, sizeof(jumbo)); int b0a = b0.rc; int b0b = b0.rc2; assert(b0a == 4 && b0b == 9045);
-	//module_return b1(jumbo, sizeof(jumbo));
-	//int b1a = b1.rc; assert(b1a == 5 && !strcmp(jumbo, "test"));
+	module_return b1(jumbo, sizeof(jumbo)); int b1a = b1.rc; assert(b1a == 5 && !strcmp(jumbo, "test"));
 }
 
 cudaError_t sentinel_test1() {

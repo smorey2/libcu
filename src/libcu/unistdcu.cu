@@ -9,7 +9,7 @@ __BEGIN_DECLS;
 __device__ int access_(const char *name, int mode) {
 	if (ISHOSTPATH(name)) { unistd_access msg(name, mode); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	int r; fsystemAccess(name, mode, &r); return r;
 #endif
@@ -21,7 +21,7 @@ Return the new file position.  */
 __device__ off_t lseek_(int fd, off_t offset, int whence) {
 	if (ISHOSTHANDLE(fd)) { unistd_lseek msg(fd, offset, whence, false); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
@@ -32,7 +32,7 @@ __device__ off_t lseek_(int fd, off_t offset, int whence) {
 __device__ off64_t lseek64_(int fd, off64_t offset, int whence) {
 	if (ISHOSTHANDLE(fd)) { unistd_lseek msg(fd, offset, whence, true); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
@@ -47,7 +47,7 @@ __device__ off64_t lseek64_(int fd, off64_t offset, int whence) {
 __device__ size_t read_(int fd, void *buf, size_t nbytes, bool wait) {
 	if (ISHOSTHANDLE(fd)) { unistd_read msg(wait, fd, buf, nbytes); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	register file_t *s = GETFILE(fd);
 	dirEnt_t *f;
@@ -63,7 +63,7 @@ __device__ size_t read_(int fd, void *buf, size_t nbytes, bool wait) {
 __device__ size_t write_(int fd, const void *buf, size_t nbytes, bool wait) {
 	if (ISHOSTHANDLE(fd)) { unistd_write msg(wait, fd, buf, nbytes); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	register file_t *s = GETFILE(fd);
 	dirEnt_t *f;
@@ -99,7 +99,7 @@ __device__ int chown_(const char *file, uid_t owner, gid_t group) {
 __device__ int chdir_(const char *path) {
 	if (ISHOSTPATH(path)) { __cwd[0] = 0; unistd_chdir msg(path); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	return fsystemChdir(path);
 #endif
@@ -120,7 +120,7 @@ __device__ char *getcwd_(char *buf, size_t size) {
 __device__ int dup_(int fd) {
 	if (ISHOSTHANDLE(fd)) { unistd_dup msg(fd, -1, true); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
@@ -131,7 +131,7 @@ __device__ int dup_(int fd) {
 __device__ int dup2_(int fd, int fd2) {
 	if (ISHOSTHANDLE(fd)) { unistd_dup msg(fd, fd2, false); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
@@ -145,7 +145,7 @@ extern __device__ char **__environ_ = nullptr;
 __device__ int unlink_(const char *filename) {
 	if (ISHOSTPATH(filename)) { unistd_unlink msg(filename); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	return fsystemUnlink(filename, false);
 #endif
@@ -155,7 +155,7 @@ __device__ int unlink_(const char *filename) {
 __device__ int rmdir_(const char *path) {
 	if (ISHOSTPATH(path)) { unistd_rmdir msg(path); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	return fsystemUnlink(path, true);
 #endif

@@ -11,63 +11,58 @@ static __device__ void executeTrans(char id, sentinelCommand *cmd, int size, sen
 
 static __device__ char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, sentinelCommand *cmd, char *data, char *dataEnd, intptr_t offset, sentinelOutPtr *&listOut_, char *&trans) {
 	sentinelInPtr *i; sentinelOutPtr *o; char **field; char *ptr = data, *next;
-
 	// PREPARE & TRANSFER
 	int transSize = 0;
 	sentinelInPtr *listIn = nullptr;
 	if (ptrsIn)
 		for (i = ptrsIn, field = (char **)i->field; field; i++, field = (char **)i->field) {
-			if (!*field) { i->unknown = nullptr; continue; }
+			if (!*field) continue;
 			int size = i->size != -1 ? i->size : (i->size = (int)strlen(*field) + 1);
 			next = ptr + size;
-			if (!size) i->unknown = nullptr;
+			if (!size) *field = nullptr;
 			else if (next <= dataEnd) { i->unknown = ptr; ptr = next; }
 			else { i->unknown = listIn; listIn = i; transSize += size; }
 		}
 	sentinelOutPtr *listOut = nullptr;
 	if (ptrsOut) {
 		if (ptrsOut[0].field != (char *)-1) ptr = data;
-		else { ptrsOut[0].unknown = nullptr; ptrsOut++; } // { -1 } = append
+		else ptrsOut++; // { -1 } = append
 		for (o = ptrsOut, field = (char **)o->field; field; o++, field = (char **)o->field) {
 			int size = o->size != -1 ? o->size : (o->size = (int)(dataEnd - ptr));
 			next = ptr + size;
-			if (!size) o->unknown = nullptr;
-			else if (next <= dataEnd) { o->unknown = ptr; ptr = next; }
-			else { o->unknown = listOut; listOut = o; transSize += size; }
+			if (!size) *field = nullptr;
+			else if (next <= dataEnd) { *field = ptr + offset; o->unknown = (void *)-1; ptr = next; }
+			else { o->unknown = listOut; listOut = o; transSize += size; continue; }
 		}
 	}
 	listOut_ = listOut;
 
 	// TRANSFER & PACK
-	if (transSize) executeTrans(0, cmd, transSize, listIn, listOut, offset, trans); // size & transfer-in
+	if (transSize)
+		executeTrans(0, cmd, transSize, listIn, listOut, offset, trans); // size & transfer-in
 	if (ptrsIn)
 		for (i = ptrsIn, field = (char **)i->field; field; i++, field = (char **)i->field) {
 			if (!*field || !(ptr = (char *)i->unknown)) continue;
-			memcpy(ptr, *field, i->size); // transfer-in
-			*field = ptr + offset;
-		}
-	if (ptrsOut)
-		for (o = ptrsOut, field = (char **)o->field; field; o++, field = (char **)o->field) {
-			if (!(ptr = (char *)o->unknown)) continue;
+			memcpy(ptr, *field, i->size);
 			*field = ptr + offset;
 		}
 	return data;
 }
 
 static __device__ bool postfixPtrs(sentinelOutPtr *ptrsOut, sentinelCommand *cmd, intptr_t offset, sentinelOutPtr *listOut, char *&trans) {
-	sentinelOutPtr *o; char **field, **buf; char *ptr;
+	sentinelOutPtr *o; char **field, **buf;
 	// UNPACK & TRANSFER
 	if (ptrsOut) {
 		if (ptrsOut[0].field == (char *)-1) ptrsOut++; // { -1 } = append
 		for (o = ptrsOut, field = (char **)o->field; field; o++, field = (char **)o->field) {
+			if (o->unknown != (void *)-1) continue;
 			if (!*field || !(buf = (char **)o->buf)) continue;
-			int *sizeField = (int *)o->sizeField;
-			int size = !sizeField ? o->size : *sizeField;
-			ptr = *field - offset;
-			if (size > 0) memcpy(*buf, ptr, size);
+			int size = !o->sizeField ? o->size : *(int *)o->sizeField;
+			if (size > 0) memcpy(*buf, *field - offset, size);
 		}
 	}
-	if (listOut) executeTrans(1, cmd, 0, nullptr, listOut, offset, trans);
+	if (listOut)
+		executeTrans(1, cmd, 0, nullptr, listOut, offset, trans);
 	return true;
 }
 
@@ -92,7 +87,8 @@ __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength, sentinel
 	if (((ptrsIn || ptrsOut) && !(data = preparePtrs(ptrsIn, ptrsOut, cmd, data, dataEnd, offset, listOut, trans))) ||
 		(msg->prepare && !msg->prepare(msg, data, dataEnd, offset)))
 		panic("msg too long");
-	if (listOut) msg->flow &= SENTINELFLOW_TRAN;
+	if (listOut)
+		msg->flow |= SENTINELFLOW_TRAN;
 	cmd->length = msgLength; memcpy(cmd->data, msg, msgLength);
 	//printf("msg: %d[%d]'", msg->op, msgLength); for (int i = 0; i < msgLength; i++) printf("%02x", ((char *)msg)[i] & 0xff); printf("'\n");
 	mutexSet(control, SENTINELCONTROL_DEVICERDY);
@@ -131,26 +127,23 @@ static __device__ void executeTrans(char id, sentinelCommand *cmd, int size, sen
 				i->unknown = nullptr;
 			}
 		if (listOut) {
-			panic("listOut");
 			for (o = listOut; o; o = (sentinelOutPtr *)o->unknown) {
 				field = (char **)o->field;
 				*field = ptr; ptr += o->size;
-				o->unknown = nullptr;
 			}
 		}
 		break;
 	case 1:
 		if (listOut)
 			for (o = listOut; o; o = (sentinelOutPtr *)o->unknown) {
-				field = (char **)o->field;
+				field = (char **)o->buf;
 				const char *v = (const char *)*field; int remain = o->size, length = 0;
 				while (remain > 0) {
 					length = cmd->length = remain > SENTINEL_MSGSIZE ? SENTINEL_MSGSIZE : remain;
-					memcpy((void *)v, data, length); remain -= length; v += length;
 					mutexSet(control, SENTINELCONTROL_TRANSOUT);
 					mutexSpinLock(nullptr, control, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
+					memcpy((void *)v, data, length); remain -= length; v += length;
 				}
-				*field = ptr; ptr += o->size;
 				o->unknown = nullptr;
 			}
 		break;

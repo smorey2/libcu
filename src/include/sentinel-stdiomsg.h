@@ -166,7 +166,7 @@ struct stdio_ungetc {
 struct stdio_fread {
 	sentinelMessage base;
 	void *buf; size_t size; size_t num; FILE *file;
-	__device__ stdio_fread(bool wait, void *buf, size_t size, size_t num, FILE *file) : base(STDIO_FREAD, wait ? SENTINELFLOW_WAIT : SENTINELFLOW_NONE, SENTINEL_CHUNK), buf(buf), size(size), num(num), file(file) { ptrsOut[0].size = size * num; sentinelDeviceSend(&base, sizeof(stdio_fread), nullptr, ptrsOut); }
+	__device__ stdio_fread(bool wait, void *buf, size_t size, size_t num, FILE *file) : base(STDIO_FREAD, wait ? SENTINELFLOW_WAIT : SENTINELFLOW_NONE, SENTINEL_CHUNK), buf(buf), size(size), num(num), file(file) { ptrsOut[0].size = (int)(size * num); sentinelDeviceSend(&base, sizeof(stdio_fread), nullptr, ptrsOut); }
 	size_t rc;
 	void *ptr;
 	sentinelOutPtr ptrsOut[2] = {
@@ -178,7 +178,7 @@ struct stdio_fread {
 struct stdio_fwrite {
 	sentinelMessage base;
 	const void *ptr; size_t size; size_t num; FILE *file;
-	__device__ stdio_fwrite(bool wait, const void *ptr, size_t size, size_t num, FILE *file) : base(STDIO_FWRITE, wait ? SENTINELFLOW_WAIT : SENTINELFLOW_NONE, SENTINEL_CHUNK), ptr(ptr), size(size), num(num), file(file) { ptrsIn[0].size = size * num; sentinelDeviceSend(&base, sizeof(stdio_fwrite), ptrsIn); }
+	__device__ stdio_fwrite(bool wait, const void *ptr, size_t size, size_t num, FILE *file) : base(STDIO_FWRITE, wait ? SENTINELFLOW_WAIT : SENTINELFLOW_NONE, SENTINEL_CHUNK), ptr(ptr), size(size), num(num), file(file) { ptrsIn[0].size = (int)(size * num); sentinelDeviceSend(&base, sizeof(stdio_fwrite), ptrsIn); }
 	size_t rc;
 	sentinelInPtr ptrsIn[2] = {
 		{ &ptr, 0 },

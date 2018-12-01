@@ -64,7 +64,7 @@ static __device__ void streamFree(cuFILE *s) {
 __device__ int remove_(const char *filename) {
 	if (ISHOSTPATH(filename)) { stdio_remove msg(filename); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	int saved_errno = errno;
 	int rv = fsystemUnlink(filename, true); //: rmdir(filename);
@@ -80,7 +80,7 @@ __device__ int remove_(const char *filename) {
 __device__ int rename_(const char *old, const char *new_) {
 	if (ISHOSTPATH(old)) { stdio_rename msg(old, new_); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	return fsystemRename(old, new_);
 #endif
@@ -92,7 +92,7 @@ __device__ int rename_(const char *old, const char *new_) {
 #define TEMP_DIRLENGTH sizeof(TEMP_DIR)-1
 __device__ FILE *tmpfile_() {
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return (FILE *)panic_no_fsystem();
 #else
 	char newPath[50] = TEMP_DIR;
 	dirEnt_t *ent = fsystemOpendir(newPath);
@@ -122,7 +122,7 @@ __device__ FILE *tmpfile_() {
 __device__ int fclose_(FILE *stream, bool wait) {
 	if (ISHOSTFILE(stream)) { stdio_fclose msg(wait, stream); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	register cuFILE *s = (cuFILE *)stream;
 	dirEnt_t *f; UNUSED_SYMBOL(f);
@@ -139,7 +139,7 @@ __device__ int fclose_(FILE *stream, bool wait) {
 __device__ int fflush_(FILE *stream, bool wait) {
 	if (ISHOSTFILE(stream)) { stdio_fflush msg(wait, stream); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	return 0;
 #endif
@@ -149,7 +149,7 @@ __device__ int fflush_(FILE *stream, bool wait) {
 __device__ FILE *freopen_(const char *__restrict filename, const char *__restrict modes, FILE *__restrict stream) {
 	if (ISHOSTPATH(filename)) { stdio_freopen msg(filename, modes, stream); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return (FILE *)panic_no_fsystem();
 #else
 	register cuFILE *s = (cuFILE *)stream;
 	if (s)
@@ -203,7 +203,7 @@ __device__ FILE *fopen_(const char *__restrict filename, const char *__restrict 
 __device__ FILE *freopen64_(const char *__restrict filename, const char *__restrict modes, FILE *__restrict stream) {
 	if (ISHOSTPATH(filename)) { stdio_freopen msg(filename, modes, stream); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return (FILE *)panic_no_fsystem();
 #else
 	register cuFILE *s = (cuFILE *)stream;
 	if (s)
@@ -253,7 +253,7 @@ __device__ FILE *fopen64_(const char *__restrict filename, const char *__restric
 __device__ int setvbuf_(FILE *__restrict stream, char *__restrict buf, int modes, size_t n) {
 	if (ISHOSTFILE(stream)) { stdio_setvbuf msg(stream, buf, modes, n); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
@@ -308,7 +308,7 @@ __device__ int vfprintf_(FILE *__restrict s, const char *__restrict format, va_l
 __device__ int fgetc_(FILE *stream) {
 	if (ISHOSTFILE(stream)) { stdio_fgetc msg(stream); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
@@ -323,7 +323,7 @@ __device__ int fputc_(int c, FILE *stream, bool wait) {
 		return 0;
 	}
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
@@ -334,7 +334,7 @@ __device__ int fputc_(int c, FILE *stream, bool wait) {
 __device__ char *fgets_(char *__restrict s, int n, FILE *__restrict stream) {
 	if (ISHOSTFILE(stream)) { stdio_fgets msg(s, n, stream); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return (char *)panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return nullptr;
@@ -349,7 +349,7 @@ __device__ int fputs_(const char *__restrict s, FILE *__restrict stream, bool wa
 		return 0;
 	}
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
@@ -360,7 +360,7 @@ __device__ int fputs_(const char *__restrict s, FILE *__restrict stream, bool wa
 __device__ int ungetc_(int c, FILE *stream, bool wait) {
 	if (ISHOSTFILE(stream)) { stdio_ungetc msg(wait, c, stream); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
@@ -371,7 +371,7 @@ __device__ int ungetc_(int c, FILE *stream, bool wait) {
 __device__ size_t fread_(void *__restrict ptr, size_t size, size_t n, FILE *__restrict stream, bool wait) {
 	if (ISHOSTFILE(stream)) { stdio_fread msg(wait, ptr, size, n, stream); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	register cuFILE *s = (cuFILE *)stream;
 	dirEnt_t *f;
@@ -389,7 +389,7 @@ __device__ size_t fread_(void *__restrict ptr, size_t size, size_t n, FILE *__re
 __device__ size_t fwrite_(const void *__restrict ptr, size_t size, size_t n, FILE *__restrict stream, bool wait) {
 	if (ISHOSTFILE(stream)) { stdio_fwrite msg(wait, ptr, size, n, stream); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	register cuFILE *s = (cuFILE *)stream;
 	dirEnt_t *f;
@@ -407,7 +407,7 @@ __device__ size_t fwrite_(const void *__restrict ptr, size_t size, size_t n, FIL
 __device__ int fseek_(FILE *stream, long int off, int whence) {
 	if (ISHOSTFILE(stream)) { stdio_fseek msg(true, stream, off, whence); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
@@ -418,7 +418,7 @@ __device__ int fseek_(FILE *stream, long int off, int whence) {
 __device__ long int ftell_(FILE *stream) {
 	if (ISHOSTFILE(stream)) { stdio_ftell msg(stream); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
@@ -429,7 +429,7 @@ __device__ long int ftell_(FILE *stream) {
 __device__ void rewind_(FILE *stream) {
 	if (ISHOSTFILE(stream)) { stdio_rewind msg(stream); return; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem");
+	panic_no_fsystem();
 #else
 	panic("Not Implemented");
 #endif
@@ -441,7 +441,7 @@ __device__ void rewind_(FILE *stream) {
 __device__ int fseeko_(FILE *stream, __off_t off, int whence) {
 	if (ISHOSTFILE(stream)) { stdio_fseeko msg(true, stream, off, 0, whence, false); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
@@ -452,7 +452,7 @@ __device__ int fseeko_(FILE *stream, __off_t off, int whence) {
 __device__ __off_t ftello_(FILE *stream) {
 	if (ISHOSTFILE(stream)) { stdio_ftello msg(stream, false); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
@@ -466,7 +466,7 @@ __device__ __off_t ftello_(FILE *stream) {
 __device__ int fgetpos_(FILE *__restrict stream, fpos_t *__restrict pos) {
 	if (ISHOSTFILE(stream)) { stdio_fgetpos msg(stream, pos, nullptr, false); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
@@ -477,7 +477,7 @@ __device__ int fgetpos_(FILE *__restrict stream, fpos_t *__restrict pos) {
 __device__ int fsetpos_(FILE *stream, const fpos_t *pos) {
 	if (ISHOSTFILE(stream)) { stdio_fsetpos msg(stream, pos, nullptr, false); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
@@ -497,7 +497,7 @@ __device__ int fseeko64_(FILE *stream, __off64_t off, int whence) {
 __device__ __off64_t ftello64_(FILE *stream) {
 	if (ISHOSTFILE(stream)) { stdio_ftello msg(stream, true); return msg.rc64; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
@@ -508,7 +508,7 @@ __device__ __off64_t ftello64_(FILE *stream) {
 __device__ int fgetpos64_(FILE *__restrict stream, fpos64_t *__restrict pos) {
 	if (ISHOSTFILE(stream)) { stdio_fgetpos msg(stream, nullptr, pos, true); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
@@ -519,7 +519,7 @@ __device__ int fgetpos64_(FILE *__restrict stream, fpos64_t *__restrict pos) {
 __device__ int fsetpos64_(FILE *stream, const fpos64_t *pos) {
 	if (ISHOSTFILE(stream)) { stdio_fsetpos msg(stream, nullptr, pos, true); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
@@ -531,7 +531,7 @@ __device__ int fsetpos64_(FILE *stream, const fpos64_t *pos) {
 __device__ void clearerr_(FILE *stream) {
 	if (ISHOSTFILE(stream)) { stdio_clearerr msg(stream); return; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem");
+	panic_no_fsystem();
 #else
 	panic("Not Implemented");
 #endif
@@ -541,7 +541,7 @@ __device__ void clearerr_(FILE *stream) {
 __device__ int feof_(FILE *stream) {
 	if (ISHOSTFILE(stream)) { stdio_feof msg(stream); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
-	panic("no fsystem"); return 0;
+	return panic_no_fsystem();
 #else
 	panic("Not Implemented");
 	return 0;
