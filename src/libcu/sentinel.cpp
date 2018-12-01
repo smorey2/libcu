@@ -48,6 +48,7 @@ static THREADCALL sentinelHostThread(void *data) {
 	sentinelContext *ctx = &_ctx;
 	sentinelMap *map = ctx->hostMap;
 	while (map) {
+		if (!_threadHostHandle) return 0;
 		long id = map->getId; map->getId += SENTINEL_MSGSIZE;
 		sentinelCommand *cmd = (sentinelCommand *)&map->data[id % sizeof(map->data)];
 		if (cmd->magic != SENTINEL_MAGIC) {
@@ -74,7 +75,10 @@ static THREADCALL sentinelHostThread(void *data) {
 					SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOSTWAIT, MUTEXPRED_GTE, SENTINELCONTROL_TRAN, executeTrans, funcTag);
 		}
 		else mutexSet(control, SENTINELCONTROL_NORMAL);
-		if (funcTag[2]) free(funcTag[2]);
+		if (funcTag[2]) {
+			free(funcTag[2]);
+			funcTag[2] = nullptr;
+		}
 	}
 	return 0;
 }
@@ -90,6 +94,7 @@ static THREADCALL sentinelDeviceThread(void *data) {
 	sentinelContext *ctx = &_ctx;
 	sentinelMap *map = ctx->deviceMap[threadId];
 	while (map) {
+		if (!_threadDeviceHandle[threadId]) return 0;
 		long id = map->getId; map->getId += SENTINEL_MSGSIZE;
 		sentinelCommand *cmd = (sentinelCommand *)&map->data[id % sizeof(map->data)];
 		if (cmd->magic != SENTINEL_MAGIC) {
@@ -122,7 +127,10 @@ static THREADCALL sentinelDeviceThread(void *data) {
 					SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOSTWAIT, MUTEXPRED_GTE, SENTINELCONTROL_TRAN, executeTrans, funcTag);
 		}
 		else mutexSet(control, SENTINELCONTROL_NORMAL);
-		if (funcTag[2]) free(funcTag[2]);
+		if (funcTag[2]) {
+			free(funcTag[2]);
+			funcTag[2] = nullptr;
+		}
 	}
 	return 0;
 }
@@ -216,9 +224,9 @@ void sentinelServerInitialize(sentinelExecutor *deviceExecutor, char *mapHostNam
 #elif __OS_UNIX
 		int err; if ((err = pthread_create(&_threadHostHandle, NULL, &sentinelHostThread, NULL))) {
 			printf("Could not create host thread (%s).\n", strerror(err)); exit(1);
-	}
+		}
 #endif
-}
+		}
 #endif
 
 #if HAS_DEVICESENTINEL
@@ -259,7 +267,7 @@ void sentinelServerInitialize(sentinelExecutor *deviceExecutor, char *mapHostNam
 		int err; for (int i = 0; i < SENTINEL_DEVICEMAPS; i++)
 			if ((err = pthread_create(&_threadDeviceHandle[i], NULL, &sentinelDeviceThread, (void *)(intptr_t)i))) {
 				printf("Could not create device thread (%s).\n", strerror(err)); exit(1);
-	}
+			}
 #endif
 	}
 #endif
@@ -268,7 +276,7 @@ initialize_error:
 	perror("sentinelServerInitialize:Error");
 	sentinelServerShutdown();
 	exit(1);
-}
+	}
 
 void sentinelServerShutdown() {
 	// close host map
@@ -296,8 +304,8 @@ void sentinelServerShutdown() {
 			if (_threadDeviceHandle[i]) { pthread_cancel(_threadDeviceHandle[i]); _threadDeviceHandle[i] = 0; }
 #endif
 			if (_deviceMap[i]) { cudaErrorCheckA(cudaFreeHost(_deviceMap[i])); _deviceMap[i] = nullptr; }
-		}
 	}
+}
 #endif
 }
 
