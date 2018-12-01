@@ -82,9 +82,7 @@ bool sentinelModuleExecutor(void *tag, sentinelMessage *data, int length, char *
 	switch (data->op) {
 	case MODULE_SIMPLE: { module_simple *msg = (module_simple *)data; msg->rc = msg->value; return true; }
 	case MODULE_STRING: { module_string *msg = (module_string *)data; msg->rc = (int)strlen(msg->str); return true; }
-	case MODULE_RETURN: { module_return *msg = (module_return *)data;
-		msg->rc = 5; strcpy((char *)msg->ptr, "test");
-		return true; }
+	case MODULE_RETURN: { module_return *msg = (module_return *)data; msg->rc = 5; strcpy((char *)msg->ptr, "test"); return true; }
 	case MODULE_CUSTOM: { module_custom *msg = (module_custom *)data; msg->rc = (int)strlen(msg->str); return true; }
 	case MODULE_COMPLEX: { module_complex *msg = (module_complex *)data; msg->rc = (int)strlen(msg->str); msg->rc2 = (int)strlen((char *)msg->ptr); return true; }
 	}
