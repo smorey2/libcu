@@ -67,9 +67,9 @@
     <None Include="jim-history.cu">
       <FileType>Document</FileType>
     </None>
-    <CudaCompile Include="jim-interactive.cu">
+    <None Include="jim-interactive.cu">
       <FileType>Document</FileType>
-    </CudaCompile>
+    </None>
     <None Include="jim-load.cu">
       <FileType>Document</FileType>
     </None>

@@ -7603,7 +7603,7 @@ static __constant__ const Jim_ObjType returnCodeObjType = {
 /* Converts a (standard) return code to a string. Returns "?" for
  * non-standard return codes.
  */
-__host__ __device__ const char *Jim_ReturnCode(int code)
+__device__ const char *Jim_ReturnCode(int code)
 {
     if (code < 0 || code >= (int)jimReturnCodesSize) {
         return "?";
