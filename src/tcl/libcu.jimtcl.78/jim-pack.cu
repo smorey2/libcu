@@ -13,7 +13,7 @@
  * Considers 'bitvect' as a big endian bit stream and returns
  * bit 'b' as zero or non-zero.
  */
-static __device__ int JimTestBitBigEndian(const unsigned char *bitvec, int b)
+static __host_device__ int JimTestBitBigEndian(const unsigned char *bitvec, int b)
 {
     div_t pos = div(b, 8);
     return bitvec[pos.quot] & (1 << (7 - pos.rem));
@@ -25,7 +25,7 @@ static __device__ int JimTestBitBigEndian(const unsigned char *bitvec, int b)
  * Considers 'bitvect' as a little endian bit stream and returns
  * bit 'b' as zero or non-zero.
  */
-static __device__ int JimTestBitLittleEndian(const unsigned char *bitvec, int b)
+static __host_device__ int JimTestBitLittleEndian(const unsigned char *bitvec, int b)
 {
     div_t pos = div(b, 8);
     return bitvec[pos.quot] & (1 << pos.rem);
@@ -36,7 +36,7 @@ static __device__ int JimTestBitLittleEndian(const unsigned char *bitvec, int b)
  *
  * For example, sign extending 0x80 with a width of 8, produces -128
  */
-static __device__ jim_wide JimSignExtend(jim_wide n, int width)
+static __host_device__ jim_wide JimSignExtend(jim_wide n, int width)
 {
     if (width == sizeof(jim_wide) * 8) {
         /* Can't sign extend the maximum size integer */
@@ -60,7 +60,7 @@ static __device__ jim_wide JimSignExtend(jim_wide n, int width)
  * The pos/width must represent bits inside bitvec,
  * and the width be no more than the width of jim_wide.
  */
-static __device__ jim_wide JimBitIntBigEndian(const unsigned char *bitvec, int pos, int width)
+static __host_device__ jim_wide JimBitIntBigEndian(const unsigned char *bitvec, int pos, int width)
 {
     jim_wide result = 0;
     int i;
@@ -88,7 +88,7 @@ static __device__ jim_wide JimBitIntBigEndian(const unsigned char *bitvec, int p
  *
  * Like JimBitIntBigEndian() but considers 'bitvect' as a little endian bit stream.
  */
-static __device__ jim_wide JimBitIntLittleEndian(const unsigned char *bitvec, int pos, int width)
+static __host_device__ jim_wide JimBitIntLittleEndian(const unsigned char *bitvec, int pos, int width)
 {
     jim_wide result = 0;
     int i;
@@ -117,7 +117,7 @@ static __device__ jim_wide JimBitIntLittleEndian(const unsigned char *bitvec, in
  * Considers 'bitvect' as a big endian bit stream and sets
  * bit 'b' to 'bit'
  */
-static __device__ void JimSetBitBigEndian(unsigned char *bitvec, int b, int bit)
+static __host_device__ void JimSetBitBigEndian(unsigned char *bitvec, int b, int bit)
 {
     div_t pos = div(b, 8);
     if (bit) {
@@ -134,7 +134,7 @@ static __device__ void JimSetBitBigEndian(unsigned char *bitvec, int b, int bit)
  * Considers 'bitvect' as a little endian bit stream and sets
  * bit 'b' to 'bit'
  */
-static __device__ void JimSetBitLittleEndian(unsigned char *bitvec, int b, int bit)
+static __host_device__ void JimSetBitLittleEndian(unsigned char *bitvec, int b, int bit)
 {
     div_t pos = div(b, 8);
     if (bit) {
@@ -155,7 +155,7 @@ static __device__ void JimSetBitLittleEndian(unsigned char *bitvec, int b, int b
  * The pos/width must represent bits inside bitvec,
  * and the width be no more than the width of jim_wide.
  */
-static __device__ void JimSetBitsIntBigEndian(unsigned char *bitvec, jim_wide value, int pos, int width)
+static __host_device__ void JimSetBitsIntBigEndian(unsigned char *bitvec, jim_wide value, int pos, int width)
 {
     int i;
 
@@ -174,7 +174,7 @@ static __device__ void JimSetBitsIntBigEndian(unsigned char *bitvec, jim_wide va
 /**
  * Little endian version of JimSetBitsIntBigEndian()
  */
-static __device__ void JimSetBitsIntLittleEndian(unsigned char *bitvec, jim_wide value, int pos, int width)
+static __host_device__ void JimSetBitsIntLittleEndian(unsigned char *bitvec, jim_wide value, int pos, int width)
 {
     int i;
 
@@ -198,7 +198,7 @@ static __device__ void JimSetBitsIntLittleEndian(unsigned char *bitvec, jim_wide
  *
  * Should work for both little- and big-endian platforms.
  */
-static __device__ float JimIntToFloat(jim_wide value)
+static __host_device__ float JimIntToFloat(jim_wide value)
 {
     int offs;
     float val;
@@ -215,7 +215,7 @@ static __device__ float JimIntToFloat(jim_wide value)
  *
  * Double precision version of JimIntToFloat
  */
-static __device__ double JimIntToDouble(jim_wide value)
+static __host_device__ double JimIntToDouble(jim_wide value)
 {
     int offs;
     double val;
@@ -235,7 +235,7 @@ static __device__ double JimIntToDouble(jim_wide value)
  *
  * Should work for both little- and big-endian platforms.
  */
-static __device__ jim_wide JimFloatToInt(float value)
+static __host_device__ jim_wide JimFloatToInt(float value)
 {
     int offs;
     jim_wide val = 0;
@@ -252,7 +252,7 @@ static __device__ jim_wide JimFloatToInt(float value)
  *
  * Double precision version of JimFloatToInt
  */
-static __device__ jim_wide JimDoubleToInt(double value)
+static __host_device__ jim_wide JimDoubleToInt(double value)
 {
     int offs;
     jim_wide val = 0;
@@ -272,7 +272,7 @@ static __device__ jim_wide JimDoubleToInt(double value)
  * Unpacks bits from $binvalue at bit position $bitpos and with $bitwidth.
  * Interprets the value according to the type and returns it.
  */
-static __device__ int Jim_UnpackCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int Jim_UnpackCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     int option;
     static const char * const options[] = { "-intbe", "-intle", "-uintbe", "-uintle",
@@ -368,7 +368,7 @@ static __device__ int Jim_UnpackCmd(Jim_Interp *interp, int argc, Jim_Obj *const
  * The variable is created if necessary (like [append])
  * The variable is expanded if necessary
  */
-static __device__ int Jim_PackCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int Jim_PackCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     int option;
     static const char * const options[] = { "-intle", "-intbe", "-floatle", "-floatbe",
@@ -477,7 +477,7 @@ static __device__ int Jim_PackCmd(Jim_Interp *interp, int argc, Jim_Obj *const *
     return JIM_OK;
 }
 
-__device__ int Jim_packInit(Jim_Interp *interp)
+__host_device__ int Jim_packInit(Jim_Interp *interp)
 {
     if (Jim_PackageProvide(interp, "pack", "1.0", JIM_ERRMSG)) {
         return JIM_ERR;

@@ -56,7 +56,7 @@
 #endif
 #include "jim.h"
 
-static __device__ void FreeRegexpInternalRep(Jim_Interp *interp, Jim_Obj *objPtr)
+static __host_device__ void FreeRegexpInternalRep(Jim_Interp *interp, Jim_Obj *objPtr)
 {
     regfree((regex_t *)objPtr->internalRep.ptrIntValue.ptr);
     Jim_Free(objPtr->internalRep.ptrIntValue.ptr);
@@ -66,7 +66,7 @@ static __device__ void FreeRegexpInternalRep(Jim_Interp *interp, Jim_Obj *objPtr
  *  ptr = compiled regex
  *  int1 = flags
  */
-static __constant__ const Jim_ObjType regexpObjType = {
+static __host_constant__ const Jim_ObjType regexpObjType = {
     "regexp",
     FreeRegexpInternalRep,
     NULL,
@@ -74,7 +74,7 @@ static __constant__ const Jim_ObjType regexpObjType = {
     JIM_TYPE_NONE
 };
 
-static __device__ regex_t *SetRegexpFromAny(Jim_Interp *interp, Jim_Obj *objPtr, unsigned flags)
+static __host_device__ regex_t *SetRegexpFromAny(Jim_Interp *interp, Jim_Obj *objPtr, unsigned flags)
 {
     regex_t *compre;
     const char *pattern;
@@ -112,7 +112,7 @@ static __device__ regex_t *SetRegexpFromAny(Jim_Interp *interp, Jim_Obj *objPtr,
     return compre;
 }
 
-__device__ int Jim_RegexpCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+__host_device__ int Jim_RegexpCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     int opt_indices = 0;
     int opt_all = 0;
@@ -339,7 +339,7 @@ __device__ int Jim_RegexpCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 
 #define MAX_SUB_MATCHES 50
 
-__device__ int Jim_RegsubCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+__host_device__ int Jim_RegsubCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     int regcomp_flags = 0;
     int regexec_flags = 0;
@@ -566,7 +566,7 @@ __device__ int Jim_RegsubCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
     return result;
 }
 
-__device__ int Jim_regexpInit(Jim_Interp *interp)
+__host_device__ int Jim_regexpInit(Jim_Interp *interp)
 {
     if (Jim_PackageProvide(interp, "regexp", "1.0", JIM_ERRMSG))
         return JIM_ERR;

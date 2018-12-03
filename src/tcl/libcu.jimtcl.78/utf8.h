@@ -23,7 +23,7 @@ extern "C" {
  *
  * Returns the number of utf-8 characters (up to MAX_UTF8_LEN).
  */
-__device__ int utf8_fromunicode(char *p, unsigned uc);
+__host_device__ int utf8_fromunicode(char *p, unsigned uc);
 
 #ifndef JIM_UTF8
 #include <ctype.h>
@@ -53,7 +53,7 @@ __device__ int utf8_fromunicode(char *p, unsigned uc);
  *
  * Note that charlen=4 is not supported by the rest of the API.
  */
-__device__ int utf8_charlen(int c);
+__host_device__ int utf8_charlen(int c);
 
 /**
  * Returns the number of characters in the utf-8
@@ -66,13 +66,13 @@ __device__ int utf8_charlen(int c);
  *
  * Does not support unicode code points > \u1fffff
  */
-__device__ int utf8_strlen(const char *str, int bytelen);
+__host_device__ int utf8_strlen(const char *str, int bytelen);
 
 /**
  * Calculates the display width of the first 'charlen' characters in 'str'.
  * See utf8_width()
  */
-__device__ int utf8_strwidth(const char *str, int charlen);
+__host_device__ int utf8_strwidth(const char *str, int charlen);
 
 /**
  * Returns the byte index of the given character in the utf-8 string.
@@ -82,7 +82,7 @@ __device__ int utf8_strwidth(const char *str, int charlen);
  * This will return the byte length of a utf-8 string
  * if given the char length.
  */
-__device__ int utf8_index(const char *str, int charindex);
+__host_device__ int utf8_index(const char *str, int charindex);
 
 /**
  * Returns the unicode codepoint corresponding to the
@@ -98,7 +98,7 @@ __device__ int utf8_index(const char *str, int charindex);
  *
  * Does not support unicode code points > \u1fffff
  */
-__device__ int utf8_tounicode(const char *str, int *uc);
+__host_device__ int utf8_tounicode(const char *str, int *uc);
 
 /**
  * Returns the number of bytes before 'str' that the previous
@@ -107,14 +107,14 @@ __device__ int utf8_tounicode(const char *str, int *uc);
  * Looks back at most 'len' bytes backwards, which must be > 0.
  * If no start char is found, returns -len
  */
-__device__ int utf8_prev_len(const char *str, int len);
+__host_device__ int utf8_prev_len(const char *str, int len);
 
 /**
  * Returns the upper-case variant of the given unicode codepoint.
  *
  * Unicode code points > \uffff are returned unchanged.
  */
-__device__ int utf8_upper(int uc);
+__host_device__ int utf8_upper(int uc);
 
 /**
  * Returns the title-case variant of the given unicode codepoint.
@@ -123,7 +123,7 @@ __device__ int utf8_upper(int uc);
  *
  * Unicode code points > \uffff are returned unchanged.
  */
-__device__ int utf8_title(int uc);
+__host_device__ int utf8_title(int uc);
 
 /**
  * Returns the lower-case variant of the given unicode codepoint.
@@ -132,13 +132,13 @@ __device__ int utf8_title(int uc);
  *
  * Unicode code points > \uffff are returned unchanged.
  */
-__device__ int utf8_lower(int uc);
+__host_device__ int utf8_lower(int uc);
 
 /**
  * Returns the width (in characters) of the given unicode codepoint.
  * This is 1 for normal letters and 0 for combining characters and 2 for wide characters.
  */
-__device__ int utf8_width(int ch);
+__host_device__ int utf8_width(int ch);
 
 #endif /* JIM_BOOTSTRAP */
 

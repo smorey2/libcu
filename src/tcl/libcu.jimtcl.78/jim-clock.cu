@@ -40,7 +40,7 @@ struct clock_options {
  *
  * Returns JIM_OK or JIM_ERR and sets an error result.
  */
-static __device__ int parse_clock_options(Jim_Interp *interp, int argc, Jim_Obj *const *argv, struct clock_options *opts)
+static __host_device__ int parse_clock_options(Jim_Interp *interp, int argc, Jim_Obj *const *argv, struct clock_options *opts)
 {
     static const char * const options[] = { "-gmt", "-format", NULL };
     enum { OPT_GMT, OPT_FORMAT, };
@@ -65,7 +65,7 @@ static __device__ int parse_clock_options(Jim_Interp *interp, int argc, Jim_Obj 
     return JIM_OK;
 }
 
-static __device__ int clock_cmd_format(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int clock_cmd_format(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     /* How big is big enough? */
     char buf[100];
@@ -100,7 +100,7 @@ static __device__ int clock_cmd_format(Jim_Interp *interp, int argc, Jim_Obj *co
 #ifdef HAVE_STRPTIME
 #ifndef HAVE_TIMEGM
 /* Implement a basic timegm() for system's that don't have it */
-static __device__ time_t timegm(struct tm *tm)
+static __host_device__ time_t timegm(struct tm *tm)
 {
     time_t t;
     const char *tz = getenv("TZ");
@@ -118,7 +118,7 @@ static __device__ time_t timegm(struct tm *tm)
 }
 #endif
 
-static __device__ int clock_cmd_scan(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int clock_cmd_scan(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     char *pt;
     struct tm tm;
@@ -155,14 +155,14 @@ static __device__ int clock_cmd_scan(Jim_Interp *interp, int argc, Jim_Obj *cons
 }
 #endif
 
-static __device__ int clock_cmd_seconds(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int clock_cmd_seconds(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     Jim_SetResultInt(interp, time(NULL));
 
     return JIM_OK;
 }
 
-static __device__ int clock_cmd_micros(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int clock_cmd_micros(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     struct timeval tv;
 
@@ -173,7 +173,7 @@ static __device__ int clock_cmd_micros(Jim_Interp *interp, int argc, Jim_Obj *co
     return JIM_OK;
 }
 
-static __device__ int clock_cmd_millis(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int clock_cmd_millis(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     struct timeval tv;
 
@@ -184,7 +184,7 @@ static __device__ int clock_cmd_millis(Jim_Interp *interp, int argc, Jim_Obj *co
     return JIM_OK;
 }
 
-static __constant__ const jim_subcmd_type clock_command_table[] = {
+static __host_constant__ const jim_subcmd_type clock_command_table[] = {
     {   "clicks",
         NULL,
         clock_cmd_micros,
@@ -232,7 +232,7 @@ static __constant__ const jim_subcmd_type clock_command_table[] = {
     { NULL }
 };
 
-__device__ int Jim_clockInit(Jim_Interp *interp)
+__host_device__ int Jim_clockInit(Jim_Interp *interp)
 {
     if (Jim_PackageProvide(interp, "clock", "1.0", JIM_ERRMSG))
         return JIM_ERR;

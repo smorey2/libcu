@@ -6,7 +6,7 @@
 #include "jimautoconf.h"
 #include "jim-subcmd.h"
 
-static __device__ int history_cmd_getline(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int history_cmd_getline(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     Jim_Obj *objPtr;
     char *line = Jim_HistoryGetline(interp, Jim_String(argv[0]));
@@ -35,37 +35,37 @@ static __device__ int history_cmd_getline(Jim_Interp *interp, int argc, Jim_Obj 
     return JIM_OK;
 }
 
-static __device__ int history_cmd_setcompletion(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int history_cmd_setcompletion(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     Jim_HistorySetCompletion(interp, Jim_Length(argv[0]) ? argv[0] : NULL);
     return JIM_OK;
 }
 
-static __device__ int history_cmd_load(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int history_cmd_load(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     Jim_HistoryLoad(Jim_String(argv[0]));
     return JIM_OK;
 }
 
-static __device__ int history_cmd_save(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int history_cmd_save(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     Jim_HistorySave(Jim_String(argv[0]));
     return JIM_OK;
 }
 
-static __device__ int history_cmd_add(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int history_cmd_add(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     Jim_HistoryAdd(Jim_String(argv[0]));
     return JIM_OK;
 }
 
-static __device__ int history_cmd_show(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int history_cmd_show(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     Jim_HistoryShow();
     return JIM_OK;
 }
 
-static __constant__ const jim_subcmd_type history_command_table[] = {
+static __host_constant__ const jim_subcmd_type history_command_table[] = {
     {   "getline",
         "prompt ?varname?",
         history_cmd_getline,
@@ -111,17 +111,17 @@ static __constant__ const jim_subcmd_type history_command_table[] = {
     { NULL }
 };
 
-static __device__ int JimHistorySubCmdProc(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int JimHistorySubCmdProc(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     return Jim_CallSubCmd(interp, Jim_ParseSubCmd(interp, history_command_table, argc, argv), argc, argv);
 }
 
-static __device__ void JimHistoryDelProc(Jim_Interp *interp, void *privData)
+static __host_device__ void JimHistoryDelProc(Jim_Interp *interp, void *privData)
 {
     Jim_Free(privData);
 }
 
-__device__ int Jim_historyInit(Jim_Interp *interp)
+__host_device__ int Jim_historyInit(Jim_Interp *interp)
 {
     void **history;
     if (Jim_PackageProvide(interp, "history", "1.0", JIM_ERRMSG))

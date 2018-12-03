@@ -119,7 +119,7 @@ union sockaddr_any {
 };
 
 #ifndef HAVE_INET_NTOP
-__device__ const char *inet_ntop(int af, const void *src, char *dst, int size)
+__host_device__ const char *inet_ntop(int af, const void *src, char *dst, int size)
 {
     if (af != PF_INET) {
         return NULL;
@@ -156,22 +156,22 @@ typedef struct AioFile
     const JimAioFopsType *fops;
 } AioFile;
 
-static __device__ int stdio_writer(struct AioFile *af, const char *buf, int len)
+static __host_device__ int stdio_writer(struct AioFile *af, const char *buf, int len)
 {
     return fwrite(buf, 1, len, af->fp);
 }
 
-static __device__ int stdio_reader(struct AioFile *af, char *buf, int len)
+static __host_device__ int stdio_reader(struct AioFile *af, char *buf, int len)
 {
     return fread(buf, 1, len, af->fp);
 }
 
-static __device__ const char *stdio_getline(struct AioFile *af, char *buf, int len)
+static __host_device__ const char *stdio_getline(struct AioFile *af, char *buf, int len)
 {
     return fgets(buf, len, af->fp);
 }
 
-static __device__ int stdio_error(const AioFile *af)
+static __host_device__ int stdio_error(const AioFile *af)
 {
     if (!ferror(af->fp)) {
         return JIM_OK;
@@ -194,12 +194,12 @@ static __device__ int stdio_error(const AioFile *af)
     return JIM_ERR;
 }
 
-static __device__ const char *stdio_strerror(struct AioFile *af)
+static __host_device__ const char *stdio_strerror(struct AioFile *af)
 {
     return strerror(errno);
 }
 
-static __constant__ const JimAioFopsType stdio_fops = {
+static __host_constant__ const JimAioFopsType stdio_fops = {
     stdio_writer,
     stdio_reader,
     stdio_getline,
@@ -210,19 +210,19 @@ static __constant__ const JimAioFopsType stdio_fops = {
 
 #if defined(JIM_SSL) && !defined(JIM_BOOTSTRAP)
 
-static __device__ SSL_CTX *JimAioSslCtx(Jim_Interp *interp);
+static __host_device__ SSL_CTX *JimAioSslCtx(Jim_Interp *interp);
 
-static __device__ int ssl_writer(struct AioFile *af, const char *buf, int len)
+static __host_device__ int ssl_writer(struct AioFile *af, const char *buf, int len)
 {
     return SSL_write(af->ssl, buf, len);
 }
 
-static __device__ int ssl_reader(struct AioFile *af, char *buf, int len)
+static __host_device__ int ssl_reader(struct AioFile *af, char *buf, int len)
 {
     return SSL_read(af->ssl, buf, len);
 }
 
-static __device__ const char *ssl_getline(struct AioFile *af, char *buf, int len)
+static __host_device__ const char *ssl_getline(struct AioFile *af, char *buf, int len)
 {
     size_t i;
     for (i = 0; i < len + 1; i++) {
@@ -240,7 +240,7 @@ static __device__ const char *ssl_getline(struct AioFile *af, char *buf, int len
     return buf;
 }
 
-static __device__ int ssl_error(const struct AioFile *af)
+static __host_device__ int ssl_error(const struct AioFile *af)
 {
     if (ERR_peek_error() == 0) {
         return JIM_OK;
@@ -249,7 +249,7 @@ static __device__ int ssl_error(const struct AioFile *af)
     return JIM_ERR;
 }
 
-static __device__ const char *ssl_strerror(struct AioFile *af)
+static __host_device__ const char *ssl_strerror(struct AioFile *af)
 {
     int err = ERR_get_error();
 
@@ -261,7 +261,7 @@ static __device__ const char *ssl_strerror(struct AioFile *af)
 	}
 }
 
-static __device__ int ssl_verify(struct AioFile *af)
+static __host_device__ int ssl_verify(struct AioFile *af)
 {
     X509 *cert;
 
@@ -278,7 +278,7 @@ static __device__ int ssl_verify(struct AioFile *af)
     return JIM_ERR;
 }
 
-static __constant__ const JimAioFopsType ssl_fops = {
+static __host_constant__ const JimAioFopsType ssl_fops = {
     ssl_writer,
     ssl_reader,
     ssl_getline,
@@ -288,12 +288,12 @@ static __constant__ const JimAioFopsType ssl_fops = {
 };
 #endif /* JIM_BOOTSTRAP */
 
-static __device__ int JimAioSubCmdProc(Jim_Interp *interp, int argc, Jim_Obj *const *argv);
-static __device__ AioFile *JimMakeChannel(Jim_Interp *interp, FILE *fh, int fd, Jim_Obj *filename,
+static __host_device__ int JimAioSubCmdProc(Jim_Interp *interp, int argc, Jim_Obj *const *argv);
+static __host_device__ AioFile *JimMakeChannel(Jim_Interp *interp, FILE *fh, int fd, Jim_Obj *filename,
     const char *hdlfmt, int family, const char *mode);
 
 #if defined(HAVE_SOCKETS) && !defined(JIM_BOOTSTRAP)
-static __device__ int JimParseIPv6Address(Jim_Interp *interp, const char *hostport, union sockaddr_any *sa, int *salen)
+static __host_device__ int JimParseIPv6Address(Jim_Interp *interp, const char *hostport, union sockaddr_any *sa, int *salen)
 {
 #if IPV6
     /*
@@ -359,7 +359,7 @@ static __device__ int JimParseIPv6Address(Jim_Interp *interp, const char *hostpo
 #endif
 }
 
-static __device__ int JimParseIpAddress(Jim_Interp *interp, const char *hostport, union sockaddr_any *sa, int *salen)
+static __host_device__ int JimParseIpAddress(Jim_Interp *interp, const char *hostport, union sockaddr_any *sa, int *salen)
 {
     /* An IPv4 addr/port looks like:
      *   192.168.1.5
@@ -426,7 +426,7 @@ static __device__ int JimParseIpAddress(Jim_Interp *interp, const char *hostport
 }
 
 #ifdef HAVE_SYS_UN_H
-static __device__ int JimParseDomainAddress(Jim_Interp *interp, const char *path, struct sockaddr_un *sa)
+static __host_device__ int JimParseDomainAddress(Jim_Interp *interp, const char *path, struct sockaddr_un *sa)
 {
     sa->sun_family = PF_UNIX;
     snprintf(sa->sun_path, sizeof(sa->sun_path), "%s", path);
@@ -438,7 +438,7 @@ static __device__ int JimParseDomainAddress(Jim_Interp *interp, const char *path
 /**
  * Format that address in 'sa' as a string and store in variable 'varObjPtr'
  */
-static __device__ int JimFormatIpAddress(Jim_Interp *interp, Jim_Obj *varObjPtr, const union sockaddr_any *sa)
+static __host_device__ int JimFormatIpAddress(Jim_Interp *interp, Jim_Obj *varObjPtr, const union sockaddr_any *sa)
 {
     /* INET6_ADDRSTRLEN is 46. Add some for [] and port */
     char addrbuf[60];
@@ -467,7 +467,7 @@ static __device__ int JimFormatIpAddress(Jim_Interp *interp, Jim_Obj *varObjPtr,
 
 #endif /* JIM_BOOTSTRAP */
 
-static __device__ const char *JimAioErrorString(AioFile *af)
+static __host_device__ const char *JimAioErrorString(AioFile *af)
 {
     if (af && af->fops)
         return af->fops->strerror(af);
@@ -475,7 +475,7 @@ static __device__ const char *JimAioErrorString(AioFile *af)
     return strerror(errno);
 }
 
-static __device__ void JimAioSetError(Jim_Interp *interp, Jim_Obj *name)
+static __host_device__ void JimAioSetError(Jim_Interp *interp, Jim_Obj *name)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
 
@@ -487,7 +487,7 @@ static __device__ void JimAioSetError(Jim_Interp *interp, Jim_Obj *name)
     }
 }
 
-static __device__ int JimCheckStreamError(Jim_Interp *interp, AioFile *af)
+static __host_device__ int JimCheckStreamError(Jim_Interp *interp, AioFile *af)
 {
 	int ret = af->fops->error(af);
 	if (ret) {
@@ -496,7 +496,7 @@ static __device__ int JimCheckStreamError(Jim_Interp *interp, AioFile *af)
 	return ret;
 }
 
-static __device__ void JimAioDelProc(Jim_Interp *interp, void *privData)
+static __host_device__ void JimAioDelProc(Jim_Interp *interp, void *privData)
 {
     AioFile *af = (AioFile *)privData;
 
@@ -521,7 +521,7 @@ static __device__ void JimAioDelProc(Jim_Interp *interp, void *privData)
     Jim_Free(af);
 }
 
-static __device__ int aio_cmd_read(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_read(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
     char buf[AIO_BUF_LEN];
@@ -584,7 +584,7 @@ static __device__ int aio_cmd_read(Jim_Interp *interp, int argc, Jim_Obj *const 
     return JIM_OK;
 }
 
-__device__ AioFile *Jim_AioFile(Jim_Interp *interp, Jim_Obj *command)
+__host_device__ AioFile *Jim_AioFile(Jim_Interp *interp, Jim_Obj *command)
 {
     Jim_Cmd *cmdPtr = Jim_GetCommand(interp, command, JIM_ERRMSG);
 
@@ -596,7 +596,7 @@ __device__ AioFile *Jim_AioFile(Jim_Interp *interp, Jim_Obj *command)
     return NULL;
 }
 
-__device__ FILE *Jim_AioFilehandle(Jim_Interp *interp, Jim_Obj *command)
+__host_device__ FILE *Jim_AioFilehandle(Jim_Interp *interp, Jim_Obj *command)
 {
     AioFile *af;
 
@@ -608,7 +608,7 @@ __device__ FILE *Jim_AioFilehandle(Jim_Interp *interp, Jim_Obj *command)
     return af->fp;
 }
 
-static __device__ int aio_cmd_getfd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_getfd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
 
@@ -618,7 +618,7 @@ static __device__ int aio_cmd_getfd(Jim_Interp *interp, int argc, Jim_Obj *const
     return JIM_OK;
 }
 
-static __device__ int aio_cmd_copy(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_copy(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
     jim_wide count = 0;
@@ -656,7 +656,7 @@ static __device__ int aio_cmd_copy(Jim_Interp *interp, int argc, Jim_Obj *const 
     return JIM_OK;
 }
 
-static __device__ int aio_cmd_gets(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_gets(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
     char buf[AIO_BUF_LEN];
@@ -714,7 +714,7 @@ static __device__ int aio_cmd_gets(Jim_Interp *interp, int argc, Jim_Obj *const 
     return JIM_OK;
 }
 
-static __device__ int aio_cmd_puts(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_puts(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
     int wlen;
@@ -741,7 +741,7 @@ static __device__ int aio_cmd_puts(Jim_Interp *interp, int argc, Jim_Obj *const 
     return JIM_ERR;
 }
 
-static __device__ int aio_cmd_isatty(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_isatty(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
 #ifdef HAVE_ISATTY
     AioFile *af = Jim_CmdPrivData(interp);
@@ -754,7 +754,7 @@ static __device__ int aio_cmd_isatty(Jim_Interp *interp, int argc, Jim_Obj *cons
 }
 
 #if defined(HAVE_SOCKETS) && !defined(JIM_BOOTSTRAP)
-static __device__ int aio_cmd_recvfrom(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_recvfrom(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
     char *buf;
@@ -786,7 +786,7 @@ static __device__ int aio_cmd_recvfrom(Jim_Interp *interp, int argc, Jim_Obj *co
 }
 
 
-static __device__ int aio_cmd_sendto(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_sendto(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
     int wlen;
@@ -816,7 +816,7 @@ static __device__ int aio_cmd_sendto(Jim_Interp *interp, int argc, Jim_Obj *cons
     return JIM_OK;
 }
 
-static __device__ int aio_cmd_accept(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_accept(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
     int sock;
@@ -840,7 +840,7 @@ static __device__ int aio_cmd_accept(Jim_Interp *interp, int argc, Jim_Obj *cons
         "aio.sockstream%ld", af->addr_family, "r+") ? JIM_OK : JIM_ERR;
 }
 
-static __device__ int aio_cmd_listen(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_listen(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
     long backlog;
@@ -858,7 +858,7 @@ static __device__ int aio_cmd_listen(Jim_Interp *interp, int argc, Jim_Obj *cons
 }
 #endif /* JIM_BOOTSTRAP */
 
-static __device__ int aio_cmd_flush(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_flush(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
 
@@ -869,7 +869,7 @@ static __device__ int aio_cmd_flush(Jim_Interp *interp, int argc, Jim_Obj *const
     return JIM_OK;
 }
 
-static __device__ int aio_cmd_eof(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_eof(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
 
@@ -877,7 +877,7 @@ static __device__ int aio_cmd_eof(Jim_Interp *interp, int argc, Jim_Obj *const *
     return JIM_OK;
 }
 
-static __device__ int aio_cmd_close(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_close(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     if (argc == 3) {
 #if defined(HAVE_SOCKETS) && defined(HAVE_SHUTDOWN)
@@ -902,7 +902,7 @@ static __device__ int aio_cmd_close(Jim_Interp *interp, int argc, Jim_Obj *const
     return Jim_DeleteCommand(interp, Jim_String(argv[0]));
 }
 
-static __device__ int aio_cmd_seek(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_seek(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
     int orig = SEEK_SET;
@@ -929,7 +929,7 @@ static __device__ int aio_cmd_seek(Jim_Interp *interp, int argc, Jim_Obj *const 
     return JIM_OK;
 }
 
-static __device__ int aio_cmd_tell(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_tell(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
 
@@ -937,7 +937,7 @@ static __device__ int aio_cmd_tell(Jim_Interp *interp, int argc, Jim_Obj *const 
     return JIM_OK;
 }
 
-static __device__ int aio_cmd_filename(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_filename(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
 
@@ -946,7 +946,7 @@ static __device__ int aio_cmd_filename(Jim_Interp *interp, int argc, Jim_Obj *co
 }
 
 #ifdef O_NDELAY
-static __device__ int aio_cmd_ndelay(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_ndelay(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
 
@@ -976,7 +976,7 @@ static __device__ int aio_cmd_ndelay(Jim_Interp *interp, int argc, Jim_Obj *cons
 #define SOCKOPT_INT 1
 #define SOCKOPT_TIMEVAL 2   /* not currently supported */
 
-static __constant__ const struct sockopt_def {
+static __host_constant__ const struct sockopt_def {
     const char *name;
     int level;
     int opt;
@@ -1018,7 +1018,7 @@ static __constant__ const struct sockopt_def {
 #endif
 };
 
-static __device__ int aio_cmd_sockopt(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_sockopt(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
     int i;
@@ -1073,7 +1073,7 @@ static __device__ int aio_cmd_sockopt(Jim_Interp *interp, int argc, Jim_Obj *con
 #endif /* JIM_BOOTSTRAP */
 
 #ifdef HAVE_FSYNC
-static __device__ int aio_cmd_sync(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_sync(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
 
@@ -1083,7 +1083,7 @@ static __device__ int aio_cmd_sync(Jim_Interp *interp, int argc, Jim_Obj *const 
 }
 #endif
 
-static __device__ int aio_cmd_buffering(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_buffering(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
 
@@ -1119,7 +1119,7 @@ static __device__ int aio_cmd_buffering(Jim_Interp *interp, int argc, Jim_Obj *c
 }
 
 #ifdef jim_ext_eventloop
-static __device__ void JimAioFileEventFinalizer(Jim_Interp *interp, void *clientData)
+static __host_device__ void JimAioFileEventFinalizer(Jim_Interp *interp, void *clientData)
 {
     Jim_Obj **objPtrPtr = (Jim_Obj **)clientData;
 
@@ -1127,14 +1127,14 @@ static __device__ void JimAioFileEventFinalizer(Jim_Interp *interp, void *client
     *objPtrPtr = NULL;
 }
 
-static __device__ int JimAioFileEventHandler(Jim_Interp *interp, void *clientData, int mask)
+static __host_device__ int JimAioFileEventHandler(Jim_Interp *interp, void *clientData, int mask)
 {
     Jim_Obj **objPtrPtr = (Jim_Obj **)clientData;
 
     return Jim_EvalObjBackground(interp, *objPtrPtr);
 }
 
-static __device__ int aio_eventinfo(Jim_Interp *interp, AioFile * af, unsigned mask, Jim_Obj **scriptHandlerObj,
+static __host_device__ int aio_eventinfo(Jim_Interp *interp, AioFile * af, unsigned mask, Jim_Obj **scriptHandlerObj,
     int argc, Jim_Obj * const *argv)
 {
     if (argc == 0) {
@@ -1166,21 +1166,21 @@ static __device__ int aio_eventinfo(Jim_Interp *interp, AioFile * af, unsigned m
     return JIM_OK;
 }
 
-static __device__ int aio_cmd_readable(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_readable(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
 
     return aio_eventinfo(interp, af, JIM_EVENT_READABLE, &af->rEvent, argc, argv);
 }
 
-static __device__ int aio_cmd_writable(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_writable(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
 
     return aio_eventinfo(interp, af, JIM_EVENT_WRITABLE, &af->wEvent, argc, argv);
 }
 
-static __device__ int aio_cmd_onexception(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_onexception(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
 
@@ -1189,7 +1189,7 @@ static __device__ int aio_cmd_onexception(Jim_Interp *interp, int argc, Jim_Obj 
 #endif
 
 #if defined(JIM_SSL) && !defined(JIM_BOOTSTRAP)
-static __device__ int aio_cmd_ssl(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_ssl(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
     SSL *ssl;
@@ -1263,7 +1263,7 @@ out:
     return JIM_ERR;
 }
 
-static __device__ int aio_cmd_verify(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_verify(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
     int ret;
@@ -1283,7 +1283,7 @@ static __device__ int aio_cmd_verify(Jim_Interp *interp, int argc, Jim_Obj *cons
 #endif /* JIM_BOOTSTRAP */
 
 #if defined(HAVE_STRUCT_FLOCK) && !defined(JIM_BOOTSTRAP)
-static __device__ int aio_cmd_lock(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_lock(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
     struct flock fl;
@@ -1316,7 +1316,7 @@ static __device__ int aio_cmd_lock(Jim_Interp *interp, int argc, Jim_Obj *const 
     return JIM_OK;
 }
 
-static __device__ int aio_cmd_unlock(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_unlock(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
     struct flock fl;
@@ -1331,7 +1331,7 @@ static __device__ int aio_cmd_unlock(Jim_Interp *interp, int argc, Jim_Obj *cons
 #endif /* JIM_BOOTSTRAP */
 
 #if defined(HAVE_TERMIOS_H) && !defined(JIM_BOOTSTRAP)
-static __device__ int aio_cmd_tty(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int aio_cmd_tty(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     AioFile *af = (AioFile *)Jim_CmdPrivData(interp);
     Jim_Obj *dictObjPtr;
@@ -1375,7 +1375,7 @@ static __device__ int aio_cmd_tty(Jim_Interp *interp, int argc, Jim_Obj *const *
 }
 #endif /* JIM_BOOTSTRAP */
 
-static __constant__ const jim_subcmd_type aio_command_table[] = {
+static __host_constant__ const jim_subcmd_type aio_command_table[] = {
     {   "read",
         "?-nonewline? ?len?",
         aio_cmd_read,
@@ -1593,12 +1593,12 @@ static __constant__ const jim_subcmd_type aio_command_table[] = {
     { NULL }
 };
 
-static __device__ int JimAioSubCmdProc(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int JimAioSubCmdProc(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     return Jim_CallSubCmd(interp, Jim_ParseSubCmd(interp, aio_command_table, argc, argv), argc, argv);
 }
 
-static __device__ int JimAioOpenCommand(Jim_Interp *interp, int argc,
+static __host_device__ int JimAioOpenCommand(Jim_Interp *interp, int argc,
         Jim_Obj *const *argv)
 {
     const char *mode;
@@ -1630,13 +1630,13 @@ static __device__ int JimAioOpenCommand(Jim_Interp *interp, int argc,
 }
 
 #if defined(JIM_SSL) && !defined(JIM_BOOTSTRAP)
-static __device__ void JimAioSslContextDelProc(struct Jim_Interp *interp, void *privData)
+static __host_device__ void JimAioSslContextDelProc(struct Jim_Interp *interp, void *privData)
 {
     SSL_CTX_free((SSL_CTX *)privData);
     ERR_free_strings();
 }
 
-static __device__ SSL_CTX *JimAioSslCtx(Jim_Interp *interp)
+static __host_device__ SSL_CTX *JimAioSslCtx(Jim_Interp *interp)
 {
     SSL_CTX *ssl_ctx = (SSL_CTX *)Jim_GetAssocData(interp, "ssl_ctx");
     if (ssl_ctx == NULL) {
@@ -1667,7 +1667,7 @@ static __device__ SSL_CTX *JimAioSslCtx(Jim_Interp *interp)
  * Creates the command and sets the name as the current result.
  * Returns the AioFile pointer on sucess or NULL on failure.
  */
-static __device__ AioFile *JimMakeChannel(Jim_Interp *interp, FILE *fh, int fd, Jim_Obj *filename,
+static __host_device__ AioFile *JimMakeChannel(Jim_Interp *interp, FILE *fh, int fd, Jim_Obj *filename,
     const char *hdlfmt, int family, const char *mode)
 {
     AioFile *af;
@@ -1740,7 +1740,7 @@ static __device__ AioFile *JimMakeChannel(Jim_Interp *interp, FILE *fh, int fd, 
 /**
  * Create a pair of channels. e.g. from pipe() or socketpair()
  */
-static __device__ int JimMakeChannelPair(Jim_Interp *interp, int p[2], Jim_Obj *filename,
+static __host_device__ int JimMakeChannelPair(Jim_Interp *interp, int p[2], Jim_Obj *filename,
     const char *hdlfmt, int family, const char *mode[2])
 {
     if (JimMakeChannel(interp, NULL, p[0], filename, hdlfmt, family, mode[0])) {
@@ -1762,7 +1762,7 @@ static __device__ int JimMakeChannelPair(Jim_Interp *interp, int p[2], Jim_Obj *
 #endif
 
 #ifdef HAVE_PIPE
-static __device__ int JimAioPipeCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int JimAioPipeCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     int p[2];
     static const char *mode[2] = { "r", "w" };
@@ -1783,7 +1783,7 @@ static __device__ int JimAioPipeCommand(Jim_Interp *interp, int argc, Jim_Obj *c
 
 #if defined(HAVE_SOCKETS) && !defined(JIM_BOOTSTRAP)
 
-static __device__ int JimAioSockCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int JimAioSockCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     const char *hdlfmt = "aio.unknown%ld";
     const char *socktypes[] = {
@@ -2039,7 +2039,7 @@ static __device__ int JimAioSockCommand(Jim_Interp *interp, int argc, Jim_Obj *c
 #endif /* JIM_BOOTSTRAP */
 
 #if defined(JIM_SSL) && !defined(JIM_BOOTSTRAP)
-static __device__ int JimAioLoadSSLCertsCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int JimAioLoadSSLCertsCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     SSL_CTX *ssl_ctx;
 
@@ -2060,7 +2060,7 @@ static __device__ int JimAioLoadSSLCertsCommand(Jim_Interp *interp, int argc, Ji
 }
 #endif /* JIM_BOOTSTRAP */
 
-__device__ int Jim_aioInit(Jim_Interp *interp)
+__host_device__ int Jim_aioInit(Jim_Interp *interp)
 {
     if (Jim_PackageProvide(interp, "aio", "1.0", JIM_ERRMSG))
         return JIM_ERR;

@@ -69,7 +69,7 @@
  *      "abc" "::def"    => def
  *
  */
-__device__ Jim_Obj *JimCanonicalNamespace(Jim_Interp *interp, Jim_Obj *nsObj, Jim_Obj *nameObj)
+__host_device__ Jim_Obj *JimCanonicalNamespace(Jim_Interp *interp, Jim_Obj *nsObj, Jim_Obj *nameObj)
 {
     Jim_Obj *objPtr;
     const char *name = Jim_String(nameObj);
@@ -92,7 +92,7 @@ __device__ Jim_Obj *JimCanonicalNamespace(Jim_Interp *interp, Jim_Obj *nsObj, Ji
     return objPtr;
 }
 
-__device__ int Jim_CreateNamespaceVariable(Jim_Interp *interp, Jim_Obj *varNameObj, Jim_Obj *targetNameObj)
+__host_device__ int Jim_CreateNamespaceVariable(Jim_Interp *interp, Jim_Obj *varNameObj, Jim_Obj *targetNameObj)
 {
     int rc;
     Jim_IncrRefCount(varNameObj);
@@ -121,7 +121,7 @@ __device__ int Jim_CreateNamespaceVariable(Jim_Interp *interp, Jim_Obj *varNameO
  * ::         => ""
  * ""         => ""
  */
-__device__ Jim_Obj *Jim_NamespaceQualifiers(Jim_Interp *interp, Jim_Obj *ns)
+__host_device__ Jim_Obj *Jim_NamespaceQualifiers(Jim_Interp *interp, Jim_Obj *ns)
 {
     const char *name = Jim_String(ns);
     const char *pt = strrchr(name, ':');
@@ -133,7 +133,7 @@ __device__ Jim_Obj *Jim_NamespaceQualifiers(Jim_Interp *interp, Jim_Obj *ns)
     }
 }
 
-__device__ Jim_Obj *Jim_NamespaceTail(Jim_Interp *interp, Jim_Obj *ns)
+__host_device__ Jim_Obj *Jim_NamespaceTail(Jim_Interp *interp, Jim_Obj *ns)
 {
     const char *name = Jim_String(ns);
     const char *pt = strrchr(name, ':');
@@ -145,14 +145,14 @@ __device__ Jim_Obj *Jim_NamespaceTail(Jim_Interp *interp, Jim_Obj *ns)
     }
 }
 
-static __device__ Jim_Obj *JimNamespaceCurrent(Jim_Interp *interp)
+static __host_device__ Jim_Obj *JimNamespaceCurrent(Jim_Interp *interp)
 {
     Jim_Obj *objPtr = Jim_NewStringObj(interp, "::", 2);
     Jim_AppendObj(interp, objPtr, interp->framePtr->nsObj);
     return objPtr;
 }
 
-static __device__ int JimVariableCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int JimVariableCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     int retcode = JIM_OK;
 
@@ -184,7 +184,7 @@ static __device__ int JimVariableCmd(Jim_Interp *interp, int argc, Jim_Obj *cons
 /* Used to invoke script-based helpers.
  * It would be ideal if ensembles were supported in the core
  */
-static __device__ int Jim_EvalEnsemble(Jim_Interp *interp, const char *basecmd, const char *subcmd, int argc, Jim_Obj *const *argv)
+static __host_device__ int Jim_EvalEnsemble(Jim_Interp *interp, const char *basecmd, const char *subcmd, int argc, Jim_Obj *const *argv)
 {
     Jim_Obj *prefixObj = Jim_NewStringObj(interp, basecmd, -1);
 
@@ -194,7 +194,7 @@ static __device__ int Jim_EvalEnsemble(Jim_Interp *interp, const char *basecmd, 
     return Jim_EvalObjPrefix(interp, prefixObj, argc, argv);
 }
 
-static __device__ int JimNamespaceCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int JimNamespaceCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     Jim_Obj *nsObj;
     Jim_Obj *objPtr;
@@ -322,7 +322,7 @@ static __device__ int JimNamespaceCmd(Jim_Interp *interp, int argc, Jim_Obj *con
     return Jim_EvalEnsemble(interp, "namespace", options[option], argc - 2, argv + 2);
 }
 
-__device__ int Jim_namespaceInit(Jim_Interp *interp)
+__host_device__ int Jim_namespaceInit(Jim_Interp *interp)
 {
     if (Jim_PackageProvide(interp, "namespace", "1.0", JIM_ERRMSG))
         return JIM_ERR;

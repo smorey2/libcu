@@ -1,7 +1,7 @@
 #include <stringcu.h>
 #include "jimiocompat.h"
 
-__device__ void Jim_SetResultErrno(Jim_Interp *interp, const char *msg)
+__host_device__ void Jim_SetResultErrno(Jim_Interp *interp, const char *msg)
 {
     Jim_SetResultFormatted(interp, "%s: %s", msg, strerror(Jim_Errno()));
 }
@@ -154,7 +154,7 @@ int Jim_OpenForRead(const char *filename)
 
 /* Unix-specific implementation */
 
-__device__ int Jim_MakeTempFile(Jim_Interp *interp, const char *filename_template, int unlink_file)
+__host_device__ int Jim_MakeTempFile(Jim_Interp *interp, const char *filename_template, int unlink_file)
 {
     int fd;
     mode_t mask;
@@ -201,12 +201,12 @@ __device__ int Jim_MakeTempFile(Jim_Interp *interp, const char *filename_templat
     return fd;
 }
 
-__device__ int Jim_OpenForWrite(const char *filename, int append)
+__host_device__ int Jim_OpenForWrite(const char *filename, int append)
 {
     return open(filename, O_WRONLY | O_CREAT | (append ? O_APPEND : O_TRUNC), 0666);
 }
 
-__device__ int Jim_OpenForRead(const char *filename)
+__host_device__ int Jim_OpenForRead(const char *filename)
 {
     return open(filename, O_RDONLY, 0);
 }

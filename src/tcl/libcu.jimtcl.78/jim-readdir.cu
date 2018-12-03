@@ -66,7 +66,7 @@
  *      Standard TCL result.
  *-----------------------------------------------------------------------------
  */
-__device__ int Jim_ReaddirCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+__host_device__ int Jim_ReaddirCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     const char *dirPath;
     DIR *dirPtr;
@@ -112,7 +112,7 @@ __device__ int Jim_ReaddirCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv
     }
 }
 
-__device__ int Jim_readdirInit(Jim_Interp *interp)
+__host_device__ int Jim_readdirInit(Jim_Interp *interp)
 {
     if (Jim_PackageProvide(interp, "readdir", "1.0", JIM_ERRMSG))
         return JIM_ERR;

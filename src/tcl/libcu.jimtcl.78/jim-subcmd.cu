@@ -13,7 +13,7 @@
 /**
  * Implements the common 'commands' subcommand
  */
-static __device__ int subcmd_null(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int subcmd_null(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     /* Nothing to do, since the result has already been created */
     return JIM_OK;
@@ -22,11 +22,11 @@ static __device__ int subcmd_null(Jim_Interp *interp, int argc, Jim_Obj *const *
 /**
  * Do-nothing command to support -commands and -usage
  */
-static __constant__ const jim_subcmd_type dummy_subcmd = {
+static __host_constant__ const jim_subcmd_type dummy_subcmd = {
     "dummy", NULL, subcmd_null, 0, 0, JIM_MODFLAG_HIDDEN
 };
 
-static __device__ void add_commands(Jim_Interp *interp, const jim_subcmd_type * ct, const char *sep)
+static __host_device__ void add_commands(Jim_Interp *interp, const jim_subcmd_type * ct, const char *sep)
 {
     const char *s = "";
 
@@ -38,21 +38,21 @@ static __device__ void add_commands(Jim_Interp *interp, const jim_subcmd_type * 
     }
 }
 
-static __device__ void bad_subcmd(Jim_Interp *interp, const jim_subcmd_type * command_table, const char *type,
+static __host_device__ void bad_subcmd(Jim_Interp *interp, const jim_subcmd_type * command_table, const char *type,
     Jim_Obj *cmd, Jim_Obj *subcmd)
 {
     Jim_SetResultFormatted(interp, "%#s, %s command \"%#s\": should be ", cmd, type, subcmd);
     add_commands(interp, command_table, ", ");
 }
 
-static __device__ void show_cmd_usage(Jim_Interp *interp, const jim_subcmd_type * command_table, int argc,
+static __host_device__ void show_cmd_usage(Jim_Interp *interp, const jim_subcmd_type * command_table, int argc,
     Jim_Obj *const *argv)
 {
     Jim_SetResultFormatted(interp, "Usage: \"%#s command ... \", where command is one of: ", argv[0]);
     add_commands(interp, command_table, ", ");
 }
 
-static __device__ void add_cmd_usage(Jim_Interp *interp, const jim_subcmd_type * ct, Jim_Obj *cmd)
+static __host_device__ void add_cmd_usage(Jim_Interp *interp, const jim_subcmd_type * ct, Jim_Obj *cmd)
 {
     if (cmd) {
         Jim_AppendStrings(interp, Jim_GetResult(interp), Jim_String(cmd), " ", NULL);
@@ -63,7 +63,7 @@ static __device__ void add_cmd_usage(Jim_Interp *interp, const jim_subcmd_type *
     }
 }
 
-static __device__ void set_wrong_args(Jim_Interp *interp, const jim_subcmd_type * command_table, Jim_Obj *subcmd)
+static __host_device__ void set_wrong_args(Jim_Interp *interp, const jim_subcmd_type * command_table, Jim_Obj *subcmd)
 {
     Jim_SetResultString(interp, "wrong # args: should be \"", -1);
     add_cmd_usage(interp, command_table, subcmd);
@@ -74,7 +74,7 @@ static __device__ void set_wrong_args(Jim_Interp *interp, const jim_subcmd_type 
  *  ptr = command_table
  *  int1 = index
  */
-static __device__ const Jim_ObjType subcmdLookupObjType = {
+static __hostb_device__ const Jim_ObjType subcmdLookupObjType = {
     "subcmd-lookup",
     NULL,
     NULL,
@@ -82,7 +82,7 @@ static __device__ const Jim_ObjType subcmdLookupObjType = {
     JIM_TYPE_REFERENCES
 };
 
-__device__ const jim_subcmd_type *Jim_ParseSubCmd(Jim_Interp *interp, const jim_subcmd_type * command_table,
+__host_device__ const jim_subcmd_type *Jim_ParseSubCmd(Jim_Interp *interp, const jim_subcmd_type * command_table,
     int argc, Jim_Obj *const *argv)
 {
     const jim_subcmd_type *ct;
@@ -196,7 +196,7 @@ found:
     return ct;
 }
 
-__device__ int Jim_CallSubCmd(Jim_Interp *interp, const jim_subcmd_type * ct, int argc, Jim_Obj *const *argv)
+__host_device__ int Jim_CallSubCmd(Jim_Interp *interp, const jim_subcmd_type * ct, int argc, Jim_Obj *const *argv)
 {
     int ret = JIM_ERR;
 
@@ -215,7 +215,7 @@ __device__ int Jim_CallSubCmd(Jim_Interp *interp, const jim_subcmd_type * ct, in
     return ret;
 }
 
-__device__ int Jim_SubCmdProc(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+__host_device__ int Jim_SubCmdProc(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     const jim_subcmd_type *ct =
         Jim_ParseSubCmd(interp, (const jim_subcmd_type *)Jim_CmdPrivData(interp), argc, argv);

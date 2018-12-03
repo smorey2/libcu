@@ -12,7 +12,7 @@
 /**
  * Returns the common initial length of the two strings.
  */
-static __device__ int JimStringCommonLength(const char *str1, int charlen1, const char *str2, int charlen2)
+static __host_device__ int JimStringCommonLength(const char *str1, int charlen1, const char *str2, int charlen2)
 {
     int maxlen = 0;
     while (charlen1-- && charlen2--) {
@@ -30,7 +30,7 @@ static __device__ int JimStringCommonLength(const char *str1, int charlen1, cons
 
 /* [tcl::prefix]
  */
-static __device__ int Jim_TclPrefixCoreCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int Jim_TclPrefixCoreCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     Jim_Obj *objPtr;
     Jim_Obj *stringObj;
@@ -186,7 +186,7 @@ static __device__ int Jim_TclPrefixCoreCommand(Jim_Interp *interp, int argc, Jim
     return JIM_ERR; /* Cannot ever get here */
 }
 
-__device__ int Jim_tclprefixInit(Jim_Interp *interp)
+__host_device__ int Jim_tclprefixInit(Jim_Interp *interp)
 {
     if (Jim_PackageProvide(interp, "tclprefix", "1.0", JIM_ERRMSG)) {
         return JIM_ERR;

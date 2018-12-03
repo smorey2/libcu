@@ -14,7 +14,7 @@
 #include "utf8.h"
 
 /* This one is always implemented */
-__device__ int utf8_fromunicode(char *p, unsigned uc)
+__host_device__ int utf8_fromunicode(char *p, unsigned uc)
 {
     if (uc <= 0x7f) {
         *p = uc;
@@ -42,7 +42,7 @@ __device__ int utf8_fromunicode(char *p, unsigned uc)
 }
 
 #if defined(USE_UTF8) && !defined(JIM_BOOTSTRAP)
-__device__ int utf8_charlen(int c)
+__host_device__ int utf8_charlen(int c)
 {
     if ((c & 0x80) == 0) {
         return 1;
@@ -60,7 +60,7 @@ __device__ int utf8_charlen(int c)
     return -1;
 }
 
-__device__ int utf8_strlen(const char *str, int bytelen)
+__host_device__ int utf8_strlen(const char *str, int bytelen)
 {
     int charlen = 0;
     if (bytelen < 0) {
@@ -76,7 +76,7 @@ __device__ int utf8_strlen(const char *str, int bytelen)
     return charlen;
 }
 
-__device__ int utf8_strwidth(const char *str, int charlen)
+__host_device__ int utf8_strwidth(const char *str, int charlen)
 {
     int width = 0;
     while (charlen) {
@@ -89,7 +89,7 @@ __device__ int utf8_strwidth(const char *str, int charlen)
     return width;
 }
 
-__device__ int utf8_index(const char *str, int index)
+__host_device__ int utf8_index(const char *str, int index)
 {
     const char *s = str;
     while (index--) {
@@ -99,7 +99,7 @@ __device__ int utf8_index(const char *str, int index)
     return s - str;
 }
 
-__device__ int utf8_prev_len(const char *str, int len)
+__host_device__ int utf8_prev_len(const char *str, int len)
 {
     int n = 1;
 
@@ -120,7 +120,7 @@ __device__ int utf8_prev_len(const char *str, int len)
     return n;
 }
 
-__device__ int utf8_tounicode(const char *str, int *uc)
+__host_device__ int utf8_tounicode(const char *str, int *uc)
 {
     unsigned const char *s = (unsigned const char *)str;
 
@@ -177,12 +177,12 @@ struct utf8range {
 
 #define ARRAYSIZE(A) sizeof(A) / sizeof(*(A))
 
-static __device__ int cmp_casemap(const void *key, const void *cm)
+static __host_device__ int cmp_casemap(const void *key, const void *cm)
 {
     return *(int *)key - (int)((const struct casemap *)cm)->code;
 }
 
-static __device__ int utf8_map_case(const struct casemap *mapping, int num, int ch)
+static __host_device__ int utf8_map_case(const struct casemap *mapping, int num, int ch)
 {
     /* We only support 16 bit case mapping */
     if (ch <= 0xffff) {
@@ -196,7 +196,7 @@ static __device__ int utf8_map_case(const struct casemap *mapping, int num, int 
     return ch;
 }
 
-static __device__ int cmp_range(const void *key, const void *cm)
+static __host_device__ int cmp_range(const void *key, const void *cm)
 {
     const struct utf8range *range = (const struct utf8range *)cm;
     unsigned ch = *(unsigned *)key;
@@ -209,7 +209,7 @@ static __device__ int cmp_range(const void *key, const void *cm)
     return 0;
 }
 
-static __device__ int utf8_in_range(const struct utf8range *range, int num, int ch)
+static __host_device__ int utf8_in_range(const struct utf8range *range, int num, int ch)
 {
     const struct utf8range *r =
         bsearch(&ch, range, num, sizeof(*range), cmp_range);
@@ -220,7 +220,7 @@ static __device__ int utf8_in_range(const struct utf8range *range, int num, int 
     return 0;
 }
 
-__device__ int utf8_upper(int ch)
+__host_device__ int utf8_upper(int ch)
 {
     if (isascii(ch)) {
         return toupper(ch);
@@ -228,7 +228,7 @@ __device__ int utf8_upper(int ch)
     return utf8_map_case(unicode_case_mapping_upper, ARRAYSIZE(unicode_case_mapping_upper), ch);
 }
 
-__device__ int utf8_lower(int ch)
+__host_device__ int utf8_lower(int ch)
 {
     if (isascii(ch)) {
         return tolower(ch);
@@ -236,7 +236,7 @@ __device__ int utf8_lower(int ch)
     return utf8_map_case(unicode_case_mapping_lower, ARRAYSIZE(unicode_case_mapping_lower), ch);
 }
 
-__device__ int utf8_title(int ch)
+__host_device__ int utf8_title(int ch)
 {
     if (!isascii(ch)) {
         int newch = utf8_map_case(unicode_case_mapping_title, ARRAYSIZE(unicode_case_mapping_title), ch);
@@ -247,7 +247,7 @@ __device__ int utf8_title(int ch)
     return utf8_upper(ch);
 }
 
-__device__ int utf8_width(int ch)
+__host_device__ int utf8_width(int ch)
 {
     if (!isascii(ch)) {
         if (utf8_in_range(unicode_range_combining, ARRAYSIZE(unicode_range_combining), ch)) {

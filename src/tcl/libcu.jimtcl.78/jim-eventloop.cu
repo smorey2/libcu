@@ -106,10 +106,10 @@ typedef struct Jim_EventLoop
     int suppress_bgerror; /* bgerror returned break, so don't call it again */
 } Jim_EventLoop;
 
-static __device__ void JimAfterTimeHandler(Jim_Interp *interp, void *clientData);
-static __device__ void JimAfterTimeEventFinalizer(Jim_Interp *interp, void *clientData);
+static __host_device__ void JimAfterTimeHandler(Jim_Interp *interp, void *clientData);
+static __host_device__ void JimAfterTimeEventFinalizer(Jim_Interp *interp, void *clientData);
 
-__device__ int Jim_EvalObjBackground(Jim_Interp *interp, Jim_Obj *scriptObjPtr)
+__host_device__ int Jim_EvalObjBackground(Jim_Interp *interp, Jim_Obj *scriptObjPtr)
 {
     Jim_EventLoop *eventLoop = (Jim_EventLoop *)Jim_GetAssocData(interp, "eventloop");
     Jim_CallFrame *savedFramePtr;
@@ -148,7 +148,7 @@ __device__ int Jim_EvalObjBackground(Jim_Interp *interp, Jim_Obj *scriptObjPtr)
 }
 
 
-__device__ void Jim_CreateFileHandler(Jim_Interp *interp, int fd, int mask,
+__host_device__ void Jim_CreateFileHandler(Jim_Interp *interp, int fd, int mask,
     Jim_FileProc * proc, void *clientData, Jim_EventFinalizerProc * finalizerProc)
 {
     Jim_FileEvent *fe;
@@ -167,7 +167,7 @@ __device__ void Jim_CreateFileHandler(Jim_Interp *interp, int fd, int mask,
 /**
  * Removes all event handlers for 'handle' that match 'mask'.
  */
-__device__ void Jim_DeleteFileHandler(Jim_Interp *interp, int fd, int mask)
+__host_device__ void Jim_DeleteFileHandler(Jim_Interp *interp, int fd, int mask)
 {
     Jim_FileEvent *fe, *next, *prev = NULL;
     Jim_EventLoop *eventLoop = (Jim_EventLoop *)Jim_GetAssocData(interp, "eventloop");
@@ -192,7 +192,7 @@ __device__ void Jim_DeleteFileHandler(Jim_Interp *interp, int fd, int mask)
 /**
  * Returns the time since interp creation in microseconds.
  */
-static __device__ jim_wide JimGetTimeUsec(Jim_EventLoop *eventLoop)
+static __host_device__ jim_wide JimGetTimeUsec(Jim_EventLoop *eventLoop)
 {
     long long now;
     struct timeval tv;
@@ -214,7 +214,7 @@ static __device__ jim_wide JimGetTimeUsec(Jim_EventLoop *eventLoop)
     return now - eventLoop->timeBase;
 }
 
-__device__ jim_wide Jim_CreateTimeHandler(Jim_Interp *interp, jim_wide us,
+__host_device__ jim_wide Jim_CreateTimeHandler(Jim_Interp *interp, jim_wide us,
     Jim_TimeProc * proc, void *clientData, Jim_EventFinalizerProc * finalizerProc)
 {
     Jim_EventLoop *eventLoop = (Jim_EventLoop *)Jim_GetAssocData(interp, "eventloop");
@@ -249,7 +249,7 @@ __device__ jim_wide Jim_CreateTimeHandler(Jim_Interp *interp, jim_wide us,
     return id;
 }
 
-static __device__ jim_wide JimParseAfterId(Jim_Obj *idObj)
+static __host_device__ jim_wide JimParseAfterId(Jim_Obj *idObj)
 {
     const char *tok = Jim_String(idObj);
     jim_wide id;
@@ -261,7 +261,7 @@ static __device__ jim_wide JimParseAfterId(Jim_Obj *idObj)
     return -1;
 }
 
-static __device__ jim_wide JimFindAfterByScript(Jim_EventLoop *eventLoop, Jim_Obj *scriptObj)
+static __host_device__ jim_wide JimFindAfterByScript(Jim_EventLoop *eventLoop, Jim_Obj *scriptObj)
 {
     Jim_TimeEvent *te;
 
@@ -276,7 +276,7 @@ static __device__ jim_wide JimFindAfterByScript(Jim_EventLoop *eventLoop, Jim_Ob
     return -1;                  /* NO event with the specified ID found */
 }
 
-static __device__ Jim_TimeEvent *JimFindTimeHandlerById(Jim_EventLoop *eventLoop, jim_wide id)
+static __host_device__ Jim_TimeEvent *JimFindTimeHandlerById(Jim_EventLoop *eventLoop, jim_wide id)
 {
     Jim_TimeEvent *te;
 
@@ -288,7 +288,7 @@ static __device__ Jim_TimeEvent *JimFindTimeHandlerById(Jim_EventLoop *eventLoop
     return NULL;
 }
 
-static __device__ Jim_TimeEvent *Jim_RemoveTimeHandler(Jim_EventLoop *eventLoop, jim_wide id)
+static __host_device__ Jim_TimeEvent *Jim_RemoveTimeHandler(Jim_EventLoop *eventLoop, jim_wide id)
 {
     Jim_TimeEvent *te, *prev = NULL;
 
@@ -305,14 +305,14 @@ static __device__ Jim_TimeEvent *Jim_RemoveTimeHandler(Jim_EventLoop *eventLoop,
     return NULL;
 }
 
-static __device__ void Jim_FreeTimeHandler(Jim_Interp *interp, Jim_TimeEvent *te)
+static __host_device__ void Jim_FreeTimeHandler(Jim_Interp *interp, Jim_TimeEvent *te)
 {
     if (te->finalizerProc)
         te->finalizerProc(interp, te->clientData);
     Jim_Free(te);
 }
 
-__device__ jim_wide Jim_DeleteTimeHandler(Jim_Interp *interp, jim_wide id)
+__host_device__ jim_wide Jim_DeleteTimeHandler(Jim_Interp *interp, jim_wide id)
 {
     Jim_TimeEvent *te;
     Jim_EventLoop *eventLoop = (Jim_EventLoop *)Jim_GetAssocData(interp, "eventloop");
@@ -350,7 +350,7 @@ __device__ jim_wide Jim_DeleteTimeHandler(Jim_Interp *interp, jim_wide id)
  * Returns the number of events processed or -1 if
  * there are no matching handlers, or -2 on error.
  */
-__device__ int Jim_ProcessEvents(Jim_Interp *interp, int flags)
+__host_device__ int Jim_ProcessEvents(Jim_Interp *interp, int flags)
 {
     jim_wide sleep_us = -1;
     int processed = 0;
@@ -511,7 +511,7 @@ __device__ int Jim_ProcessEvents(Jim_Interp *interp, int flags)
 
 /* ---------------------------------------------------------------------- */
 
-static __device__ void JimELAssocDataDeleProc(Jim_Interp *interp, void *data)
+static __host_device__ void JimELAssocDataDeleProc(Jim_Interp *interp, void *data)
 {
     void *next;
     Jim_FileEvent *fe;
@@ -538,7 +538,7 @@ static __device__ void JimELAssocDataDeleProc(Jim_Interp *interp, void *data)
     Jim_Free(data);
 }
 
-static __device__ int JimELVwaitCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int JimELVwaitCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     Jim_EventLoop *eventLoop = (Jim_EventLoop *)Jim_CmdPrivData(interp);
     Jim_Obj *oldValue;
@@ -587,7 +587,7 @@ static __device__ int JimELVwaitCommand(Jim_Interp *interp, int argc, Jim_Obj *c
     return JIM_OK;
 }
 
-static __device__ int JimELUpdateCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int JimELUpdateCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     Jim_EventLoop *eventLoop = (Jim_EventLoop *)Jim_CmdPrivData(interp);
     static const char * const options[] = {
@@ -613,21 +613,21 @@ static __device__ int JimELUpdateCommand(Jim_Interp *interp, int argc, Jim_Obj *
     return JIM_OK;
 }
 
-static __device__ void JimAfterTimeHandler(Jim_Interp *interp, void *clientData)
+static __host_device__ void JimAfterTimeHandler(Jim_Interp *interp, void *clientData)
 {
     Jim_Obj *objPtr = (Jim_Obj *)clientData;
 
     Jim_EvalObjBackground(interp, objPtr);
 }
 
-static __device__ void JimAfterTimeEventFinalizer(Jim_Interp *interp, void *clientData)
+static __host_device__ void JimAfterTimeEventFinalizer(Jim_Interp *interp, void *clientData)
 {
     Jim_Obj *objPtr = (Jim_Obj *)clientData;
 
     Jim_DecrRefCount(interp, objPtr);
 }
 
-static __device__ int JimELAfterCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int JimELAfterCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     Jim_EventLoop *eventLoop = (Jim_EventLoop *)Jim_CmdPrivData(interp);
     double ms = 0;
@@ -741,7 +741,7 @@ static __device__ int JimELAfterCommand(Jim_Interp *interp, int argc, Jim_Obj *c
     return JIM_OK;
 }
 
-__device__ int Jim_eventloopInit(Jim_Interp *interp)
+__host_device__ int Jim_eventloopInit(Jim_Interp *interp)
 {
     Jim_EventLoop *eventLoop;
 

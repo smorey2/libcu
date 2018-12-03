@@ -16,19 +16,19 @@
 /**
  * Set an error result based on errno and the given message.
  */
-__device__ void Jim_SetResultErrno(Jim_Interp *interp, const char *msg);
+__host_device__ void Jim_SetResultErrno(Jim_Interp *interp, const char *msg);
 
 /**
  * Opens the file for writing (and appending if append is true).
  * Returns the file descriptor, or -1 on failure.
  */
-__device__ int Jim_OpenForWrite(const char *filename, int append);
+__host_device__ int Jim_OpenForWrite(const char *filename, int append);
 
 /**
  * Opens the file for reading.
  * Returns the file descriptor, or -1 on failure.
  */
-__device__ int Jim_OpenForRead(const char *filename);
+__host_device__ int Jim_OpenForRead(const char *filename);
 
 #if defined(__MINGW32__)
     #ifndef STRICT

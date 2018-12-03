@@ -4,13 +4,13 @@
 #include "jimautoconf.h"
 #include "jim-subcmd.h"
 
-static __device__ void JimInterpDelProc(Jim_Interp *interp, void *privData)
+static __host_device__ void JimInterpDelProc(Jim_Interp *interp, void *privData)
 {
     Jim_FreeInterp((Jim_Interp *)privData);
 }
 
 /* Everything passing between interpreters must be converted to a string */
-static __device__ Jim_Obj *JimInterpCopyObj(Jim_Interp *target, Jim_Obj *obj)
+static __host_device__ Jim_Obj *JimInterpCopyObj(Jim_Interp *target, Jim_Obj *obj)
 {
     const char *rep;
     int len;
@@ -21,7 +21,7 @@ static __device__ Jim_Obj *JimInterpCopyObj(Jim_Interp *target, Jim_Obj *obj)
 
 #define JimInterpCopyResult(to, from) Jim_SetResult((to), JimInterpCopyObj((to), Jim_GetResult((from))))
 
-static __device__ int interp_cmd_eval(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int interp_cmd_eval(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     int ret;
     Jim_Interp *child = (Jim_Interp *)Jim_CmdPrivData(interp);
@@ -40,18 +40,18 @@ static __device__ int interp_cmd_eval(Jim_Interp *interp, int argc, Jim_Obj *con
     return ret;
 }
 
-static __device__ int interp_cmd_delete(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int interp_cmd_delete(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     return Jim_DeleteCommand(interp, Jim_String(argv[0]));
 }
 
-static __device__ void JimInterpDelAlias(Jim_Interp *interp, void *privData)
+static __host_device__ void JimInterpDelAlias(Jim_Interp *interp, void *privData)
 {
     Jim_Interp *parent = (Jim_Interp *)Jim_GetAssocData(interp, "interp.parent");
     Jim_DecrRefCount(parent, (Jim_Obj *)privData);
 }
 
-static __device__ int JimInterpAliasProc(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int JimInterpAliasProc(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     int i, ret;
     Jim_Interp *parent = (Jim_Interp *)Jim_GetAssocData(interp, "interp.parent");
@@ -75,7 +75,7 @@ static __device__ int JimInterpAliasProc(Jim_Interp *interp, int argc, Jim_Obj *
     return ret;
 }
 
-static __device__ int interp_cmd_alias(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int interp_cmd_alias(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     Jim_Interp *child = (Jim_Interp *)Jim_CmdPrivData(interp);
     Jim_Obj *aliasPrefixList;
@@ -91,7 +91,7 @@ static __device__ int interp_cmd_alias(Jim_Interp *interp, int argc, Jim_Obj *co
     return JIM_OK;
 }
 
-static __constant__ const jim_subcmd_type interp_command_table[] = {
+static __host_constant__ const jim_subcmd_type interp_command_table[] = {
     {   "eval",
         "script ...",
         interp_cmd_eval,
@@ -117,12 +117,12 @@ static __constant__ const jim_subcmd_type interp_command_table[] = {
     { NULL }
 };
 
-static __device__ int JimInterpSubCmdProc(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int JimInterpSubCmdProc(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     return Jim_CallSubCmd(interp, Jim_ParseSubCmd(interp, interp_command_table, argc, argv), argc, argv);
 }
 
-static __device__ void JimInterpCopyVariable(Jim_Interp *target, Jim_Interp *source, const char *var, const char *default_value)
+static __host_device__ void JimInterpCopyVariable(Jim_Interp *target, Jim_Interp *source, const char *var, const char *default_value)
 {
     Jim_Obj *value = Jim_GetGlobalVariableStr(source, var, JIM_NONE);
     const char *str;
@@ -136,7 +136,7 @@ static __device__ void JimInterpCopyVariable(Jim_Interp *target, Jim_Interp *sou
 /**
  * [interp] creates a new interpreter.
  */
-static __device__ int JimInterpCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int JimInterpCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     Jim_Interp *child;
     char buf[34];
@@ -167,7 +167,7 @@ static __device__ int JimInterpCommand(Jim_Interp *interp, int argc, Jim_Obj *co
     return JIM_OK;
 }
 
-__device__ int Jim_interpInit(Jim_Interp *interp)
+__host_device__ int Jim_interpInit(Jim_Interp *interp)
 {
     if (Jim_PackageProvide(interp, "interp", "1.0", JIM_ERRMSG))
         return JIM_ERR;

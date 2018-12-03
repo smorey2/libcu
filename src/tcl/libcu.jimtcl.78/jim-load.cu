@@ -104,7 +104,7 @@ static void JimFreeLoadHandles(Jim_Interp *interp, void *data)
 }
 
 #else /* JIM_DYNLIB */
-__device__ int Jim_LoadLibrary(Jim_Interp *interp, const char *pathName)
+__host_device__ int Jim_LoadLibrary(Jim_Interp *interp, const char *pathName)
 {
     JIM_NOTUSED(interp);
     JIM_NOTUSED(pathName);
@@ -113,13 +113,13 @@ __device__ int Jim_LoadLibrary(Jim_Interp *interp, const char *pathName)
     return JIM_ERR;
 }
 
-__device__ void Jim_FreeLoadHandles(Jim_Interp *interp)
+__host_device__ void Jim_FreeLoadHandles(Jim_Interp *interp)
 {
 }
 #endif /* JIM_DYNLIB */
 
 /* [load] */
-static __device__ int Jim_LoadCoreCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int Jim_LoadCoreCommand(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     if (argc < 2) {
         Jim_WrongNumArgs(interp, 1, argv, "libraryFile");
@@ -128,7 +128,7 @@ static __device__ int Jim_LoadCoreCommand(Jim_Interp *interp, int argc, Jim_Obj 
     return Jim_LoadLibrary(interp, Jim_String(argv[1]));
 }
 
-__device__ int Jim_loadInit(Jim_Interp *interp)
+__host_device__ int Jim_loadInit(Jim_Interp *interp)
 {
     Jim_CreateCommand(interp, "load", Jim_LoadCoreCommand, NULL, NULL);
     return JIM_OK;

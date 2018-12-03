@@ -24,7 +24,7 @@ static const char completion_callback_assoc_key[] = "interactive-completion";
 /**
  * Returns an allocated line, or NULL if EOF.
  */
-__device__ char *Jim_HistoryGetline(Jim_Interp *interp, const char *prompt)
+__host_device__ char *Jim_HistoryGetline(Jim_Interp *interp, const char *prompt)
 {
 #ifdef USE_LINENOISE
     struct JimCompletionInfo *compinfo = Jim_GetAssocData(interp, completion_callback_assoc_key);
@@ -65,21 +65,21 @@ __device__ char *Jim_HistoryGetline(Jim_Interp *interp, const char *prompt)
 #endif
 }
 
-__device__ void Jim_HistoryLoad(const char *filename)
+__host_device__ void Jim_HistoryLoad(const char *filename)
 {
 #ifdef USE_LINENOISE
     linenoiseHistoryLoad(filename);
 #endif
 }
 
-__device__ void Jim_HistoryAdd(const char *line)
+__host_device__ void Jim_HistoryAdd(const char *line)
 {
 #ifdef USE_LINENOISE
     linenoiseHistoryAdd(line);
 #endif
 }
 
-__device__ void Jim_HistorySave(const char *filename)
+__host_device__ void Jim_HistorySave(const char *filename)
 {
 #ifdef USE_LINENOISE
 #ifdef HAVE_UMASK
@@ -94,7 +94,7 @@ __device__ void Jim_HistorySave(const char *filename)
 #endif
 }
 
-__device__ void Jim_HistoryShow(void)
+__host_device__ void Jim_HistoryShow(void)
 {
 #ifdef USE_LINENOISE
     /* built-in history command */
@@ -113,7 +113,7 @@ struct JimCompletionInfo {
     Jim_Obj *command;
 };
 
-static __device__ void JimCompletionCallback(const char *prefix, linenoiseCompletions *comp, void *userdata)
+static __host_device__ void JimCompletionCallback(const char *prefix, linenoiseCompletions *comp, void *userdata)
 {
     struct JimCompletionInfo *info = (struct JimCompletionInfo *)userdata;
     Jim_Obj *objv[2];
@@ -135,7 +135,7 @@ static __device__ void JimCompletionCallback(const char *prefix, linenoiseComple
     }
 }
 
-static __device__ void JimHistoryFreeCompletion(Jim_Interp *interp, void *data)
+static __host_device__ void JimHistoryFreeCompletion(Jim_Interp *interp, void *data)
 {
     struct JimCompletionInfo *compinfo = data;
 
@@ -149,7 +149,7 @@ static __device__ void JimHistoryFreeCompletion(Jim_Interp *interp, void *data)
  * Sets a completion command to be used with Jim_HistoryGetline()
  * If commandObj is NULL, deletes any existing completion command.
  */
-__device__ void Jim_HistorySetCompletion(Jim_Interp *interp, Jim_Obj *commandObj)
+__host_device__ void Jim_HistorySetCompletion(Jim_Interp *interp, Jim_Obj *commandObj)
 {
 #ifdef USE_LINENOISE
     if (commandObj) {
@@ -169,7 +169,7 @@ __device__ void Jim_HistorySetCompletion(Jim_Interp *interp, Jim_Obj *commandObj
 #endif
 }
 
-__device__ int Jim_InteractivePrompt(Jim_Interp *interp)
+__host_device__ int Jim_InteractivePrompt(Jim_Interp *interp)
 {
     int retcode = JIM_OK;
     char *history_file = NULL;

@@ -45,7 +45,7 @@ typedef struct {
  *  }
  *
  */
-__device__ const jim_subcmd_type *
+__host_device__ const jim_subcmd_type *
 Jim_ParseSubCmd(Jim_Interp *interp, const jim_subcmd_type *command_table, int argc, Jim_Obj *const *argv);
 
 /**
@@ -56,7 +56,7 @@ Jim_ParseSubCmd(Jim_Interp *interp, const jim_subcmd_type *command_table, int ar
  *
  * e.g. Jim_CreateCommand(interp, "mycmd", Jim_SubCmdProc, command_table, NULL);
  */
-__device__ int Jim_SubCmdProc(Jim_Interp *interp, int argc, Jim_Obj *const *argv);
+__host_device__ int Jim_SubCmdProc(Jim_Interp *interp, int argc, Jim_Obj *const *argv);
 
 /**
  * Invokes the given subcmd with the given args as returned
@@ -68,7 +68,7 @@ __device__ int Jim_SubCmdProc(Jim_Interp *interp, int argc, Jim_Obj *const *argv
  * If ct->function returns -1, sets an error message and returns JIM_ERR.
  * Otherwise returns the result of ct->function.
  */
-__device__ int Jim_CallSubCmd(Jim_Interp *interp, const jim_subcmd_type *ct, int argc, Jim_Obj *const *argv);
+__host_device__ int Jim_CallSubCmd(Jim_Interp *interp, const jim_subcmd_type *ct, int argc, Jim_Obj *const *argv);
 
 #ifdef __cplusplus
 }

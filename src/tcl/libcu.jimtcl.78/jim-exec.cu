@@ -35,7 +35,7 @@
  * The standard output is not available.
  * Can't redirect filehandles.
  */
-static __device__ int Jim_ExecCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int Jim_ExecCmd(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     Jim_Obj *cmdlineObj = Jim_NewEmptyStringObj(interp);
     int i, j;
@@ -80,7 +80,7 @@ static __device__ int Jim_ExecCmd(Jim_Interp *interp, int argc, Jim_Obj *const *
     return JIM_OK;
 }
 
-__device__ int Jim_execInit(Jim_Interp *interp)
+__host_device__ int Jim_execInit(Jim_Interp *interp)
 {
     if (Jim_PackageProvide(interp, "exec", "1.0", JIM_ERRMSG))
         return JIM_ERR;

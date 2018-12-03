@@ -53,7 +53,7 @@
  *
  * Returns a new object with zero reference count if OK, or NULL on error.
  */
-__device__ Jim_Obj *Jim_FormatString(Jim_Interp *interp, Jim_Obj *fmtObjPtr, int objc, Jim_Obj *const *objv)
+__host_device__ Jim_Obj *Jim_FormatString(Jim_Interp *interp, Jim_Obj *fmtObjPtr, int objc, Jim_Obj *const *objv)
 {
     const char *span, *format, *formatEnd, *msg;
     int numBytes = 0, objIndex = 0, gotXpg = 0, gotSequential = 0;

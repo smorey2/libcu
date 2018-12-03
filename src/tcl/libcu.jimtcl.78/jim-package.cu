@@ -10,13 +10,13 @@
 #endif
 
 /* All packages have a fixed, dummy version */
-static __constant__ const char *package_version_1 = "1.0";
+static __host_constant__ const char *package_version_1 = "1.0";
 
 /* -----------------------------------------------------------------------------
  * Packages handling
  * ---------------------------------------------------------------------------*/
 
-__device__ int Jim_PackageProvide(Jim_Interp *interp, const char *name, const char *ver, int flags)
+__host_device__ int Jim_PackageProvide(Jim_Interp *interp, const char *name, const char *ver, int flags)
 {
     /* If the package was already provided returns an error. */
     Jim_HashEntry *he = Jim_FindHashEntry(&interp->packages, name);
@@ -38,7 +38,7 @@ __device__ int Jim_PackageProvide(Jim_Interp *interp, const char *name, const ch
  * Returns the allocated path to the package file if found,
  * or NULL if not found.
  */
-static __device__ char *JimFindPackage(Jim_Interp *interp, Jim_Obj *prefixListObj, const char *pkgName)
+static __host_device__ char *JimFindPackage(Jim_Interp *interp, Jim_Obj *prefixListObj, const char *pkgName)
 {
     int i;
     char *buf = (char *)Jim_Alloc(JIM_PATH_LEN);
@@ -73,7 +73,7 @@ static __device__ char *JimFindPackage(Jim_Interp *interp, Jim_Obj *prefixListOb
 /* Search for a suitable package under every dir specified by JIM_LIBPATH,
  * and load it if possible. If a suitable package was loaded with success
  * JIM_OK is returned, otherwise JIM_ERR is returned. */
-static __device__ int JimLoadPackage(Jim_Interp *interp, const char *name, int flags)
+static __host_device__ int JimLoadPackage(Jim_Interp *interp, const char *name, int flags)
 {
     int retCode = JIM_ERR;
     Jim_Obj *libPathObjPtr = Jim_GetGlobalVariableStr(interp, JIM_LIBPATH, JIM_NONE);
@@ -116,7 +116,7 @@ static __device__ int JimLoadPackage(Jim_Interp *interp, const char *name, int f
     return JIM_ERR;
 }
 
-__device__ int Jim_PackageRequire(Jim_Interp *interp, const char *name, int flags)
+__host_device__ int Jim_PackageRequire(Jim_Interp *interp, const char *name, int flags)
 {
     Jim_HashEntry *he;
 
@@ -161,7 +161,7 @@ __device__ int Jim_PackageRequire(Jim_Interp *interp, const char *name, int flag
  *
  *----------------------------------------------------------------------
  */
-static __device__ int package_cmd_provide(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int package_cmd_provide(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     return Jim_PackageProvide(interp, Jim_String(argv[0]), package_version_1, JIM_ERRMSG);
 }
@@ -179,7 +179,7 @@ static __device__ int package_cmd_provide(Jim_Interp *interp, int argc, Jim_Obj 
  *
  *----------------------------------------------------------------------
  */
-static __device__ int package_cmd_require(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int package_cmd_require(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     /* package require failing is important enough to add to the stack */
     interp->addStackTrace++;
@@ -199,7 +199,7 @@ static __device__ int package_cmd_require(Jim_Interp *interp, int argc, Jim_Obj 
  *
  *----------------------------------------------------------------------
  */
-static __device__ int package_cmd_list(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+static __host_device__ int package_cmd_list(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
     Jim_HashTableIterator *htiter;
     Jim_HashEntry *he;
@@ -216,7 +216,7 @@ static __device__ int package_cmd_list(Jim_Interp *interp, int argc, Jim_Obj *co
     return JIM_OK;
 }
 
-static __constant__ const jim_subcmd_type package_command_table[] = {
+static __host_constant__ const jim_subcmd_type package_command_table[] = {
     {
         "provide",
         "name ?version?",
@@ -246,7 +246,7 @@ static __constant__ const jim_subcmd_type package_command_table[] = {
     }
 };
 
-__device__ int Jim_packageInit(Jim_Interp *interp)
+__host_device__ int Jim_packageInit(Jim_Interp *interp)
 {
     Jim_CreateCommand(interp, "package", Jim_SubCmdProc, (void *)package_command_table, NULL);
     return JIM_OK;

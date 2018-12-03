@@ -60,27 +60,27 @@ typedef void Jim_EventFinalizerProc(Jim_Interp *interp, void *clientData);
 #define JIM_EVENT_WRITABLE 2
 #define JIM_EVENT_EXCEPTION 4
 
-JIM_EXPORT __device__ void Jim_CreateFileHandler (Jim_Interp *interp,
+JIM_EXPORT __host_device__ void Jim_CreateFileHandler (Jim_Interp *interp,
         int fd, int mask,
         Jim_FileProc *proc, void *clientData,
         Jim_EventFinalizerProc *finalizerProc);
-JIM_EXPORT __device__ void Jim_DeleteFileHandler (Jim_Interp *interp,
+JIM_EXPORT __host_device__ void Jim_DeleteFileHandler (Jim_Interp *interp,
         int fd, int mask);
-JIM_EXPORT __device__ jim_wide Jim_CreateTimeHandler (Jim_Interp *interp,
+JIM_EXPORT __host_device__ jim_wide Jim_CreateTimeHandler (Jim_Interp *interp,
         jim_wide milliseconds,
         Jim_TimeProc *proc, void *clientData,
         Jim_EventFinalizerProc *finalizerProc);
-JIM_EXPORT __device__ jim_wide Jim_DeleteTimeHandler (Jim_Interp *interp, jim_wide id);
+JIM_EXPORT __host_device__ jim_wide Jim_DeleteTimeHandler (Jim_Interp *interp, jim_wide id);
 
 #define JIM_FILE_EVENTS 1
 #define JIM_TIME_EVENTS 2
 #define JIM_ALL_EVENTS (JIM_FILE_EVENTS|JIM_TIME_EVENTS)
 #define JIM_DONT_WAIT 4
 
-JIM_EXPORT __device__ int Jim_ProcessEvents (Jim_Interp *interp, int flags);
-JIM_EXPORT __device__ int Jim_EvalObjBackground (Jim_Interp *interp, Jim_Obj *scriptObjPtr);
+JIM_EXPORT __host_device__ int Jim_ProcessEvents (Jim_Interp *interp, int flags);
+JIM_EXPORT __host_device__ int Jim_EvalObjBackground (Jim_Interp *interp, Jim_Obj *scriptObjPtr);
 
-__device__ int Jim_eventloopInit(Jim_Interp *interp);
+__host_device__ int Jim_eventloopInit(Jim_Interp *interp);
 
 #ifdef __cplusplus
 }
