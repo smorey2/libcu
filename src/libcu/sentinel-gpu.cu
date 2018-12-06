@@ -101,7 +101,7 @@ __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength, sentinel
 		if ((ptrsOut && !postfixPtrs(ptrsOut, cmd, offset, listOut, trans)) ||
 			(msg->postfix && !msg->postfix(msg, offset)))
 			panic("postfix error");
-		mutexSet(control, SENTINELCONTROL_NORMAL);
+		mutexSet(control, !listOut ? SENTINELCONTROL_NORMAL : SENTINELCONTROL_DEVICERDY);
 	}
 	atomicSub(&cmd->locks, 1);
 }

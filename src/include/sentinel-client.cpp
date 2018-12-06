@@ -155,7 +155,7 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrs
 		if ((ptrsOut && !postfixPtrs(ptrsOut, cmd, offset, listOut, trans)) ||
 			(msg->postfix && !msg->postfix(msg, offset)))
 			panic("postfix error");
-		mutexSet(control, SENTINELCONTROL_NORMAL);
+		mutexSet(control, !listOut ? SENTINELCONTROL_NORMAL : SENTINELCONTROL_DEVICERDY);
 	}
 	AtomicAdd(&cmd->locks, -1);
 #endif

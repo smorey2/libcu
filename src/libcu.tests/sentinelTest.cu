@@ -95,8 +95,8 @@ static __global__ void g_sentinel_test1() {
 
 	//// SENTINELDEVICESEND ////
 	//	extern __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength);
-	for (int k = 0; k < 0; k++) {
-		//printf("%d ", k);
+	for (int k = 0; k < 100; k++) {
+		printf("%d ", k);
 		char buf[100];
 		module_simple a0(true, 1); int a0a = a0.rc; assert(a0a == 1);
 		module_string a1(true, "test"); int a1a = a1.rc; assert(a1a == 4);
