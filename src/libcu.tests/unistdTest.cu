@@ -28,12 +28,15 @@ static __global__ void g_unistd_test1() {
 	//extern __device__ off_t lseek_(int fd, off_t offset, int whence); #sentinel-branch
 	//extern __device__ int close_(int fd); #sentinel-branch
 	/* Host Absolute */
-	int a0a = access(HostDir"missing.txt", F_OK); assert(a0a < 0);
-	makeAFile(HostDir"test.txt");
-	int a1a = access(HostDir"test.txt", F_OK); assert(!a1a);
-	int a0_fd = open(HostDir"test.txt", O_RDONLY);
-	int a2a = lseek(a0_fd, 1, SEEK_SET); int a2b = read(a0_fd, buf, 1); assert(a2a > 0 && a2b == 1 && buf[0] == 'e');
-	int a3a = close(a0_fd); assert(!a3a);
+	for (int k = 0; k < 1000; k++) {
+		printf("%d ", k);
+		int a0a = access(HostDir"missing.txt", F_OK); assert(a0a < 0);
+		makeAFile(HostDir"test.txt");
+		int a1a = access(HostDir"test.txt", F_OK); assert(!a1a);
+		int a0_fd = open(HostDir"test.txt", O_RDONLY);
+		int a2a = lseek(a0_fd, 1, SEEK_SET); int a2b = read(a0_fd, buf, 1); assert(a2a > 0 && a2b == 1 && buf[0] == 'e');
+		int a3a = close(a0_fd); assert(!a3a);
+	}
 
 	/* Device Absolute */
 	int b0a = access(DeviceDir"missing.txt", F_OK); assert(b0a < 0);

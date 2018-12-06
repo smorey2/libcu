@@ -108,8 +108,18 @@ bool sentinelDefaultDeviceExecutor(void *tag, sentinelMessage *data, int length,
 #endif
 		return true; }
 #endif
-	case STDIO_FGETPOS: { stdio_fgetpos *msg = (stdio_fgetpos *)data; msg->rc = fgetpos(msg->file, msg->pos); return true; }
-	case STDIO_FSETPOS: { stdio_fsetpos *msg = (stdio_fsetpos *)data; msg->rc = fsetpos(msg->file, msg->pos); return true; }
+	case STDIO_FGETPOS: { stdio_fgetpos *msg = (stdio_fgetpos *)data;
+		if (!msg->bit64) msg->rc = fgetpos(msg->file, &msg->pos);
+#ifdef __USE_LARGEFILE64
+		else msg->rc = fgetpos64(msg->file, &msg->pos64);
+#endif
+		return true; }
+	case STDIO_FSETPOS: { stdio_fsetpos *msg = (stdio_fsetpos *)data;
+		if (!msg->bit64) msg->rc = fsetpos(msg->file, &msg->pos);
+#ifdef __USE_LARGEFILE64
+		else msg->rc = fsetpos64(msg->file, &msg->pos64);
+#endif
+		return true; }
 	case STDIO_CLEARERR: { stdio_clearerr *msg = (stdio_clearerr *)data; clearerr(msg->file); return true; }
 	case STDIO_FEOF: { stdio_feof *msg = (stdio_feof *)data; msg->rc = feof(msg->file); return true; }
 	case STDIO_FERROR: { stdio_ferror *msg = (stdio_ferror *)data; msg->rc = ferror(msg->file); return true; }

@@ -55,7 +55,7 @@ typedef struct memfile_t {
 #define RC_IOERR_SHORT_READ (RC_IOERR | (2<<8))
 #define RC_IOERR_NOMEM_BKPT 10
 
-/* Read data from the in-memory journal file.  This is the implementation of the sqlite3_vfs.xRead method. */
+/* Read data from the in-memory journal file.  This is the implementation of the vsys.read method. */
 __host_device__ int memfileRead(vsysfile *p, void *buf, int amount, int64_t offset) {
 	memfile_t *f = (memfile_t *)p;
 #if defined(ENABLE_ATOMIC_WRITE) || defined(ENABLE_BATCH_ATOMIC_WRITE)

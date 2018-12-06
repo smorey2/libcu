@@ -181,6 +181,7 @@ __device__ FILE *freopen_(const char *__restrict filename, const char *__restric
 		if (!s)
 			return nullptr;
 	}
+	s->off = s->state = 0;
 	s->_flag = openMode;
 	s->_base = (char *)fsystemOpen(filename, openMode, &s->_file);
 	if (!s->_base) {
@@ -235,8 +236,14 @@ __device__ FILE *freopen64_(const char *__restrict filename, const char *__restr
 		if (!s)
 			return nullptr;
 	}
+	s->off = s->state = 0;
 	s->_flag = openMode;
 	s->_base = (char *)fsystemOpen(filename, openMode, &s->_file);
+	if (!s->_base) {
+		_set_errno(EINVAL);
+		streamFree(s);
+		return nullptr;
+	}
 	return (FILE *)s;
 #endif
 }
@@ -310,8 +317,7 @@ __device__ int fgetc_(FILE *stream) {
 #ifdef LIBCU_LEAN_FSYSTEM
 	return panic_no_fsystem();
 #else
-	panic("Not Implemented");
-	return 0;
+	int c; fread(&c, 1, 1, stream); return c;
 #endif
 }
 
@@ -325,8 +331,7 @@ __device__ int fputc_(int c, FILE *stream, bool wait) {
 #ifdef LIBCU_LEAN_FSYSTEM
 	return panic_no_fsystem();
 #else
-	panic("Not Implemented");
-	return 0;
+	return fwrite(&c, 1, 1, stream);
 #endif
 }
 
@@ -351,8 +356,7 @@ __device__ int fputs_(const char *__restrict s, FILE *__restrict stream, bool wa
 #ifdef LIBCU_LEAN_FSYSTEM
 	return panic_no_fsystem();
 #else
-	panic("Not Implemented");
-	return 0;
+	return fwrite(s, 1, strlen(s), stream);
 #endif
 }
 
@@ -380,7 +384,7 @@ __device__ size_t fread_(void *__restrict ptr, size_t size, size_t n, FILE *__re
 	if (f->dir.d_type != DIRTYPE_FILE)
 		panic("fread: stream !file");
 	size *= n;
-	memfileRead(f->u.file, ptr, size, 0);
+	memfileRead(f->u.file, ptr, size, s->off); s->off += size;
 	return n;
 #endif
 }
@@ -398,7 +402,7 @@ __device__ size_t fwrite_(const void *__restrict ptr, size_t size, size_t n, FIL
 	if (f->dir.d_type != DIRTYPE_FILE)
 		panic("fwrite: stream !file");
 	size *= n;
-	memfileWrite(f->u.file, ptr, size, 0);
+	memfileWrite(f->u.file, ptr, size, s->off); s->off += size;
 	return n;
 #endif
 }
@@ -409,8 +413,16 @@ __device__ int fseek_(FILE *stream, long int off, int whence) {
 #ifdef LIBCU_LEAN_FSYSTEM
 	return panic_no_fsystem();
 #else
-	panic("Not Implemented");
-	return 0;
+	register cuFILE *s = (cuFILE *)stream;
+	dirEnt_t *f;
+	if (!s || !(f = (dirEnt_t *)s->_base))
+		panic("lseek: !stream");
+	switch (whence) {
+	case SEEK_SET: return (s->off = off);
+	case SEEK_CUR: return (s->off += off);
+	case SEEK_END: int64_t size; memfileFileSize(f->u.file, &size); return (s->off = size - off);
+	default: return -1;
+	}
 #endif
 }
 
@@ -420,8 +432,8 @@ __device__ long int ftell_(FILE *stream) {
 #ifdef LIBCU_LEAN_FSYSTEM
 	return panic_no_fsystem();
 #else
-	panic("Not Implemented");
-	return 0;
+	register cuFILE *s = (cuFILE *)stream;
+	return (long int)s->off;
 #endif
 }
 
@@ -431,7 +443,8 @@ __device__ void rewind_(FILE *stream) {
 #ifdef LIBCU_LEAN_FSYSTEM
 	panic_no_fsystem();
 #else
-	panic("Not Implemented");
+	register cuFILE *s = (cuFILE *)stream;
+	s->off = 0;
 #endif
 }
 
@@ -443,8 +456,15 @@ __device__ int fseeko_(FILE *stream, __off_t off, int whence) {
 #ifdef LIBCU_LEAN_FSYSTEM
 	return panic_no_fsystem();
 #else
-	panic("Not Implemented");
-	return 0;
+	register cuFILE *s = (cuFILE *)stream;
+	dirEnt_t *f;
+	if (!s || !(f = (dirEnt_t *)s->_base))
+		panic("fseeko: !stream");
+	switch (whence) {
+	case SEEK_SET: return (s->off = off);
+	case SEEK_CUR: return (s->off += off);
+	case SEEK_END: int64_t size; memfileFileSize(f->u.file, &size); return (s->off = size - off);
+	default: return -1;
 #endif
 }
 
@@ -454,8 +474,8 @@ __device__ __off_t ftello_(FILE *stream) {
 #ifdef LIBCU_LEAN_FSYSTEM
 	return panic_no_fsystem();
 #else
-	panic("Not Implemented");
-	return 0;
+	register cuFILE *s = (cuFILE *)stream;
+	return s->off;
 #endif
 }
 #endif
@@ -464,22 +484,25 @@ __device__ __off_t ftello_(FILE *stream) {
 #ifndef __USE_FILE_OFFSET64
 /* Get STREAM's position.  */
 __device__ int fgetpos_(FILE *__restrict stream, fpos_t *__restrict pos) {
-	if (ISHOSTFILE(stream)) { stdio_fgetpos msg(stream, pos, nullptr, false); return msg.rc; }
+	if (ISHOSTFILE(stream)) { stdio_fgetpos msg(stream, false); *pos = msg.pos; return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
 	return panic_no_fsystem();
 #else
-	panic("Not Implemented");
+	register cuFILE *s = (cuFILE *)stream;
+	*pos = s->off;
 	return 0;
 #endif
 }
 
 /* Set STREAM's position.  */
 __device__ int fsetpos_(FILE *stream, const fpos_t *pos) {
-	if (ISHOSTFILE(stream)) { stdio_fsetpos msg(stream, pos, nullptr, false); return msg.rc; }
+	const fpos_t pos_ = *pos;
+	if (ISHOSTFILE(stream)) { stdio_fsetpos msg(stream, pos_, 0, false); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
 	return panic_no_fsystem();
 #else
-	panic("Not Implemented");
+	register cuFILE *s = (cuFILE *)stream;
+	s->off = pos_;
 	return 0;
 #endif
 }
@@ -489,8 +512,19 @@ __device__ int fsetpos_(FILE *stream, const fpos_t *pos) {
 /* Seek to a certain position on STREAM.   */
 __device__ int fseeko64_(FILE *stream, __off64_t off, int whence) {
 	if (ISHOSTFILE(stream)) { stdio_fseeko msg(true, stream, 0, off, whence, true); return msg.rc; }
-	panic("Not Implemented");
-	return 0;
+#ifdef LIBCU_LEAN_FSYSTEM
+	return panic_no_fsystem();
+#else
+	register cuFILE *s = (cuFILE *)stream;
+	dirEnt_t *f;
+	if (!s || !(f = (dirEnt_t *)s->_base))
+		panic("fseeko: !stream");
+	switch (whence) {
+	case SEEK_SET: return (s->off = off);
+	case SEEK_CUR: return (s->off += off);
+	case SEEK_END: int64_t size; memfileFileSize(f->u.file, &size); return (s->off = size - off);
+	default: return -1;
+#endif
 }
 
 /* Return the current position of STREAM.  */
@@ -499,29 +533,32 @@ __device__ __off64_t ftello64_(FILE *stream) {
 #ifdef LIBCU_LEAN_FSYSTEM
 	return panic_no_fsystem();
 #else
-	panic("Not Implemented");
-	return 0;
+	register cuFILE *s = (cuFILE *)stream;
+	return s->off;
 #endif
 }
 
 /* Get STREAM's position.  */
 __device__ int fgetpos64_(FILE *__restrict stream, fpos64_t *__restrict pos) {
-	if (ISHOSTFILE(stream)) { stdio_fgetpos msg(stream, nullptr, pos, true); return msg.rc; }
+	if (ISHOSTFILE(stream)) { stdio_fgetpos msg(stream, true); *pos = msg.pos64; return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
 	return panic_no_fsystem();
 #else
-	panic("Not Implemented");
+	register cuFILE *s = (cuFILE *)stream;
+	*pos = s->off;
 	return 0;
 #endif
 }
 
 /* Set STREAM's position.  */
 __device__ int fsetpos64_(FILE *stream, const fpos64_t *pos) {
-	if (ISHOSTFILE(stream)) { stdio_fsetpos msg(stream, nullptr, pos, true); return msg.rc; }
+	const fpos64_t pos_ = *pos;
+	if (ISHOSTFILE(stream)) { stdio_fsetpos msg(stream, 0, pos_, true); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
 	return panic_no_fsystem();
 #else
-	panic("Not Implemented");
+	register cuFILE *s = (cuFILE *)stream;
+	s->off = pos_;
 	return 0;
 #endif
 }
@@ -533,7 +570,8 @@ __device__ void clearerr_(FILE *stream) {
 #ifdef LIBCU_LEAN_FSYSTEM
 	panic_no_fsystem();
 #else
-	panic("Not Implemented");
+	register cuFILE *s = (cuFILE *)stream;
+	s->state = 0;
 #endif
 }
 
@@ -543,8 +581,8 @@ __device__ int feof_(FILE *stream) {
 #ifdef LIBCU_LEAN_FSYSTEM
 	return panic_no_fsystem();
 #else
-	panic("Not Implemented");
-	return 0;
+	register cuFILE *s = (cuFILE *)stream;
+	return s->state & 0xF;
 #endif
 }
 
@@ -553,7 +591,8 @@ __device__ int ferror_(FILE *stream) {
 	if (ISHOSTFILE(stream)) { stdio_ferror msg(stream); return msg.rc; }
 	if (stream == stdout || stream == stderr)
 		return 0;
-	return 0;
+	register cuFILE *s = (cuFILE *)stream;
+	return s->state & 0xFFF0;
 }
 
 /* Print a message describing the meaning of the value of errno.  */

@@ -233,15 +233,16 @@ struct stdio_ftello {
 #endif
 struct stdio_fgetpos {
 	sentinelMessage base;
-	FILE *file; fpos_t *pos; fpos64_t *pos64; bool bit64;
-	__device__ stdio_fgetpos(FILE *__restrict file, fpos_t *__restrict pos, fpos64_t *__restrict pos64, bool bit64) : base(STDIO_FGETPOS, SENTINELFLOW_WAIT), file(file), pos(pos), pos64(pos64), bit64(bit64) { sentinelDeviceSend(&base, sizeof(stdio_fgetpos)); }
+	FILE *file; bool bit64;
+	__device__ stdio_fgetpos(FILE *__restrict file, bool bit64) : base(STDIO_FGETPOS, SENTINELFLOW_WAIT), file(file), bit64(bit64) { sentinelDeviceSend(&base, sizeof(stdio_fgetpos)); }
 	int rc;
+	fpos_t pos; fpos64_t pos64;
 };
 
 struct stdio_fsetpos {
 	sentinelMessage base;
-	FILE *file; const fpos_t *pos; const fpos64_t *pos64; bool bit64;
-	__device__ stdio_fsetpos(FILE *__restrict file, const fpos_t *pos, const fpos64_t *pos64, bool bit64) : base(STDIO_FSETPOS, SENTINELFLOW_WAIT), file(file), pos(pos), pos64(pos64), bit64(bit64) { sentinelDeviceSend(&base, sizeof(stdio_fsetpos)); }
+	FILE *file; const fpos_t pos; const fpos64_t pos64; bool bit64;
+	__device__ stdio_fsetpos(FILE *__restrict file, const fpos_t pos, const fpos64_t pos64, bool bit64) : base(STDIO_FSETPOS, SENTINELFLOW_WAIT), file(file), pos(pos), pos64(pos64), bit64(bit64) { sentinelDeviceSend(&base, sizeof(stdio_fsetpos)); }
 	int rc;
 };
 

@@ -33,6 +33,7 @@ struct dirEnt_t {
 struct file_t {
 	char *base;
 	int flag;
+	off_t off;
 };
 
 __device__ int expandPath(const char *path, char *newPath);

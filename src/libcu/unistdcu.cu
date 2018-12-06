@@ -23,8 +23,16 @@ __device__ off_t lseek_(int fd, off_t offset, int whence) {
 #ifdef LIBCU_LEAN_FSYSTEM
 	return panic_no_fsystem();
 #else
-	panic("Not Implemented");
-	return 0;
+	register file_t *s = GETFILE(fd);
+	dirEnt_t *f;
+	if (!s || !(f = (dirEnt_t *)s->base))
+		panic("lseek: !stream");
+	switch (whence) {
+	case SEEK_SET: return (s->off = offset);
+	case SEEK_CUR: return (s->off += offset);
+	case SEEK_END: int64_t size; memfileFileSize(f->u.file, &size); return (s->off = size - offset);
+	default: return -1;
+	}
 #endif
 }
 
@@ -34,8 +42,15 @@ __device__ off64_t lseek64_(int fd, off64_t offset, int whence) {
 #ifdef LIBCU_LEAN_FSYSTEM
 	return panic_no_fsystem();
 #else
-	panic("Not Implemented");
-	return 0;
+	register file_t *s = GETFILE(fd);
+	dirEnt_t *f;
+	if (!s || !(f = (dirEnt_t *)s->base))
+		panic("lseek: !stream");
+	switch (whence) {
+	case SEEK_SET: return (s->off = offset);
+	case SEEK_CUR: return (s->off += offset);
+	case SEEK_END: int64_t size; memfileFileSize(f->u.file, &size); return (s->off = size - offset);
+	default: return -1;
 #endif
 }
 #endif
@@ -55,7 +70,8 @@ __device__ size_t read_(int fd, void *buf, size_t nbytes, bool wait) {
 		panic("read: !stream");
 	if (f->dir.d_type != DIRTYPE_FILE)
 		panic("read: stream !file");
-	return memfileRead(f->u.file, buf, nbytes, 0);
+	memfileRead(f->u.file, buf, nbytes, s->off); s->off += nbytes;
+	return nbytes;
 #endif
 }
 
@@ -71,7 +87,8 @@ __device__ size_t write_(int fd, const void *buf, size_t nbytes, bool wait) {
 		panic("write: !stream");
 	if (f->dir.d_type != DIRTYPE_FILE)
 		panic("write: stream !file");
-	return memfileWrite(f->u.file, buf, nbytes, 0);
+	memfileWrite(f->u.file, buf, nbytes, s->off); s->off += nbytes;
+	return nbytes;
 #endif
 }
 

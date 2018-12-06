@@ -33,6 +33,8 @@ typedef struct {
 	char *_base;
 	int _flag;
 	int _file;
+	int off;
+	int state;
 } cuFILE;
 #ifdef __APPLE__
 #define __off_t off_t
