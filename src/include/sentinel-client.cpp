@@ -52,6 +52,12 @@ static void mutexSet(volatile long *mutex, long val = 0, unsigned int mspause = 
 #endif
 #pragma endregion
 
+#if __OS_WIN
+#define AtomicAdd(mutex, val) InterlockedAdd((volatile long *)mutex, val)
+#elif __OS_UNIX
+#define AtomicAdd(mutex, val) __sync_fetch_and_add((volatile long *)mutex, val)
+#endif
+
 static void executeTrans(char id, sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset, char *&trans);
 
 static char *preparePtrs(sentinelInPtr *ptrsIn, sentinelOutPtr *ptrsOut, sentinelCommand *cmd, char *data, char *dataEnd, intptr_t offset, sentinelOutPtr *&listOut_, char *&trans) {
@@ -122,14 +128,11 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrs
 		panic("sentinel: client map not defined. did you start sentinel?\n");
 
 	// ATTACH
-#if __OS_WIN
-	long id = InterlockedAdd(&map->setId, SENTINEL_MSGSIZE) - SENTINEL_MSGSIZE;
-#elif __OS_UNIX
-	long id = __sync_fetch_and_add((volatile long *)&map->setId, SENTINEL_MSGSIZE) - SENTINEL_MSGSIZE;
-#endif
+	long id = AtomicAdd(&map->setId, SENTINEL_MSGSIZE) - SENTINEL_MSGSIZE;
 	sentinelCommand *cmd = (sentinelCommand *)&map->data[id % sizeof(map->data)];
 	if (cmd->magic != SENTINEL_MAGIC)
 		panic("bad sentinel magic");
+	AtomicAdd(&cmd->locks, 1);
 	volatile long *control = &cmd->control; intptr_t offset = _sentinelClientMapOffset; char *trans = nullptr;
 	mutexSpinLock(nullptr, control, SENTINELCONTROL_NORMAL, SENTINELCONTROL_DEVICE);
 
@@ -154,6 +157,7 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrs
 			panic("postfix error");
 		mutexSet(control, SENTINELCONTROL_NORMAL);
 	}
+	AtomicAdd(&cmd->locks, -1);
 #endif
 }
 

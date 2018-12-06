@@ -78,6 +78,7 @@ __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength, sentinel
 	sentinelCommand *cmd = (sentinelCommand *)&map->data[id % sizeof(map->data)];
 	if (cmd->magic != SENTINEL_MAGIC)
 		panic("bad sentinel magic");
+	atomicAdd(&cmd->locks, 1);
 	volatile long *control = &cmd->control; intptr_t offset = map->offset; char *trans = nullptr;
 	mutexSpinLock(nullptr, control, SENTINELCONTROL_NORMAL, SENTINELCONTROL_DEVICE);
 
@@ -102,6 +103,7 @@ __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength, sentinel
 			panic("postfix error");
 		mutexSet(control, SENTINELCONTROL_NORMAL);
 	}
+	atomicSub(&cmd->locks, 1);
 }
 
 static __device__ void executeTrans(char id, sentinelCommand *cmd, int size, sentinelInPtr *listIn, sentinelOutPtr *listOut, intptr_t offset, char *&trans) {

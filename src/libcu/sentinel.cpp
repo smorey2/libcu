@@ -228,6 +228,7 @@ void sentinelServerInitialize(sentinelExecutor *deviceExecutor, char *mapHostNam
 			sentinelCommand *cmd = (sentinelCommand *)&_ctx.hostMap->data[j];
 			cmd->magic = SENTINEL_MAGIC;
 			cmd->control = 0;
+			cmd->locks = 0;
 		}
 
 		// register executor
@@ -264,6 +265,7 @@ void sentinelServerInitialize(sentinelExecutor *deviceExecutor, char *mapHostNam
 				sentinelCommand *cmd = (sentinelCommand *)&_ctx.deviceMap[i]->data[j];
 				cmd->magic = SENTINEL_MAGIC;
 				cmd->control = 0;
+				cmd->locks = 0;
 			}
 		}
 		cudaErrorCheckF(cudaMemcpyToSymbol(_sentinelDeviceMap, &d_deviceMap, sizeof(d_deviceMap)), goto initialize_error);

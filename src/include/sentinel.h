@@ -93,8 +93,8 @@ extern "C" {
 	typedef struct __align__(8) {
 		unsigned short magic;
 		volatile long control;
+		int locks;
 		int length;
-		int unknown;
 		char data[1];
 		void dump();
 	} sentinelCommand;

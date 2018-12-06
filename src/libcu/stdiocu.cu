@@ -497,7 +497,8 @@ __device__ int fgetpos_(FILE *__restrict stream, fpos_t *__restrict pos) {
 /* Set STREAM's position.  */
 __device__ int fsetpos_(FILE *stream, const fpos_t *pos) {
 	const fpos_t pos_ = *pos;
-	if (ISHOSTFILE(stream)) { stdio_fsetpos msg(stream, pos_, 0, false); return msg.rc; }
+	const fpos64_t pos64_{};
+	if (ISHOSTFILE(stream)) { stdio_fsetpos msg(stream, pos_, pos64_, false); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
 	return panic_no_fsystem();
 #else
@@ -552,8 +553,9 @@ __device__ int fgetpos64_(FILE *__restrict stream, fpos64_t *__restrict pos) {
 
 /* Set STREAM's position.  */
 __device__ int fsetpos64_(FILE *stream, const fpos64_t *pos) {
-	const fpos64_t pos_ = *pos;
-	if (ISHOSTFILE(stream)) { stdio_fsetpos msg(stream, 0, pos_, true); return msg.rc; }
+	const fpos_t pos_{};
+	const fpos64_t pos64_ = *pos;
+	if (ISHOSTFILE(stream)) { stdio_fsetpos msg(stream, pos_, pos64_, true); return msg.rc; }
 #ifdef LIBCU_LEAN_FSYSTEM
 	return panic_no_fsystem();
 #else
