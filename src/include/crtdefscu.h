@@ -26,8 +26,8 @@ THE SOFTWARE.
 #ifndef _CRTDEFSCU_H
 #define _CRTDEFSCU_H
 
-//#define LIBCU_LEAN_AND_MEAN
-//#define LIBCU_LEAN_FSYSTEM
+#define LIBCU_LEAN_AND_MEAN
+#define LIBCU_LEAN_FSYSTEM
 
 //////////////////////
 // OS

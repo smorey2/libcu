@@ -50,7 +50,7 @@ extern "C" {
 #define SENTINEL_MAGIC (unsigned short)0xC811
 #define SENTINEL_DEVICEMAPS 1
 #define SENTINEL_MSGSIZE 5120
-#define SENTINEL_MSGCOUNT 10
+#define SENTINEL_MSGCOUNT 1
 #define SENTINEL_CHUNK 4096
 
 	typedef struct sentinelInPtr {
