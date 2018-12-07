@@ -136,10 +136,12 @@ static bool executeTrans(void **tag) {
 	sentinelCommand *cmd = (sentinelCommand *)tag[1];
 	volatile long *control = &cmd->control;
 	char *data = cmd->data, *ptr = (char *)tag[2];
+	bool r = false;
 	while (*control >= SENTINELCONTROL_TRAN) {
 		int length = cmd->length;
 		switch (*control) {
 		case SENTINELCONTROL_TRANSSIZE:
+			r = false;
 			ptr = (char *)tag[2];
 			if (ptr) free(ptr);
 			if (!(ptr = (char *)malloc(length))) {
@@ -162,7 +164,7 @@ static bool executeTrans(void **tag) {
 		mutexSpinLock(threadId != -1 ? (void **)&_threadDeviceHandle[threadId] : (void **)&_threadHostHandle, control,
 			SENTINELCONTROL_TRANDONE, SENTINELCONTROL_TRAN, MUTEXPRED_AND, 0xF);
 	}
-	return false;
+	return r;
 }
 
 #if HAS_HOSTSENTINEL
