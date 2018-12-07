@@ -81,10 +81,12 @@ __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength, sentinel
 	atomicAdd(&cmd->locks, 1);
 	volatile long *control = &cmd->control; intptr_t offset = map->offset; char *trans = nullptr;
 	mutexSpinLock(nullptr, control, SENTINELCONTROL_NORMAL, SENTINELCONTROL_DEVICE);
+	//if (cmd->locks != 1)
+	//	panic("bad sentinel lock");
 
 	// PREPARE
 	char *data = cmd->data + ROUND8_(msgLength), *dataEnd = data + msg->size;
-	sentinelOutPtr *listOut;
+	sentinelOutPtr *listOut = nullptr;
 	if (((ptrsIn || ptrsOut) && !(data = preparePtrs(ptrsIn, ptrsOut, cmd, data, dataEnd, offset, listOut, trans))) ||
 		(msg->prepare && !msg->prepare(msg, data, dataEnd, offset)))
 		panic("msg too long");
@@ -111,7 +113,7 @@ static __device__ void executeTrans(char id, sentinelCommand *cmd, int size, sen
 	sentinelInPtr *i; sentinelOutPtr *o; char **field; char *data = cmd->data, *ptr = trans;
 	switch (id) {
 	case 0:
-		*(int *)data = size;
+		cmd->length = size;
 		mutexSet(control, SENTINELCONTROL_TRANSSIZE);
 		mutexSpinLock(nullptr, control, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
 		ptr = trans = *(char **)data;

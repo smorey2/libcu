@@ -28,7 +28,7 @@ static __global__ void g_unistd_test1() {
 	//extern __device__ off_t lseek_(int fd, off_t offset, int whence); #sentinel-branch
 	//extern __device__ int close_(int fd); #sentinel-branch
 	/* Host Absolute */
-	for (int k = 0; k < 1000; k++) {
+	for (int k = 0; k < 10; k++) {
 		printf("%d ", k);
 		int a0a = access(HostDir"missing.txt", F_OK); assert(a0a < 0);
 		makeAFile(HostDir"test.txt");
