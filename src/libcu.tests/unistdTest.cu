@@ -28,23 +28,22 @@ static __global__ void g_unistd_test1() {
 	//extern __device__ off_t lseek_(int fd, off_t offset, int whence); #sentinel-branch
 	//extern __device__ int close_(int fd); #sentinel-branch
 	/* Host Absolute */
-	for (int k = 0; k < 10; k++) {
-		printf("%d ", k);
-		int a0a = access(HostDir"missing.txt", F_OK); assert(a0a < 0);
-		makeAFile(HostDir"test.txt");
-		int a1a = access(HostDir"test.txt", F_OK); assert(!a1a);
-		int a0_fd = open(HostDir"test.txt", O_RDONLY);
-		int a2a = lseek(a0_fd, 1, SEEK_SET); int a2b = read(a0_fd, buf, 1); assert(a2a > 0 && a2b == 1 && buf[0] == 'e');
-		int a3a = close(a0_fd); assert(!a3a);
-	}
+	int a0a = access(HostDir"missing.txt", F_OK); assert(a0a < 0);
+	makeAFile(HostDir"test.txt");
+	int a1a = access(HostDir"test.txt", F_OK); assert(!a1a);
+	int a0_fd = open(HostDir"test.txt", O_RDONLY);
+	int a2a = lseek(a0_fd, 1, SEEK_SET); int a2b = read(a0_fd, buf, 1); assert(a2a > 0 && a2b == 1 && buf[0] == 'e');
+	int a3a = close(a0_fd); assert(!a3a);
 
 	/* Device Absolute */
+#ifndef LIBCU_LEAN_FSYSTEM
 	int b0a = access(DeviceDir"missing.txt", F_OK); assert(b0a < 0);
 	makeAFile(DeviceDir"test.txt");
 	int b1a = access(DeviceDir"test.txt", F_OK); assert(!b1a);
 	int b0_fd = open(DeviceDir"test.txt", O_RDONLY);
 	int b2a = lseek(b0_fd, 1, SEEK_SET); int b2b = read(b0_fd, buf, 1); assert(b2a > 0 && b2b == 1 && buf[0] == 'e');
 	int b3a = close(b0_fd); assert(!b3a);
+#endif
 
 	/* Host Relative */
 	chdir(HostDir);
@@ -56,6 +55,7 @@ static __global__ void g_unistd_test1() {
 	int c3a = close(c0_fd); assert(!c3a);
 
 	/* Device Relative */
+#ifndef LIBCU_LEAN_FSYSTEM
 	chdir(DeviceDir);
 	int d0a = access("missing.txt", F_OK); assert(d0a < 0);
 	makeAFile("test.txt");
@@ -63,17 +63,21 @@ static __global__ void g_unistd_test1() {
 	int d0_fd = open("test.txt", O_RDONLY);
 	int d2a = lseek(d0_fd, 1, SEEK_SET); int d2b = read(d0_fd, buf, 1); assert(d2a > 0 && d2b == 1 && buf[0] == 'e');
 	int d3a = close(d0_fd); assert(!d3a);
+#endif
 
 	//// READ, WRITE ////
 	//extern __device__ size_t read_(int fd, void *buf, size_t nbytes, bool wait = true); #sentinel-branch
 	//extern __device__ size_t write_(int fd, void *buf, size_t nbytes, bool wait = true); #sentinel-branch
 	/* Host Absolute */
 	int e0a = open(HostDir"test.txt", O_WRONLY); int e0b = write(e0a, "test", 4); close(e0a); assert(e0b == 4);
+	//+ here
 	int e1a = open(HostDir"test.txt", O_RDONLY); int e1b = read(e1a, buf, 4); close(e1a); assert(e1b == 4 && !strncmp(buf, "test", 4));
 
 	/* Device Absolute */
+#ifndef LIBCU_LEAN_FSYSTEM
 	int f0a = open(DeviceDir"test.txt", O_WRONLY); int f0b = write(f0b, "test", 4); close(f0a); assert(f0b == 4);
 	int f1a = open(DeviceDir"test.txt", O_RDONLY); int f1b = read(f1b, buf, 4); close(f1a); assert(f1b == 4 && !strncmp(buf, "test", 4));
+#endif
 
 	//// PIPE, ALARM ////
 	////nosupport: extern __device__ int pipe_(int pipedes[2]); #notsupported
@@ -139,10 +143,12 @@ static __global__ void g_unistd_test1() {
 	assert(m0a == -1 && !m0b);
 
 	/* Device Absolute */
+#ifndef LIBCU_LEAN_FSYSTEM
 	int n0a = unlink(HostDir"missing.txt");
 	makeAFile(DeviceDir"test.txt");
 	int n0b = unlink(DeviceDir"test.txt");
 	assert(n0a == -1 && !n0b);
+#endif
 
 	//// RMDIR ////
 	//extern __device__ int rmdir_(const char *path); #sentinel-branch
@@ -153,9 +159,11 @@ static __global__ void g_unistd_test1() {
 	assert(o0a == -1 && !o0b);
 
 	/* Device Absolute */
+#ifndef LIBCU_LEAN_FSYSTEM
 	int p0a = rmdir(DeviceDir"missing");
 	mkdir(DeviceDir"test", 0);
 	int p0b = rmdir(DeviceDir"test");
 	assert(p0a == -1 && !p0b);
+#endif
 }
-cudaError_t unistd_test1() { g_unistd_test1<<<1, 1>>>(); return cudaDeviceSynchronize(); }
+cudaError_t unistd_test1() { g_unistd_test1 << <1, 1 >> > (); return cudaDeviceSynchronize(); }

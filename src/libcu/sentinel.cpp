@@ -140,7 +140,8 @@ static bool executeTrans(void **tag) {
 		int length = cmd->length;
 		switch (*control) {
 		case SENTINELCONTROL_TRANSSIZE:
-			if (tag[2]) free(tag[2]);
+			ptr = (char *)tag[2];
+			if (ptr) free(ptr);
 			if (!(ptr = (char *)malloc(length))) {
 				printf("sentinel transfer out of memory"); exit(0);
 			}
