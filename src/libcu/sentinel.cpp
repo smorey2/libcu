@@ -5,6 +5,7 @@
 #include <io.h>
 #define THREADHANDLE HANDLE
 #define THREADCALL unsigned int __stdcall
+#define AtomicAdd(mutex, val) InterlockedAdd((volatile long *)mutex, val) - val
 #elif __OS_UNIX
 #include <stdlib.h>
 #include <string.h>
@@ -15,6 +16,7 @@
 #include <pthread.h>
 #define THREADHANDLE pthread_t
 #define THREADCALL void *
+#define AtomicAdd(mutex, val) __sync_fetch_and_add((volatile long *)mutex, val) - val
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,7 +51,7 @@ static THREADCALL sentinelHostThread(void *data) {
 	sentinelMap *map = ctx->hostMap;
 	while (map) {
 		if (!_threadHostHandle) break;
-		long id = map->getId; map->getId += SENTINEL_MSGSIZE;
+		long id = AtomicAdd(&map->getId, SENTINEL_MSGSIZE);
 		sentinelCommand *cmd = (sentinelCommand *)&map->data[id % sizeof(map->data)];
 		if (cmd->magic != SENTINEL_MAGIC) {
 			printf("bad sentinel magic"); exit(1);
@@ -74,7 +76,7 @@ static THREADCALL sentinelHostThread(void *data) {
 				mutexSpinLock((void **)&_threadHostHandle, control,
 					SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOSTWAIT, MUTEXPRED_GTE, SENTINELCONTROL_TRAN, executeTrans, funcTag);
 		}
-		else mutexSet(control, SENTINELCONTROL_NORMAL);
+		mutexSet(control, SENTINELCONTROL_NORMAL);
 	}
 	if (funcTag[2]) free(funcTag[2]);
 	return 0;
@@ -92,10 +94,10 @@ static THREADCALL sentinelDeviceThread(void *data) {
 	sentinelMap *map = ctx->deviceMap[threadId];
 	while (map) {
 		if (!_threadDeviceHandle[threadId]) break;
-		long id = map->getId; map->getId += SENTINEL_MSGSIZE;
+		long id = AtomicAdd(&map->getId, SENTINEL_MSGSIZE);
 		sentinelCommand *cmd = (sentinelCommand *)&map->data[id % sizeof(map->data)];
 		if (cmd->magic != SENTINEL_MAGIC) {
-			printf("bad sentinel magic"); exit(1);
+			printf("host: bad sentinel magic"); exit(1);
 		}
 		funcTag[1] = cmd;
 		volatile long *control = &cmd->control;
@@ -113,7 +115,7 @@ static THREADCALL sentinelDeviceThread(void *data) {
 		// host-prepare
 		char *data = cmd->data + cmd->length, *dataEnd = data + msg->size;
 		if (hostPrepare && !hostPrepare(msg, data, dataEnd, map->offset)) {
-			printf("msg too long"); exit(0);
+			printf("host: msg too long"); exit(0);
 		}
 
 		// FLOW-WAIT
@@ -123,7 +125,7 @@ static THREADCALL sentinelDeviceThread(void *data) {
 				mutexSpinLock((void **)&_threadDeviceHandle[threadId], control,
 					SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOSTWAIT, MUTEXPRED_GTE, SENTINELCONTROL_TRAN, executeTrans, funcTag);
 		}
-		else mutexSet(control, SENTINELCONTROL_NORMAL);
+		mutexSet(control, SENTINELCONTROL_NORMAL);
 	}
 	if (funcTag[2]) free(funcTag[2]);
 	return 0;
@@ -131,17 +133,25 @@ static THREADCALL sentinelDeviceThread(void *data) {
 #endif
 
 // EXECUTETRANS
+#if HAS_HOSTSENTINEL && HAS_DEVICESENTINEL
+#define CANCELTOKEN threadId != -1 ? (void **)&_threadDeviceHandle[threadId] : (void **)&_threadHostHandle
+#elif HAS_HOSTSENTINEL
+#define CANCELTOKEN threadId != -1 ? nullptr : (void **)&_threadHostHandle
+#elif HAS_DEVICESENTINEL
+#define CANCELTOKEN threadId != -1 ? (void **)&_threadDeviceHandle[threadId] : nullptr
+#else
+#define CANCELTOKEN nullptr
+#endif
 static bool executeTrans(void **tag) {
 	int threadId = static_cast<int>((intptr_t)tag[0]);
 	sentinelCommand *cmd = (sentinelCommand *)tag[1];
 	volatile long *control = &cmd->control;
 	char *data = cmd->data, *ptr = (char *)tag[2];
-	bool r = false;
+	bool r = true;
 	while (*control >= SENTINELCONTROL_TRAN) {
 		int length = cmd->length;
 		switch (*control) {
 		case SENTINELCONTROL_TRANSSIZE:
-			r = false;
 			ptr = (char *)tag[2];
 			if (ptr) free(ptr);
 			if (!(ptr = (char *)malloc(length))) {
@@ -152,6 +162,7 @@ static bool executeTrans(void **tag) {
 		case SENTINELCONTROL_TRANSIN:
 			memcpy(ptr, data, length); ptr += length; break;
 		case SENTINELCONTROL_TRANSOUT:
+			//r = false;
 			memcpy(data, ptr, length); ptr += length; break;
 		default:
 #if __OS_WIN
@@ -161,11 +172,15 @@ static bool executeTrans(void **tag) {
 #endif
 		}
 		mutexSet(control, SENTINELCONTROL_TRANRDY);
-		mutexSpinLock(threadId != -1 ? (void **)&_threadDeviceHandle[threadId] : (void **)&_threadHostHandle, control,
+		mutexSpinLock(CANCELTOKEN, control,
 			SENTINELCONTROL_TRANDONE, SENTINELCONTROL_TRAN, MUTEXPRED_AND, 0xF);
+		if (cmd->magic != SENTINEL_MAGIC) {
+			printf("sentinel cell destroyed"); exit(1);
+		}
 	}
 	return r;
 }
+#undef CANCELTOKEN
 
 #if HAS_HOSTSENTINEL
 static sentinelMap *_sentinelHostMap = nullptr;
@@ -218,7 +233,7 @@ void sentinelServerInitialize(sentinelExecutor *deviceExecutor, char *mapHostNam
 			cmd->magic = SENTINEL_MAGIC;
 			cmd->control = 0;
 			cmd->locks = 0;
-	}
+		}
 
 		// register executor
 		sentinelRegisterExecutor(&_baseHostExecutor, true, false);
@@ -255,8 +270,10 @@ void sentinelServerInitialize(sentinelExecutor *deviceExecutor, char *mapHostNam
 				cmd->magic = SENTINEL_MAGIC;
 				cmd->control = 0;
 				cmd->locks = 0;
+				printf("%x ", cmd);
+			}
+			printf("\n");
 		}
-	}
 		cudaErrorCheckF(cudaMemcpyToSymbol(_sentinelDeviceMap, &d_deviceMap, sizeof(d_deviceMap)), goto initialize_error);
 
 		// register executor

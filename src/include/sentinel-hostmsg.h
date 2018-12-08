@@ -26,6 +26,7 @@ THE SOFTWARE.
 #pragma once
 #ifndef _SENTINEL_HOSTMSG_H
 #define _SENTINEL_HOSTMSG_H
+#if HAS_HOSTSENTINEL
 
 #include <sentinel.h>
 
@@ -39,4 +40,5 @@ struct host_getprocessid {
 	int rc;
 };
 
+#endif
 #endif  /* _SENTINEL_HOSTMSG_H */

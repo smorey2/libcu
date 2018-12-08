@@ -81,8 +81,8 @@ __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength, sentinel
 	atomicAdd(&cmd->locks, 1);
 	volatile long *control = &cmd->control; intptr_t offset = map->offset; char *trans = nullptr;
 	mutexSpinLock(nullptr, control, SENTINELCONTROL_NORMAL, SENTINELCONTROL_DEVICE);
-	//if (cmd->locks != 1)
-	//	panic("bad sentinel lock");
+	if (cmd->locks != 1)
+		panic("bad sentinel lock");
 
 	// PREPARE
 	char *data = cmd->data + ROUND8_(msgLength), *dataEnd = data + msg->size;

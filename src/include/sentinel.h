@@ -28,7 +28,6 @@ THE SOFTWARE.
 #define _SENTINEL_H
 #include <crtdefscu.h>
 #include <driver_types.h>
-//#include <host_defines.h>
 #include <stdio.h>
 #include <ext/pipeline.h>
 #if _MSC_VER
@@ -39,6 +38,7 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
+#define HAS_HOSTSENTINEL 0
 #ifndef HAS_DEVICESENTINEL
 #define HAS_DEVICESENTINEL 1
 #endif
@@ -50,7 +50,7 @@ extern "C" {
 #define SENTINEL_MAGIC (unsigned short)0xC811
 #define SENTINEL_DEVICEMAPS 1
 #define SENTINEL_MSGSIZE 5120
-#define SENTINEL_MSGCOUNT 10
+#define SENTINEL_MSGCOUNT 1
 #define SENTINEL_CHUNK 4096
 
 	typedef struct sentinelInPtr {

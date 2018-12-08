@@ -91,11 +91,11 @@ bool sentinelModuleExecutor(void *tag, sentinelMessage *data, int length, char *
 static sentinelExecutor _moduleExecutor = { nullptr, "module", sentinelModuleExecutor, nullptr };
 
 static __global__ void g_sentinel_test1() {
-	//printf("sentinel_test1\n");
+	printf("sentinel_test1\n");
 
 	//// SENTINELDEVICESEND ////
 	//	extern __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength);
-	for (int k = 0; k < 5; k++) {
+	for (int k = 0; k < 0; k++) {
 		printf("%d ", k);
 		char buf[100];
 		module_simple a0(true, 1); int a0a = a0.rc; assert(a0a == 1);
@@ -108,7 +108,7 @@ static __global__ void g_sentinel_test1() {
 
 	// JUMBO
 #define JUMBOSIZE (4096+4096+1024)
-	for (int k = 0; k < 5; k++) {
+	for (int k = 0; k < 100; k++) {
 		printf("J%d ", k);
 		char jumbo[JUMBOSIZE]; memset(jumbo, 2, sizeof(jumbo)); jumbo[JUMBOSIZE - 1] = 0;
 		module_complex b0(true, "test", jumbo, sizeof(jumbo)); int b0a = b0.rc; int b0b = b0.rc2; assert(b0a == 4 && b0b == JUMBOSIZE - 1);

@@ -35,7 +35,7 @@ extern "C" {
 #define MUTEXPRED_GTE 4
 
 	/* Mutex with exponential back-off. */
-	extern __host_device__ void mutexSpinLock(void **cancelToken, volatile long *mutex, long cmp = 0, long val = 1, char pred = 0, long predVal = 0, bool(*func)(void **) = nullptr, void **funcTag = nullptr, unsigned int msmin = 8, unsigned int msmax = 50); //256
+	extern __host_device__ void mutexSpinLock(void **cancelToken, volatile long *mutex, long cmp = 0, long val = 1, char pred = 0, long predVal = 0, bool(*func)(void **) = nullptr, void **funcTag = nullptr, unsigned int msmin = 1, unsigned int msmax = 256); //256
 
 	/* Mutex set. */
 	extern __host_device__ void mutexSet(volatile long *mutex, long val = 0, unsigned int mspause = 0);
