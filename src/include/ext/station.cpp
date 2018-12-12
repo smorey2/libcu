@@ -17,12 +17,9 @@ void stationCommand::dump() {
 
 static stationContext _ctx;
 
-#if HAS_DEVICESTATION
 static bool _stationDevice = false;
 static int *_deviceMap[STATION_DEVICEMAPS];
-#endif
 void stationHostInitialize() {
-#if HAS_DEVICESTATION
 	// create device maps
 	_stationDevice = true;
 	stationMap *d_deviceMap[STATION_DEVICEMAPS];
@@ -38,7 +35,6 @@ void stationHostInitialize() {
 #endif
 	}
 	cudaErrorCheckF(cudaMemcpyToSymbol(_stationDeviceMap, &d_deviceMap, sizeof(d_deviceMap)), goto initialize_error);
-#endif
 	return;
 initialize_error:
 	perror("stationHostInitialize:Error");

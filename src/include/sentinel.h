@@ -23,7 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
 #ifndef _SENTINEL_H
 #define _SENTINEL_H
 #include <crtdefscu.h>
@@ -38,7 +37,8 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
-#define HAS_HOSTSENTINEL 0
+//#define HAS_HOSTSENTINEL 0
+
 #ifndef HAS_DEVICESENTINEL
 #define HAS_DEVICESENTINEL 1
 #endif
@@ -50,7 +50,7 @@ extern "C" {
 #define SENTINEL_MAGIC (unsigned short)0xC811
 #define SENTINEL_DEVICEMAPS 1
 #define SENTINEL_MSGSIZE 5120
-#define SENTINEL_MSGCOUNT 1
+#define SENTINEL_MSGCOUNT 5
 #define SENTINEL_CHUNK 4096
 
 	typedef struct sentinelInPtr {
@@ -95,7 +95,7 @@ extern "C" {
 		volatile long control;
 		int locks;
 		int length;
-		char data[1];
+		char data[SENTINEL_MSGSIZE];
 		void dump();
 	} sentinelCommand;
 
@@ -103,7 +103,7 @@ extern "C" {
 		long getId;
 		volatile long setId;
 		intptr_t offset;
-		char data[SENTINEL_MSGSIZE*SENTINEL_MSGCOUNT];
+		sentinelCommand cmds[SENTINEL_MSGCOUNT];
 		void dump();
 	} sentinelMap;
 

@@ -23,7 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-//#pragma once
 #ifndef _STDLIBCU_H
 #define _STDLIBCU_H
 #include <crtdefscu.h>

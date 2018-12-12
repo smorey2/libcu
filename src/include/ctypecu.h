@@ -23,7 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-//#pragma once
 #ifndef _CTYPECU_H
 #define _CTYPECU_H
 #include <crtdefscu.h>

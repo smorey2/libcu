@@ -34,11 +34,21 @@ extern "C" {
 #define MUTEXPRED_LTE 3
 #define MUTEXPRED_GTE 4
 
+	typedef struct mutexSleep_t {
+		float msmin;
+		float msmax;
+		float factor;
+		float ms;
+	} mutexSleep_t;
+
+	/* Mutex default sleep */
+	extern __hostb_device__ mutexSleep_t mutexDefaultSleep;
+
 	/* Mutex with exponential back-off. */
-	extern __host_device__ void mutexSpinLock(void **cancelToken, volatile long *mutex, long cmp = 0, long val = 1, char pred = 0, long predVal = 0, bool(*func)(void **) = nullptr, void **funcTag = nullptr, unsigned int msmin = 1, unsigned int msmax = 256); //256
+	extern __host_device__ void mutexSpinLock(void **cancelToken, volatile long *mutex, long cmp = 0, long val = 1, char pred = 0, long predVal = 0, bool(*func)(void **) = nullptr, void **funcTag = nullptr, mutexSleep_t *ms = nullptr);
 
 	/* Mutex set. */
-	extern __host_device__ void mutexSet(volatile long *mutex, long val = 0, unsigned int mspause = 0);
+	extern __host_device__ void mutexSet(volatile long *mutex, long val = 0);
 
 	/* Mutex held. */
 #define mutexHeld(mutex) (*mutex == 1)

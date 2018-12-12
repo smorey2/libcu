@@ -13,9 +13,13 @@
 #define SLEEP(MS) sleep(MS)
 #endif
 
+/* Mutex default sleep */
+__hostb_device__ mutexSleep_t mutexDefaultSleep = { 0, 256, .5 };
+
 /* Mutex with exponential back-off. */
-__host_device__ void mutexSpinLock(void **cancelToken, volatile long *mutex, long cmp, long val, char pred, long predVal, bool(*func)(void **), void **funcTag, unsigned int msmin, unsigned int msmax) {
-	long v; unsigned int ms = msmin;
+__host_device__ void mutexSpinLock(void **cancelToken, volatile long *mutex, long cmp, long val, char pred, long predVal, bool(*func)(void **), void **funcTag, mutexSleep_t *ms) {
+	if (ms == nullptr) ms = &mutexDefaultSleep;
+	long v; ms->ms = ms->msmin;
 #if __CUDA_ARCH__
 	while ((!cancelToken || *cancelToken) && (v = atomicCAS((int *)mutex, cmp, val)) != cmp) {
 #elif __OS_WIN
@@ -31,13 +35,15 @@ __host_device__ void mutexSpinLock(void **cancelToken, volatile long *mutex, lon
 		case MUTEXPRED_GTE: condition = v >= predVal; break;
 		}
 		if (condition) { if (!func || !func(funcTag)) return; continue; }
-		SLEEP(ms);
-		if (ms < msmax) ms *= 2;
+		SLEEP((int)ms->ms);
+		ms->ms = ms->ms <= 0 ? ms->factor :
+			ms->ms < ms->msmax ? ms->ms * ms->factor :
+			ms->msmax;
 	}
 }
 
 /* Mutex set. */
-__host_device__ void mutexSet(volatile long *mutex, long val, unsigned int mspause) {
+__host_device__ void mutexSet(volatile long *mutex, long val) {
 #if __CUDA_ARCH__
 	atomicExch((int *)mutex, val);
 #elif __OS_WIN
@@ -45,5 +51,4 @@ __host_device__ void mutexSet(volatile long *mutex, long val, unsigned int mspau
 #elif __OS_UNIX
 	__sync_lock_test_and_set((long *)mutex, val);
 #endif
-	if (mspause) SLEEP(mspause);
 }

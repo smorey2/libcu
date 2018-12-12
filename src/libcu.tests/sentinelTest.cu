@@ -91,12 +91,12 @@ bool sentinelModuleExecutor(void *tag, sentinelMessage *data, int length, char *
 static sentinelExecutor _moduleExecutor = { nullptr, "module", sentinelModuleExecutor, nullptr };
 
 static __global__ void g_sentinel_test1() {
-	printf("sentinel_test1\n");
+	//printf("sentinel_test1\n");
 
 	//// SENTINELDEVICESEND ////
 	//	extern __device__ void sentinelDeviceSend(sentinelMessage *msg, int msgLength);
-	for (int k = 0; k < 0; k++) {
-		printf("%d ", k);
+	for (int k = 0; k < 100; k++) {
+		//printf("%d ", k);
 		char buf[100];
 		module_simple a0(true, 1); int a0a = a0.rc; assert(a0a == 1);
 		module_string a1(true, "test"); int a1a = a1.rc; assert(a1a == 4);
@@ -108,11 +108,11 @@ static __global__ void g_sentinel_test1() {
 
 	// JUMBO
 #define JUMBOSIZE (4096+4096+1024)
-	for (int k = 0; k < 100; k++) {
+	for (int k = 0; k < 0; k++) {
 		printf("J%d ", k);
 		char jumbo[JUMBOSIZE]; memset(jumbo, 2, sizeof(jumbo)); jumbo[JUMBOSIZE - 1] = 0;
 		module_complex b0(true, "test", jumbo, sizeof(jumbo)); int b0a = b0.rc; int b0b = b0.rc2; assert(b0a == 4 && b0b == JUMBOSIZE - 1);
-		//module_return b1(jumbo, sizeof(jumbo)); int b1a = b1.rc; assert(b1a == 5 && !strcmp(jumbo, "test"));
+		module_return b1(jumbo, sizeof(jumbo)); int b1a = b1.rc; assert(b1a == 5 && !strcmp(jumbo, "test"));
 	}
 }
 

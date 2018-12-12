@@ -44,17 +44,17 @@ static bool executeTrans(void **tag);
 
 // HOSTSENTINEL
 #if HAS_HOSTSENTINEL
+
 static THREADHANDLE _threadHostHandle = 0;
 static THREADCALL sentinelHostThread(void *data) {
 	void *funcTag[3]{ (void *)-1, nullptr, nullptr };
-	sentinelContext *ctx = &_ctx;
-	sentinelMap *map = ctx->hostMap;
+	sentinelMap *map = _ctx.hostMap;
 	while (map) {
 		if (!_threadHostHandle) break;
-		long id = AtomicAdd(&map->getId, SENTINEL_MSGSIZE);
-		sentinelCommand *cmd = (sentinelCommand *)&map->data[id % sizeof(map->data)];
+		long id = AtomicAdd(&map->getId, 1);
+		sentinelCommand *cmd = &map->cmds[id % SENTINEL_MSGCOUNT];
 		if (cmd->magic != SENTINEL_MAGIC) {
-			printf("bad sentinel magic"); exit(1);
+			printf("host: bad sentinel magic."); exit(1);
 		}
 		funcTag[1] = cmd;
 		volatile long *control = &cmd->control;
@@ -72,15 +72,18 @@ static THREADCALL sentinelHostThread(void *data) {
 		// FLOW-WAIT
 		if (msg->flow & SENTINELFLOW_WAIT) {
 			mutexSet(control, SENTINELCONTROL_HOSTRDY);
-			if (msg->flow & SENTINELFLOW_TRAN)
+			if (msg->flow & SENTINELFLOW_TRAN) {
 				mutexSpinLock((void **)&_threadHostHandle, control,
 					SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOSTWAIT, MUTEXPRED_GTE, SENTINELCONTROL_TRAN, executeTrans, funcTag);
+				mutexSet(control, SENTINELCONTROL_NORMAL);
+			}
 		}
-		mutexSet(control, SENTINELCONTROL_NORMAL);
+		else mutexSet(control, SENTINELCONTROL_NORMAL);
 	}
 	if (funcTag[2]) free(funcTag[2]);
 	return 0;
 }
+
 #endif
 
 // DEVICESENTINEL
@@ -90,17 +93,17 @@ static THREADHANDLE _threadDeviceHandle[SENTINEL_DEVICEMAPS];
 static THREADCALL sentinelDeviceThread(void *data) {
 	int threadId = (int)(intptr_t)data;
 	void *funcTag[3]{ reinterpret_cast<void *>(threadId), nullptr, nullptr };
-	sentinelContext *ctx = &_ctx;
-	sentinelMap *map = ctx->deviceMap[threadId];
+	sentinelMap *map = _ctx.deviceMap[threadId];
 	while (map) {
 		if (!_threadDeviceHandle[threadId]) break;
-		long id = AtomicAdd(&map->getId, SENTINEL_MSGSIZE);
-		sentinelCommand *cmd = (sentinelCommand *)&map->data[id % sizeof(map->data)];
+		long id = AtomicAdd(&map->getId, 1);
+		sentinelCommand *cmd = &map->cmds[id % SENTINEL_MSGCOUNT];
 		if (cmd->magic != SENTINEL_MAGIC) {
-			printf("host: bad sentinel magic"); exit(1);
+			printf("bad sentinel magic."); exit(1);
 		}
 		funcTag[1] = cmd;
 		volatile long *control = &cmd->control;
+		printf("H:%d:%d|", id % SENTINEL_MSGCOUNT, control);
 		mutexSpinLock((void **)&_threadDeviceHandle[threadId], control,
 			SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOST, MUTEXPRED_GTE, SENTINELCONTROL_TRAN, executeTrans, funcTag);
 		if (!_threadDeviceHandle[threadId]) break;
@@ -115,17 +118,19 @@ static THREADCALL sentinelDeviceThread(void *data) {
 		// host-prepare
 		char *data = cmd->data + cmd->length, *dataEnd = data + msg->size;
 		if (hostPrepare && !hostPrepare(msg, data, dataEnd, map->offset)) {
-			printf("host: msg too long"); exit(0);
+			printf("msg too long."); exit(0);
 		}
 
 		// FLOW-WAIT
 		if (msg->flow & SENTINELFLOW_WAIT) {
 			mutexSet(control, SENTINELCONTROL_HOSTRDY);
-			if (msg->flow & SENTINELFLOW_TRAN)
+			if (msg->flow & SENTINELFLOW_TRAN) {
 				mutexSpinLock((void **)&_threadDeviceHandle[threadId], control,
 					SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOSTWAIT, MUTEXPRED_GTE, SENTINELCONTROL_TRAN, executeTrans, funcTag);
+				mutexSet(control, SENTINELCONTROL_NORMAL);
+			}
 		}
-		mutexSet(control, SENTINELCONTROL_NORMAL);
+		else mutexSet(control, SENTINELCONTROL_NORMAL);
 	}
 	if (funcTag[2]) free(funcTag[2]);
 	return 0;
@@ -228,8 +233,8 @@ void sentinelServerInitialize(sentinelExecutor *deviceExecutor, char *mapHostNam
 #endif
 
 		// initialize commands
-		for (int j = 0; j < SENTINEL_MSGCOUNT*SENTINEL_MSGSIZE; j += SENTINEL_MSGSIZE) {
-			sentinelCommand *cmd = (sentinelCommand *)&_ctx.hostMap->data[j];
+		for (int j = 0; j < SENTINEL_MSGCOUNT; j++) {
+			sentinelCommand *cmd = &_ctx.hostMap->cmds[j];
 			cmd->magic = SENTINEL_MAGIC;
 			cmd->control = 0;
 			cmd->locks = 0;
@@ -265,14 +270,12 @@ void sentinelServerInitialize(sentinelExecutor *deviceExecutor, char *mapHostNam
 			_ctx.deviceMap[i]->offset = 0;
 #endif
 			// initialize commands
-			for (int j = 0; j < SENTINEL_MSGCOUNT*SENTINEL_MSGSIZE; j += SENTINEL_MSGSIZE) {
-				sentinelCommand *cmd = (sentinelCommand *)&_ctx.deviceMap[i]->data[j];
+			for (int j = 0; j < SENTINEL_MSGCOUNT; j++) {
+				sentinelCommand *cmd = &_ctx.deviceMap[i]->cmds[j];
 				cmd->magic = SENTINEL_MAGIC;
 				cmd->control = 0;
 				cmd->locks = 0;
-				printf("%x ", cmd);
 			}
-			printf("\n");
 		}
 		cudaErrorCheckF(cudaMemcpyToSymbol(_sentinelDeviceMap, &d_deviceMap, sizeof(d_deviceMap)), goto initialize_error);
 

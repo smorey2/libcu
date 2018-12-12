@@ -23,7 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
 #ifndef _STATION_H
 #define _STATION_H
 #include <crtdefscu.h>
@@ -36,10 +35,6 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
-#ifndef HAS_DEVICESTATION
-#define HAS_DEVICESTATION 1
-#endif
-
 #define STATION_MAGIC (unsigned short)0xC812
 #define STATION_DEVICEMAPS 1
 #define STATION_MSGSIZE 4096
@@ -48,11 +43,11 @@ extern "C" {
 	typedef struct __align__(8) {
 		unsigned short magic;
 		volatile long control;
-		int length;
 #ifndef _WIN64
 		int unknown;
 #endif
-		char data[1];
+		int length;
+		char data[STATION_MSGSIZE];
 		void dump();
 	} stationCommand;
 
@@ -60,7 +55,7 @@ extern "C" {
 		long getId;
 		volatile long setId;
 		intptr_t offset;
-		char data[STATION_MSGSIZE*STATION_MSGCOUNT];
+		stationCommand cmds[STATION_MSGCOUNT];
 		void dump();
 	} stationMap;
 
@@ -68,15 +63,11 @@ extern "C" {
 		stationMap *deviceMap[STATION_DEVICEMAPS];
 	} stationContext;
 
-#if HAS_DEVICESTATION
 	extern __constant__ const stationMap *_stationDeviceMap[STATION_DEVICEMAPS];
-#endif
 
 	extern void stationHostInitialize();
 	extern void stationHostShutdown();
-#if HAS_DEVICESTATION
 	extern __device__ void stationDeviceSend(void *msg, int msgLength);
-#endif
 
 #define STATIONCONTROL_NORMAL 0x0
 #define STATIONCONTROL_DEVICE 0x1

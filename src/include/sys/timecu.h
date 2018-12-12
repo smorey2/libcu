@@ -23,9 +23,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-//#pragma once
 #ifndef _SYS_TIMECU_H
-#define	_SYS_TIMECU_H
+#define _SYS_TIMECU_H
 #include <crtdefscu.h>
 
 #if __OS_WIN

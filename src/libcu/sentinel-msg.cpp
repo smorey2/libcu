@@ -6,6 +6,7 @@
 #include <sys/statcu.h>
 #include <math.h>
 #include <fcntl.h>
+#include <sentinel.h>
 #if __OS_WIN
 #include <io.h>
 #elif __OS_UNIX

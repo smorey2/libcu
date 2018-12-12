@@ -27,26 +27,25 @@
 #endif
 
 /* Mutex with exponential back-off. */
-static void mutexSpinLock(void **cancelToken, volatile long *mutex, long cmp = 0, long val = 1, unsigned int msmin = 8, unsigned int msmax = 256) {
-	long v; unsigned int ms = msmin;
+static void mutexSpinLock(void **cancelToken, volatile long *mutex, long cmp = 0, long val = 1) {
+	long v; float ms = 32;
 #if __OS_WIN
 	while ((!cancelToken || *cancelToken) && (v = _InterlockedCompareExchange((volatile long *)mutex, cmp, val)) != cmp) {
 #elif __OS_UNIX
 	while ((!cancelToken || *cancelToken) && (v = __sync_val_compare_and_swap((long *)mutex, cmp, val)) != cmp) {
 #endif
-		SLEEP(ms);
-		if (ms < msmax) ms *= 2;
+		SLEEP((int)ms);
+		if (ms < 256) ms *= 2;
 	}
 }
 
 /* Mutex set. */
-static void mutexSet(volatile long *mutex, long val = 0, unsigned int mspause = 0) {
+static void mutexSet(volatile long *mutex, long val = 0) {
 #if __OS_WIN
 	_InterlockedExchange((volatile long *)mutex, val);
 #elif __OS_UNIX
 	__sync_lock_test_and_set((long *)mutex, val);
 #endif
-	if (mspause) SLEEP(mspause);
 }
 
 #endif
@@ -128,22 +127,22 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrs
 		panic("sentinel: client map not defined. did you start sentinel?\n");
 
 	// ATTACH
-	long id = AtomicAdd(&map->setId, SENTINEL_MSGSIZE);
-	sentinelCommand *cmd = (sentinelCommand *)&map->data[id % sizeof(map->data)];
+	long id = AtomicAdd(&map->setId, 1);
+	sentinelCommand *cmd = (sentinelCommand *)&map->cmds[id % SENTINEL_MSGCOUNT];
 	if (cmd->magic != SENTINEL_MAGIC)
-		panic("bad sentinel magic");
+		panic("host: bad sentinel magic");
 	AtomicAdd(&cmd->locks, 1);
 	volatile long *control = &cmd->control; intptr_t offset = _sentinelClientMapOffset; char *trans = nullptr;
 	mutexSpinLock(nullptr, control, SENTINELCONTROL_NORMAL, SENTINELCONTROL_DEVICE);
 	if (cmd->locks != 1)
-		panic("bad sentinel lock");
+		panic("host: bad sentinel lock");
 
 	// PREPARE
 	char *data = cmd->data + ROUND8_(msgLength), *dataEnd = data + msg->size;
 	sentinelOutPtr *listOut = nullptr;
 	if (((ptrsIn || ptrsOut) && !(data = preparePtrs(ptrsIn, ptrsOut, cmd, data, dataEnd, offset, listOut, trans))) ||
 		(msg->prepare && !msg->prepare(msg, data, dataEnd, offset)))
-		panic("msg too long");
+		panic("host: msg too long");
 	if (listOut)
 		msg->flow |= SENTINELFLOW_TRAN;
 	cmd->length = msgLength; memcpy(cmd->data, msg, msgLength);
@@ -156,7 +155,7 @@ void sentinelClientSend(sentinelMessage *msg, int msgLength, sentinelInPtr *ptrs
 		cmd->length = msgLength; memcpy(msg, cmd->data, msgLength);
 		if ((ptrsOut && !postfixPtrs(ptrsOut, cmd, offset, listOut, trans)) ||
 			(msg->postfix && !msg->postfix(msg, offset)))
-			panic("postfix error");
+			panic("host: postfix error");
 		mutexSet(control, !listOut ? SENTINELCONTROL_NORMAL : SENTINELCONTROL_DEVICERDY);
 	}
 	AtomicAdd(&cmd->locks, -1);

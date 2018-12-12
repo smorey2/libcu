@@ -111,7 +111,7 @@
       <Filter>include\ext</Filter>
     </ClInclude>
     <ClInclude Include="..\include\ext\station.h">
-      <Filter>ext</Filter>
+      <Filter>include\ext</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -207,10 +207,10 @@
       <Filter>ext</Filter>
     </None>
     <None Include="..\include\ext\station-gpu.cu">
-      <Filter>ext</Filter>
+      <Filter>include\ext</Filter>
     </None>
     <None Include="..\include\ext\station.cpp">
-      <Filter>ext</Filter>
+      <Filter>include\ext</Filter>
     </None>
   </ItemGroup>
 </Project>
