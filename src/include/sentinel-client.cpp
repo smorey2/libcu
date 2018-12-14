@@ -168,8 +168,8 @@ static void executeTrans(char id, sentinelCommand *cmd, int size, sentinelInPtr 
 	switch (id) {
 	case 0:
 		*(int *)data = size;
-		mutexSet(control, SENTINELCONTROL_TRANSSIZE);
-		mutexSpinLock(nullptr, control, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
+		mutexSet(control, SENTINELCONTROL_TRANSIZE);
+		mutexSpinLock(nullptr, control, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRAN);
 		ptr = trans = *(char **)data;
 		if (listIn)
 			for (i = listIn; i; i = (sentinelInPtr *)i->unknown) {
@@ -178,8 +178,8 @@ static void executeTrans(char id, sentinelCommand *cmd, int size, sentinelInPtr 
 				while (remain > 0) {
 					length = cmd->length = remain > SENTINEL_MSGSIZE ? SENTINEL_MSGSIZE : remain;
 					memcpy(data, (void *)v, length); remain -= length; v += length;
-					mutexSet(control, SENTINELCONTROL_TRANSIN);
-					mutexSpinLock(nullptr, control, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
+					mutexSet(control, SENTINELCONTROL_TRANIN);
+					mutexSpinLock(nullptr, control, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRAN);
 				}
 				*field = ptr; ptr += i->size;
 				i->unknown = nullptr;
@@ -198,8 +198,8 @@ static void executeTrans(char id, sentinelCommand *cmd, int size, sentinelInPtr 
 				const char *v = (const char *)*field; int remain = o->size, length = 0;
 				while (remain > 0) {
 					length = cmd->length = remain > SENTINEL_MSGSIZE ? SENTINEL_MSGSIZE : remain;
-					mutexSet(control, SENTINELCONTROL_TRANSOUT);
-					mutexSpinLock(nullptr, control, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRANDONE);
+					mutexSet(control, SENTINELCONTROL_TRANOUT);
+					mutexSpinLock(nullptr, control, SENTINELCONTROL_TRANRDY, SENTINELCONTROL_TRAN);
 					memcpy((void *)v, data, length); remain -= length; v += length;
 				}
 				o->unknown = nullptr;

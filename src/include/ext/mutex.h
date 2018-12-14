@@ -29,10 +29,14 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
-#define MUTEXPRED_AND 1
-#define MUTEXPRED_ANE 2
-#define MUTEXPRED_LTE 3
-#define MUTEXPRED_GTE 4
+#define MUTEXPRED_EQ 1
+#define MUTEXPRED_NE 2
+#define MUTEXPRED_LT 3
+#define MUTEXPRED_GT 4
+#define MUTEXPRED_LTE 5
+#define MUTEXPRED_GTE 6
+#define MUTEXPRED_AND 7
+#define MUTEXPRED_ANE 8
 
 	typedef struct mutexSleep_t {
 		float msmin;

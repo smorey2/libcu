@@ -103,7 +103,6 @@ static THREADCALL sentinelDeviceThread(void *data) {
 		}
 		funcTag[1] = cmd;
 		volatile long *control = &cmd->control;
-		printf("H:%d:%d|", id % SENTINEL_MSGCOUNT, control);
 		mutexSpinLock((void **)&_threadDeviceHandle[threadId], control,
 			SENTINELCONTROL_DEVICERDY, SENTINELCONTROL_HOST, MUTEXPRED_GTE, SENTINELCONTROL_TRAN, executeTrans, funcTag);
 		if (!_threadDeviceHandle[threadId]) break;
@@ -152,11 +151,10 @@ static bool executeTrans(void **tag) {
 	sentinelCommand *cmd = (sentinelCommand *)tag[1];
 	volatile long *control = &cmd->control;
 	char *data = cmd->data, *ptr = (char *)tag[2];
-	bool r = true;
 	while (*control >= SENTINELCONTROL_TRAN) {
 		int length = cmd->length;
 		switch (*control) {
-		case SENTINELCONTROL_TRANSSIZE:
+		case SENTINELCONTROL_TRANSIZE:
 			ptr = (char *)tag[2];
 			if (ptr) free(ptr);
 			if (!(ptr = (char *)malloc(length))) {
@@ -164,26 +162,21 @@ static bool executeTrans(void **tag) {
 			}
 			tag[2] = *(char **)data = ptr;
 			break;
-		case SENTINELCONTROL_TRANSIN:
+		case SENTINELCONTROL_TRANIN:
 			memcpy(ptr, data, length); ptr += length; break;
-		case SENTINELCONTROL_TRANSOUT:
-			//r = false;
+		case SENTINELCONTROL_TRANOUT:
 			memcpy(data, ptr, length); ptr += length; break;
 		default:
 #if __OS_WIN
-			Sleep(25); continue;
+			Sleep(1); continue;
 #elif __OS_UNIX
-			sleep(25); continue;
+			sleep(1); continue;
 #endif
 		}
 		mutexSet(control, SENTINELCONTROL_TRANRDY);
-		mutexSpinLock(CANCELTOKEN, control,
-			SENTINELCONTROL_TRANDONE, SENTINELCONTROL_TRAN, MUTEXPRED_AND, 0xF);
-		if (cmd->magic != SENTINEL_MAGIC) {
-			printf("sentinel cell destroyed"); exit(1);
-		}
+		mutexSpinLock(CANCELTOKEN, control, SENTINELCONTROL_TRAN, SENTINELCONTROL_TRAN, MUTEXPRED_LTE, SENTINELCONTROL_TRAN);
 	}
-	return r;
+	return true;
 }
 #undef CANCELTOKEN
 

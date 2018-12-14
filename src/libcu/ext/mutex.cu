@@ -29,12 +29,16 @@ __host_device__ void mutexSpinLock(void **cancelToken, volatile long *mutex, lon
 #endif
 		bool condition = false;
 		switch (pred) {
-		case MUTEXPRED_AND: condition = v & predVal; break;
-		case MUTEXPRED_ANE: condition = (v & predVal) == predVal; break;
+		case MUTEXPRED_EQ: condition = v == predVal; break;
+		case MUTEXPRED_NE: condition = v != predVal; break;
+		case MUTEXPRED_LT: condition = v < predVal; break;
+		case MUTEXPRED_GT: condition = v > predVal; break;
 		case MUTEXPRED_LTE: condition = v <= predVal; break;
 		case MUTEXPRED_GTE: condition = v >= predVal; break;
+		case MUTEXPRED_AND: condition = v & predVal; break;
+		case MUTEXPRED_ANE: condition = (v & predVal) == predVal; break;
 		}
-		if (condition) { if (!func || !func(funcTag)) return; continue; }
+		if (condition && (!func || !func(funcTag))) return;
 		SLEEP((int)ms->ms);
 		ms->ms = ms->ms <= 0 ? ms->factor :
 			ms->ms < ms->msmax ? ms->ms * ms->factor :
