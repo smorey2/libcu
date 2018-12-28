@@ -111,8 +111,8 @@ static __global__ void g_sentinel_test1() {
 	for (int k = 0; k < 50; k++) {
 		printf("J%d ", k);
 		char jumbo[JUMBOSIZE]; memset(jumbo, 2, sizeof(jumbo)); jumbo[JUMBOSIZE - 1] = 0;
-		module_complex b0(true, "test", jumbo, sizeof(jumbo)); int b0a = b0.rc; int b0b = b0.rc2; assert(b0a == 4 && b0b == JUMBOSIZE - 1);
-		//module_return b1(jumbo, sizeof(jumbo)); int b1a = b1.rc; assert(b1a == 5 && !strcmp(jumbo, "test"));
+		//module_complex b0(true, "test", jumbo, sizeof(jumbo)); int b0a = b0.rc; int b0b = b0.rc2; assert(b0a == 4 && b0b == JUMBOSIZE - 1);
+		module_return b1(jumbo, sizeof(jumbo)); int b1a = b1.rc; assert(b1a == 5 && !strcmp(jumbo, "test"));
 	}
 }
 
