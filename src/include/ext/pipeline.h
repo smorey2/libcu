@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 #ifndef _EXT_PIPELINE_H
 #define _EXT_PIPELINE_H
-#ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -75,7 +75,7 @@ extern "C" {
 	/* Reads from the pipeline. */
 	extern void pipelineRead(pipelineRedir &redir);
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 #endif  /* _EXT_PIPELINE_H */

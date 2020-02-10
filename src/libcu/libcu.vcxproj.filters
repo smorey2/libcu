@@ -203,14 +203,14 @@
     <None Include="..\include\ext\pipeline.cpp">
       <Filter>include\ext</Filter>
     </None>
-    <None Include="ext\mutex.cu">
-      <Filter>ext</Filter>
-    </None>
     <None Include="..\include\ext\station-gpu.cu">
       <Filter>include\ext</Filter>
     </None>
     <None Include="..\include\ext\station.cpp">
       <Filter>include\ext</Filter>
+    </None>
+    <None Include="ext\mutex.cu">
+      <Filter>ext</Filter>
     </None>
   </ItemGroup>
 </Project>

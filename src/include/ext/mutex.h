@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 #ifndef _EXT_MUTEX_H
 #define _EXT_MUTEX_H
-#ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -57,7 +57,7 @@ extern "C" {
 	/* Mutex held. */
 #define mutexHeld(mutex) (*mutex == 1)
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 #endif  /* _EXT_MUTEX_H */

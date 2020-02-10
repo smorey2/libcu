@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include <driver_types.h>
 #include <stdio.h>
 #include <ext/pipeline.h>
-#if _MSC_VER
+#if __OS_WIN
 #include <fcntl.h>
 #include <io.h>
 #endif
@@ -165,7 +165,7 @@ extern "C" {
 #define SENTINELCONTROL_TRANIN 0x14
 #define SENTINELCONTROL_TRANOUT 0x15
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

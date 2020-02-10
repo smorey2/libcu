@@ -74,7 +74,7 @@ extern "C" {
 #define STATIONCONTROL_HOST 0x5
 #define STATIONCONTROL_HOSTRDY 0x6
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

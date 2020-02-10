@@ -83,7 +83,9 @@
     <None Include="locale\none.cu" />
     <None Include="locale\utf8.cu" />
     <None Include="locale\xlocale.cu" />
-    <None Include="ext\mutex.cu" />
+    <None Include="ext\mutex.cu">
+      <FileType>Document</FileType>
+    </None>
     <None Include="..\include\ext\station-gpu.cu">
       <FileType>Document</FileType>
     </None>

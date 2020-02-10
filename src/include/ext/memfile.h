@@ -26,7 +26,7 @@ THE SOFTWARE.
 #ifndef _EXT_MEMFILE_H
 #define _EXT_MEMFILE_H
 #include <stdint.h>
-#ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 	/* Read data from the file. */
@@ -51,7 +51,7 @@ extern "C" {
 	extern __host_device__ int memfileIsInMemory(vsysfile *p); //: sqlite3JournalIsInMemory
 	/* Return the number of bytes required to store a JournalFile that uses vsystem to create the underlying on-disk files. */
 	extern __host_device__ int memfileSize(vsystem *p); //: sqlite3JournalSize
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 #endif  /* _EXT_MEMFILE_H */
